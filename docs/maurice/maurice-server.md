@@ -204,9 +204,11 @@ existing file too. Raise or drop it per household in its own env file.
 `MAURICE_PRICE_FACTOR` travels through `compose.household.yml` the same way,
 and so, since 1 November 2026, does `TAVILY_API_KEY` (Candide's, in
 `defaults.env` and each household's file): before it a hosted household had
-no web search, and Maurice told its members he had no internet. **Gap**: the
-APNs key is not on the fleet, so a hosted household sends no push
-notification to the Apple apps.
+no web search, and Maurice told its members he had no internet. Push to the
+Apple apps came the same evening: the team's APNs key is kept once on the
+host, `/opt/maurice/secrets/apns.p8` (mode 600), mounted read-only into every
+household, its id in `APNS_KEY_ID`; until then a hosted household sent no push
+at all.
 
 **Since 19 September the fuse has three layers, and the tightest wins.** The
 instance's env caps stay the operator's fuse, summed over the whole household.
