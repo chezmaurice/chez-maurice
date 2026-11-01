@@ -1,6 +1,6 @@
 ---
 title: The chat experience
-date: '2026-10-29'
+date: '2026-11-01'
 flags: []
 locale: en
 description: Streaming render, tool-result data cards, math, markdown, images, dictation,
@@ -177,7 +177,7 @@ The composer's model pill opens a Menu grouped by provider (Anthropic, OpenAI, M
 
 ## The cost meter
 
-Off by default; "Show what each reply cost" in Settings turns it on. A coin then joins the copy and regenerate controls under each of Maurice's replies, with the turn's cost and the share of the prompt served from cache beside it; tapping the coin drops down a popover with the token split, the uncached figure for comparison, the number of rounds and the model (a popover on the phone too, not a sheet, and the transcript never reflows). Local models are free; cloud models show a figure when their price is on file (Anthropic, Mistral Medium, GLM-5.3 and Flash), token counts otherwise — never a bare "$0.00" for a model nobody has priced. The data is the `usage` event the [[maurice-server|server]] emits and stores on the message.
+Off by default; "Show what each reply cost" in Settings turns it on. A coin then joins the copy and regenerate controls under each of Maurice's replies, with the turn's cost and the share of the prompt served from cache beside it; tapping the coin drops down a popover with the token split, the uncached figure for comparison, the number of rounds and the model (a popover on the phone too, not a sheet, and the transcript never reflows). Local models are free; cloud models show a figure when their price is on file (Anthropic, Mistral Medium, GLM-5.3 and Flash), token counts otherwise — never a bare "$0.00" for a model nobody has priced. The data is the `usage` event the [[maurice-server|server]] emits and stores on the message; on a hosted household the server sends it at Maurice's price (`MAURICE_PRICE_FACTOR`, since 1 November 2026), so the coin and the summary read the price the household pays.
 
 The same switch adds a **"Cost and tokens" section to the details sheet** behind "…": the whole conversation folded into one figure per column. Total cost first (with how many of the metered turns were priced when the sum doesn't cover them all), the average and costliest turn, what the thread would have cost without cache and what the cache saved; then the number of metered turns (with the count of turns that carry no usage — local models before the server recorded it), the model calls, the share of all prompt tokens served from cache, the prompt split (fresh / from cache / written), reply tokens and the grand total; and one line per model that answered, with its turns and its share of the cost. It is computed client-side (`ConversationUsage`) from the usage persisted on each assistant message, so it is exact for the messages on screen and needs no route; a conversation with no metered turn says so instead of showing zeros. Cost and token figures are spelled by one `UsageFormat` helper, so the coin and the summary can't disagree on rounding.
 

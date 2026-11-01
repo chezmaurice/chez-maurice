@@ -1,6 +1,6 @@
 ---
 title: Maurice — the digest
-date: '2026-10-31'
+date: '2026-11-01'
 flags: []
 locale: en
 description: 'The system documentation condensed to what a user needs: everything
@@ -18,7 +18,7 @@ covers:
   maurice-applications: '2026-10-20'
   maurice-architecture: '2026-10-26'
   maurice-carnet: '2026-10-23'
-  maurice-chat: '2026-10-29'
+  maurice-chat: '2026-11-01'
   maurice-composer: '2026-10-20'
   maurice-data-model: '2026-10-29'
   maurice-docs: '2026-10-20'
@@ -28,7 +28,7 @@ covers:
   maurice-knowledge: '2026-10-20'
   maurice-life: '2026-10-20'
   maurice-personas-hats: '2026-09-19'
-  maurice-server: '2026-10-31'
+  maurice-server: '2026-11-01'
   maurice-shared-gardens: '2026-10-20'
   maurice-tools: '2026-10-20'
   maurice-web-garden: '2026-10-20'
@@ -36,7 +36,7 @@ covers:
 
 # Maurice — the digest
 
-This is the whole documentation condensed for someone who uses Maurice and will never read its code: what it can do, how it behaves, what its architecture guarantees, what is finished and what is not. It describes the system as it stands on 31 October 2026. Each section names the note that holds the detail (*Detail:* `server`, `carnet`…); any of them can be asked for in full.
+This is the whole documentation condensed for someone who uses Maurice and will never read its code: what it can do, how it behaves, what its architecture guarantees, what is finished and what is not. It describes the system as it stands on 1 November 2026. Each section names the note that holds the detail (*Detail:* `server`, `carnet`…); any of them can be asked for in full.
 
 Two distinctions run through everything. **Ships vs. exists**: what every install and every hosted household gets, against what runs only at the developer's home in a private overlay and is experimental. **Built vs. planned**: a planned feature is never described here as working; the gaps are listed at the end of each section and gathered at the end.
 
@@ -146,9 +146,9 @@ There is also a **browser clipper** that saves the page being read into the memb
 
 ## 8. Costs and budgets
 
-- **Prices are in euros.** Every turn records its cost on the message. A member can turn on **"Show what each reply cost"**: a coin under each reply (cost, cached share, a breakdown on tap) and a *Cost and tokens* section per conversation. An unpriced model shows token counts, never a false zero.
+- **Prices are in euros, and there is only one.** On a hosted Maurice every amount you read — under a reply, in the *Budget* pane, on the console, on the account page — is Maurice's price, VAT and margin included: 10 € topped up is 10 € of thinking. At home, where the household pays its own provider, the figures are what the provider bills. Every turn records its cost on the message. A member can turn on **"Show what each reply cost"**: a coin under each reply (cost, cached share, a breakdown on tap) and a *Cost and tokens* section per conversation. An unpriced model shows token counts, never a false zero.
 - **One budget for the household, the same for every member, never shown to members in euros.** Everyone sees a **ring** in the sidebar: on a hosted Maurice the prepaid balance, full after each top-up and running down from there; at home, where the household pays its own provider, only if the admin sets a monthly budget, starting afresh each month — otherwise there is no ring. It turns orange then red as it runs low, with three gentle warnings (20, 10, 5 %), and opens a *Budget* pane; the admin, who pays, also reads the amount left there. Nothing is ever paid in the apps: topping up is on the web, and when the budget is spent Maurice says so and sends the member to whoever runs the household — never to a page to pay.
-- **The operator sets the limits**, all optional, the tightest winning: an instance total or rolling-day cap (the hosted fleet's default is 10 € a day per household), a household daily cap, a member daily cap, a monthly household budget, and a separate allowance for the night's automatic work. Caps are checked before every model round, not once per turn. Under a cap an unpriced model is refused; local models are exempt.
+- **The operator sets the limits**, all optional, the tightest winning: an instance total or rolling-day cap (the hosted fleet sets a daily one per household), a household daily cap, a member daily cap, a monthly household budget, and a separate allowance for the night's automatic work — the admin types these in the console at the price they read everywhere else. Caps are checked before every model round, not once per turn. Under a cap an unpriced model is refused; local models are exempt.
 - **Who pays what:** a member's own turns, the documentation tool, scanned-attachment transcription, mail reading and its documents, a domain's first notes, chapter and article summaries and the summaries of conversations on a fiche are charged to that member; the night's briefs and domain mapping to the household's *system* spender.
 - **Orders of magnitude:** a short classic summarized chapter by chapter costs a cent or two, a long novel some tens of cents; writing a domain's first notes under a cent; a night's domain mapping a few cents per member.
 

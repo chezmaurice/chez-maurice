@@ -1,6 +1,6 @@
 ---
 title: The server
-date: '2026-10-31'
+date: '2026-11-01'
 flags: []
 locale: en
 description: 'The Hono/Bun engine: API surface, the streaming agentic loop, prompt
@@ -169,6 +169,25 @@ it. The apps show it in the chat, so it names **no purchase, no account page
 and no link** (App Review 3.1.1; the tower's `creditSpentMessage`, 29 October
 2026). `compose.household.yml` passes it through; unset, the default says the
 same in the member's language, without an amount.
+
+**One price: Maurice's (1 November 2026).** A hosted household is sold its
+thinking at Maurice's price — VAT and margin included — and that is the only
+price its people see: 10 € paid reads as 10 € of thinking. The ratio between
+the two is `MAURICE_PRICE_FACTOR` (the tower writes 1.452 into every hosted
+household's env; unset, 1, so a household on its own key sees what its
+provider bills). It applies **at the edge only** (`priceFactor`, `shownEur`,
+`countedEur`, `shownUsage` in `services/pricing.ts`): a message's `usage` as
+it is read or streamed, the admin's `left_eur`, `/api/me/usage` and
+`/api/admin/usage`, the amounts in a refusal and in
+`MAURICE_SPEND_CAP_MESSAGE`'s `{cap}`, a brief's rewrite cost, the mail
+reading estimate, and every figure on the console. The caps an admin types in
+the console are typed at Maurice's price and divided by the factor when saved
+(a field posted back as it was shown keeps the stored figure). The ledger, the
+stored `messages.usage`, the caps and every comparison stay at the provider's
+price, and so do `/api/ancillary` (the local tools' route) and a member's
+export. **Gap**: the conversion is applied by hand at each edge, so a new route
+that returns an amount must remember it; and a cap an admin had typed at the
+provider's price before the factor was set now reads 1.452 times higher.
 
 Spend is recorded in `spend_ledger` by `addMessage` — the one place every
 persisted turn passes through, whichever route produced it. See
