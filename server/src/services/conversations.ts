@@ -1,5 +1,5 @@
 import db from "../db";
-import type { TurnUsage } from "./pricing";
+import { shownUsage, type TurnUsage } from "./pricing";
 import { recordSpend } from "./budget";
 
 export interface Conversation {
@@ -76,6 +76,10 @@ function hydrateMessage(m: any): Message {
       m[field] = null;
     }
   }
+  // A hydrated message is what goes out to a person: its cost at Maurice's
+  // price. Never sum it against a cap — the ledger is the provider-priced
+  // count (budget.ts); the raw column is too.
+  if (m?.usage) m.usage = shownUsage(m.usage);
   return m as Message;
 }
 

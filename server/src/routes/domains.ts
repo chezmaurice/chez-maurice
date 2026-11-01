@@ -27,6 +27,7 @@ import {
   type Proposal,
 } from "../services/domainProposals";
 import { seededNotesOf } from "../services/domainSeeding";
+import { shownEur } from "../services/pricing";
 
 // A domain is a row of `maurices` of kind `domain`: not a persona to summon
 // but a part of a member's life that Maurice follows, with a brief he keeps
@@ -345,7 +346,7 @@ domains.post("/:id/brief/refresh", async (c) => {
   if (!domain) return notFound(c);
   const r = await refreshBrief(domain, domain.created_by!);
   return c.json(
-    { outcome: r.outcome, sources: r.sources, cost_usd: r.cost_usd, error: r.error ?? null, brief: briefJson(r.brief) },
+    { outcome: r.outcome, sources: r.sources, cost_usd: shownEur(r.cost_usd), error: r.error ?? null, brief: briefJson(r.brief) },
     r.outcome === "capped" ? 429 : r.outcome === "failed" ? 502 : 200,
   );
 });

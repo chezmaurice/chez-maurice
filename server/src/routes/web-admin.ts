@@ -58,7 +58,8 @@ import { ArchiveError, exportResponse } from "../services/archive";
 import { recordHouseholdExport } from "../services/accountEvents";
 import { publicPagesAvailableOn } from "../../data-api/services/publicPages";
 import { t, langOf, SUPPORTED } from "../services/i18n";
-import { SYSTEM_SPENDER, spentTodayUsd, spentMonthUsd, memberDailyCap, setMemberDailyCap, setHouseholdDailyCap, setSystemDailyCap, householdMonthlyBudget, setHouseholdMonthlyBudget } from "../services/budget";
+import { countedEur, shownEur } from "../services/pricing";
+import { SYSTEM_SPENDER, spentTodayUsd, spentMonthUsd, memberDailyCap, householdDailyCap, systemDailyCap, setMemberDailyCap, setHouseholdDailyCap, setSystemDailyCap, householdMonthlyBudget, setHouseholdMonthlyBudget } from "../services/budget";
 import { ImportError, importHistory, importStatus, isImportProvider, startImport } from "../services/chatImport";
 import { providerPlugin } from "../services/providerPlugins";
 import { mkdirSync, readFileSync, existsSync } from "fs";
@@ -595,7 +596,7 @@ web.get("/dashboard", async (c) => {
   // them: a household on its own key, or on Ollama, never sees a figure.
   const spentTag = (id: string) => {
     const today = spentTodayUsd(id);
-    return today > 0 ? ` · <span title="${escape(t(lang, "members.spent_today_title"))}">${escape(t(lang, "members.spent_today", today.toFixed(2)))}</span>` : "";
+    return today > 0 ? ` · <span title="${escape(t(lang, "members.spent_today_title"))}">${escape(t(lang, "members.spent_today", shownEur(today).toFixed(2)))}</span>` : "";
   };
   const memberRows = users.map((u) => `
     <div class="member">
@@ -614,8 +615,8 @@ web.get("/dashboard", async (c) => {
   // whole household — every member's ring shows what is left of it.
   const budget = householdMonthlyBudget();
   const budgetSummary = budget != null
-    ? t(lang, "budget.allowance", budget.toFixed(2), spentMonthUsd().toFixed(2))
-    : t(lang, "budget.spent_month", spentMonthUsd().toFixed(2));
+    ? t(lang, "budget.allowance", shownEur(budget).toFixed(2), shownEur(spentMonthUsd()).toFixed(2))
+    : t(lang, "budget.spent_month", shownEur(spentMonthUsd()).toFixed(2));
 
   // ── 03 model rows ──
   const modelRow = (m: Model, removable: boolean) => `
@@ -763,7 +764,7 @@ web.get("/dashboard", async (c) => {
         <form method="POST" action="/admin/budget" class="card flush">
           <div style="padding:18px">
             <div class="field" style="max-width:240px"><label class="label">${escape(t(lang, "budget.monthly"))}</label>
-              <input type="number" name="budget_monthly_eur" min="0" step="0.01" value="${budget ?? ""}" placeholder="∞" />
+              <input type="number" name="budget_monthly_eur" min="0" step="0.01" value="${capField(budget)}" placeholder="∞" />
               <span class="hint">${escape(t(lang, "budget.monthly_hint"))}</span></div>
           </div>
           <div style="padding:14px 18px;border-top:0.5px solid var(--rule)">
@@ -822,11 +823,11 @@ web.get("/dashboard", async (c) => {
           </div>
           <div class="grid2" style="margin-top:16px">
             <div class="field" style="max-width:200px"><label class="label">${escape(t(lang, "settings.spend_cap_daily"))}</label>
-              <input type="number" name="spend_cap_daily_usd" min="0" step="0.01" value="${household.spend_cap_daily_usd ?? ""}" placeholder="—" />
+              <input type="number" name="spend_cap_daily_usd" min="0" step="0.01" value="${capField(household.spend_cap_daily_usd)}" placeholder="—" />
               <span class="hint">${escape(t(lang, "settings.spend_cap_daily_hint"))}</span></div>
             <div class="field" style="max-width:200px"><label class="label">${escape(t(lang, "settings.spend_cap_system"))}</label>
-              <input type="number" name="spend_cap_system_daily_usd" min="0" step="0.01" value="${household.spend_cap_system_daily_usd ?? ""}" placeholder="—" />
-              <span class="hint">${escape(t(lang, "settings.spend_cap_system_hint", spentTodayUsd(SYSTEM_SPENDER).toFixed(2), spentMonthUsd(SYSTEM_SPENDER).toFixed(2)))}</span></div>
+              <input type="number" name="spend_cap_system_daily_usd" min="0" step="0.01" value="${capField(household.spend_cap_system_daily_usd)}" placeholder="—" />
+              <span class="hint">${escape(t(lang, "settings.spend_cap_system_hint", shownEur(spentTodayUsd(SYSTEM_SPENDER)).toFixed(2), shownEur(spentMonthUsd(SYSTEM_SPENDER)).toFixed(2)))}</span></div>
           </div>
           <div class="grid-actions"><button type="submit" class="btn primary">${escape(t(lang, "settings.save"))}</button></div>
         </form>
@@ -958,12 +959,21 @@ function publicPagesCard(lang: string): string {
 }
 
 /** A posted spending cap: "" → null (no cap), a non-negative number → itself,
- *  anything else → undefined (leave the stored value alone). */
-function parseCapUsd(raw: unknown): number | null | undefined {
+ *  anything else → undefined (leave the stored value alone). The admin types
+ *  it at Maurice's price; it is stored at the provider's, as every cap is. */
+function parseCapUsd(raw: unknown, current: number | null = null): number | null | undefined {
   const s = String(raw ?? "").trim();
   if (s === "") return null;
+  // The field as it was shown, posted back untouched (every save posts every
+  // cap): keep the stored figure, not the cent-rounded one divided back.
+  if (current != null && s === capField(current)) return current;
   const n = Number(s);
-  return Number.isFinite(n) && n >= 0 ? n : undefined;
+  return Number.isFinite(n) && n >= 0 ? countedEur(n) : undefined;
+}
+
+/** A stored cap as its input shows it: at Maurice's price, to the cent. */
+function capField(eur: number | null): string {
+  return eur == null ? "" : String(Math.round(shownEur(eur) * 100) / 100);
 }
 
 // ── Maurice's documentation ─────────────────────────────────────
@@ -1040,7 +1050,7 @@ function briefsCard(lang: string): string {
     : t(lang, "briefs.never_run");
   const outcome = s.last_outcome ? t(lang, "briefs.outcome_" + s.last_outcome) : "";
   const stats = s.last_stats
-    ? t(lang, "briefs.stats", String(s.last_stats.written), String(s.last_stats.unchanged), String(s.last_stats.failed), String(s.last_stats.domains), s.last_stats.cost_usd.toFixed(4))
+    ? t(lang, "briefs.stats", String(s.last_stats.written), String(s.last_stats.unchanged), String(s.last_stats.failed), String(s.last_stats.domains), shownEur(s.last_stats.cost_usd).toFixed(4))
     : "";
   return `
         <div class="card pad">
@@ -1048,7 +1058,7 @@ function briefsCard(lang: string): string {
             <label class="label">${escape(s.running ? t(lang, "briefs.running") : s.on ? t(lang, "briefs.nightly_on") : t(lang, "briefs.off"))}</label>
             <span class="hint">${escape(when)}${outcome ? ` · ${escape(outcome)}` : ""}${stats ? ` · ${escape(stats)}` : ""}</span>
             ${s.last_error ? `<span class="hint" style="color:var(--caution)">${escape(t(lang, "briefs.last_error", s.last_error))}</span>` : ""}
-            <span class="hint">${escape(t(lang, "briefs.spent", spentTodayUsd(SYSTEM_SPENDER).toFixed(2), spentMonthUsd(SYSTEM_SPENDER).toFixed(2)))}</span>
+            <span class="hint">${escape(t(lang, "briefs.spent", shownEur(spentTodayUsd(SYSTEM_SPENDER)).toFixed(2), shownEur(spentMonthUsd(SYSTEM_SPENDER)).toFixed(2)))}</span>
           </div>
           <div class="grid-actions"><form method="POST" action="/admin/briefs/run" class="inline"><button type="submit" class="btn default sm"${s.running ? " disabled" : ""}>↻ ${escape(t(lang, "briefs.run_now"))}</button></form></div>
         </div>`;
@@ -1066,7 +1076,7 @@ function mappingCard(lang: string): string {
     : t(lang, "mapping.never_run");
   const outcome = s.last_outcome ? t(lang, "mapping.outcome_" + s.last_outcome) : "";
   const stats = s.last_stats
-    ? t(lang, "mapping.stats", String(s.last_stats.proposals), String(s.last_stats.attached ?? 0), String(s.last_stats.skipped), String(s.last_stats.members), s.last_stats.cost_usd.toFixed(4))
+    ? t(lang, "mapping.stats", String(s.last_stats.proposals), String(s.last_stats.attached ?? 0), String(s.last_stats.skipped), String(s.last_stats.members), shownEur(s.last_stats.cost_usd).toFixed(4))
     : "";
   const perMember = s.last_stats?.results?.length
     ? `<ul class="hint" style="margin:6px 0 0 16px">${s.last_stats.results.map((r) => `<li>${escape(r.member_id)}: ${escape(r.outcome)}${r.reason ? ` — ${escape(r.reason)}` : ""}${r.presented?.length ? ` — ${escape(r.presented.join(", "))}` : ""}</li>`).join("")}</ul>`
@@ -1149,11 +1159,11 @@ web.post("/settings", async (c) => {
   if (sets.length) db.run(`UPDATE households SET ${sets.join(", ")} WHERE id = 'default'`, params);
   // A number input always posts: "" clears the household's own cap.
   if (form.spend_cap_daily_usd !== undefined) {
-    const cap = parseCapUsd(form.spend_cap_daily_usd);
+    const cap = parseCapUsd(form.spend_cap_daily_usd, householdDailyCap());
     if (cap !== undefined) setHouseholdDailyCap(cap);
   }
   if (form.spend_cap_system_daily_usd !== undefined) {
-    const cap = parseCapUsd(form.spend_cap_system_daily_usd);
+    const cap = parseCapUsd(form.spend_cap_system_daily_usd, systemDailyCap());
     if (cap !== undefined) setSystemDailyCap(cap);
   }
   // Days between two conversations Maurice opens for one member: "" = the default.
@@ -1171,7 +1181,7 @@ web.post("/budget", async (c) => {
   const redir = requireWebAdmin(c);
   if (redir) return redir;
   const form = await c.req.parseBody();
-  const budget = parseCapUsd(form.budget_monthly_eur);
+  const budget = parseCapUsd(form.budget_monthly_eur, householdMonthlyBudget());
   if (budget === undefined) return c.redirect("/admin/dashboard?msg=budget_invalid#sec-budget");
   setHouseholdMonthlyBudget(budget);
   return c.redirect("/admin/dashboard?msg=budget_saved#sec-budget");
@@ -1492,10 +1502,10 @@ web.get("/users/:id/edit", (c) => {
           </div>
           <div class="grid2" style="margin-top:16px">
             <div class="field" style="max-width:200px"><label class="label">${escape(t(lang, "members.spend_cap_daily"))}</label>
-              <input type="number" name="spend_cap_daily_usd" min="0" step="0.01" value="${memberDailyCap(user.id) ?? ""}" placeholder="—" />
+              <input type="number" name="spend_cap_daily_usd" min="0" step="0.01" value="${capField(memberDailyCap(user.id))}" placeholder="—" />
               <span class="hint">${escape(t(lang, "members.spend_cap_daily_hint"))}</span></div>
             <div class="field"><label class="label">${escape(t(lang, "members.spent"))}</label>
-              <div class="mono" style="padding:9px 0">${escape(t(lang, "members.spent_figures", spentTodayUsd(user.id).toFixed(2), spentMonthUsd(user.id).toFixed(2)))}</div></div>
+              <div class="mono" style="padding:9px 0">${escape(t(lang, "members.spent_figures", shownEur(spentTodayUsd(user.id)).toFixed(2), shownEur(spentMonthUsd(user.id)).toFixed(2)))}</div></div>
           </div>
           <div class="access-block">
             <div class="access-head"><span class="ttl2">Experimental tools</span></div>
@@ -1610,7 +1620,7 @@ web.post("/users/:id/edit", async (c) => {
   await updateUser(id, updates);
   // Every member, admins included: a cap is a choice about money, not access.
   if (fd.has("spend_cap_daily_usd")) {
-    const cap = parseCapUsd(fd.get("spend_cap_daily_usd"));
+    const cap = parseCapUsd(fd.get("spend_cap_daily_usd"), memberDailyCap(id));
     if (cap !== undefined) setMemberDailyCap(id, cap);
   }
   if (user.role !== "admin") {

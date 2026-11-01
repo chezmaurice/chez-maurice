@@ -3,7 +3,7 @@
 
 import { test, expect, beforeEach, afterEach } from "bun:test";
 
-const ENV = ["MAURICE_SPEND_CAP_USD", "MAURICE_SPEND_CAP_DAILY_USD", "MAURICE_SPEND_CAP_MESSAGE"] as const;
+const ENV = ["MAURICE_SPEND_CAP_USD", "MAURICE_SPEND_CAP_DAILY_USD", "MAURICE_SPEND_CAP_MESSAGE", "MAURICE_PRICE_FACTOR"] as const;
 const saved: Record<string, string | undefined> = {};
 
 // Two members, so a cap on one can be shown not to touch the other.
@@ -351,4 +351,71 @@ test("the month starts afresh on the first, UTC", async () => {
   const b = await budget();
   expect(b.monthResetsAt(new Date("2026-09-29T22:00:00Z"))).toBe("2026-10-01T00:00:00.000Z");
   expect(b.monthResetsAt(new Date("2026-12-31T23:59:59Z"))).toBe("2027-01-01T00:00:00.000Z");
+});
+
+// ── Maurice's price ─────────────────────────────────────────────────────────
+// A hosted household reads every euro at Maurice's price (MAURICE_PRICE_FACTOR);
+// the ledger and the caps stay at the provider's. A slip either way is money:
+// a figure shown at the provider's price undersells, a cap compared at
+// Maurice's lets the household spend past what it paid for.
+
+test("the price factor is 1 unless set, and a nonsense value is ignored", async () => {
+  const p = await import("../src/services/pricing");
+  expect(p.priceFactor()).toBe(1);
+  process.env.MAURICE_PRICE_FACTOR = "1.452";
+  expect(p.priceFactor()).toBeCloseTo(1.452, 9);
+  for (const bad of ["0", "-1", "abc", ""]) {
+    process.env.MAURICE_PRICE_FACTOR = bad;
+    expect(p.priceFactor()).toBe(1);
+  }
+});
+
+test("a turn's usage is shown at Maurice's price, and the original is left as charged", async () => {
+  process.env.MAURICE_PRICE_FACTOR = "1.452";
+  const p = await import("../src/services/pricing");
+  const u = turn(0.02);
+  const shown = p.shownUsage(u);
+  expect(shown.cost).toBeCloseTo(0.02904, 9);
+  expect(shown.cost_uncached).toBeCloseTo(0.02904, 9);
+  expect(u.cost).toBe(0.02);
+  expect(p.shownUsage({ ...u, cost: null, cost_uncached: null }).cost).toBe(null);
+});
+
+test("the admin's balance reads at Maurice's price; the fuse still counts at the provider's", async () => {
+  process.env.MAURICE_PRICE_FACTOR = "1.452";
+  process.env.MAURICE_SPEND_CAP_USD = "6.8871"; // 10 € paid, at the provider's price
+  const b = await budget();
+  expect(b.householdBudget(true).left_eur).toBeCloseTo(10, 2);
+  b.recordSpend(turn(6.8), ANNA);
+  expect(b.verdict("anthropic", "claude-sonnet-5", 0, ANNA).ok).toBe(true);
+  expect(b.householdBudget(true).left_eur).toBeCloseTo(0.13, 2);
+  b.recordSpend(turn(0.1), ANNA);
+  expect(b.verdict("anthropic", "claude-sonnet-5", 0, ANNA).ok).toBe(false);
+});
+
+test("a message's cost reads at Maurice's price; the ledger and the stored row keep the provider's", async () => {
+  process.env.MAURICE_PRICE_FACTOR = "1.452";
+  const b = await budget();
+  const { createConversation, addMessage, getMessages } = await import("../src/services/conversations");
+  const db = (await import("../src/db")).default;
+  const convo = createConversation(ANNA);
+  const returned = addMessage(convo.id, "assistant", "…", { usage: turn(0.02), spenderId: ANNA });
+  expect(returned.usage?.cost).toBeCloseTo(0.02904, 9);
+  expect(getMessages(convo.id).at(-1)?.usage?.cost).toBeCloseTo(0.02904, 9);
+  const stored = db.query<{ usage: string }, [string]>(`SELECT usage FROM messages WHERE id = ?`).get(returned.id)!;
+  expect(JSON.parse(stored.usage).cost).toBe(0.02);
+  expect(b.spentTodayUsd(ANNA)).toBeCloseTo(0.02, 9);
+});
+
+test("a member's figures and the refusal's amount read at Maurice's price", async () => {
+  process.env.MAURICE_PRICE_FACTOR = "2";
+  process.env.MAURICE_SPEND_CAP_DAILY_USD = "0.5";
+  const b = await budget();
+  b.recordSpend(turn(0.25), ANNA);
+  const shown = b.shownMemberUsage(b.usageFor(ANNA));
+  expect(shown.today_usd).toBeCloseTo(0.5, 9);
+  expect(shown.cap_daily_usd).toBeCloseTo(1, 9);
+  expect(shown.remaining_usd).toBeCloseTo(0.5, 9);
+  b.recordSpend(turn(0.25), BEN);
+  expect(b.verdict("anthropic", "claude-sonnet-5", 0, ANNA).reason).toContain("€1.00");
 });

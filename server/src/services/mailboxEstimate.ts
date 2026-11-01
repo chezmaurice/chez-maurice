@@ -1,6 +1,7 @@
 import db from "../db";
 import { ancillaryModel } from "./ancillary";
 import { eurosFor } from "./mailReadingCost";
+import { shownEur } from "./pricing";
 import { passOverhead } from "./mailReading";
 import { WRITE_INVOCATION } from "./mailDocuments";
 
@@ -73,7 +74,7 @@ export interface MailboxView {
     to_sort: number;
     to_read: number;
     hours: number;
-    /** For the operator; stripped for a member. Null when no price is known. */
+    /** For the operator, at Maurice's price; stripped for a member. Null when no price is known. */
     euros: number | null;
     basis: "history" | "formula";
     /** The box is not sorted yet: the numbers will move once it is. */
@@ -153,7 +154,7 @@ export function mailboxViews(payload: any, models: PassModels = passModels()): M
             to_sort: toSort,
             to_read: toRead,
             hours: Math.round((toSort / LIGHT_PER_HOUR + toRead / FULL_PER_HOUR) * 10) / 10,
-            euros: units ? Math.round((toSort * units.light + toRead * units.read) * 100) / 100 : null,
+            euros: units ? Math.round(shownEur(toSort * units.light + toRead * units.read) * 100) / 100 : null,
             basis: history ? "history" : "formula",
             pending: b.untriaged > 0,
           }

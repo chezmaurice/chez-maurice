@@ -10,7 +10,7 @@ import { ArchiveError } from "../services/archive";
 import { listAccountEvents, markAccountEventsSeen } from "../services/accountEvents";
 import db from "../db";
 import { createDeviceLinkCode, deviceLinkCodeState, verifyPassword, verifyPin } from "../services/auth";
-import { householdBudget, usageFor } from "../services/budget";
+import { householdBudget, shownMemberUsage, usageFor } from "../services/budget";
 import { gardensRoot } from "../services/gardensRoot";
 import { isGardenDir } from "../services/gitHttp";
 import { exportsConversations, setExportsConversations } from "../services/gardenExport";
@@ -38,7 +38,7 @@ me.use("/*", requireAuth);
 // the tightest daily cap that applies to them (null when none), and the
 // headroom left under the tightest cap of any kind (null when uncapped).
 
-me.get("/usage", (c) => c.json(usageFor(c.get("userId"))));
+me.get("/usage", (c) => c.json(shownMemberUsage(usageFor(c.get("userId")))));
 
 // ── The member's own data (docs/member-data.md) ─────────────────
 // Export, import and erasure are the member's, about the member: no admin

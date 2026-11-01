@@ -24,7 +24,7 @@ import {
 import { getUser, getUserByUsername, guestCanReach } from "../services/users";
 import { blockedIdsFor, createAiReplyReport, createReport, isAiReplyReason, isReason, hasBlocked } from "../services/safety";
 import { streamResponse, getHouseholdConfig } from "../services/claude";
-import type { TurnUsage } from "../services/pricing";
+import { shownUsage, type TurnUsage } from "../services/pricing";
 import { getConversationMaurice, canUseMaurice } from "../services/maurices";
 import { resolveUsableModel } from "../services/modelAccess";
 import { getModel, householdDefaultModel } from "../services/models";
@@ -576,6 +576,9 @@ conversations.post("/:id/messages", async (c) => {
         let erred = false;
         const send = async (event: TurnEvent) => {
           if (event.type === "error") erred = true;
+          // The turn's cost goes out at Maurice's price; `turnUsage`, kept
+          // from the event before this, is what is persisted and charged.
+          if (event.type === "usage" && event.usage) event = { ...event, usage: shownUsage(event.usage) };
           recordEvent(convoId, event);
           await write(event);
         };

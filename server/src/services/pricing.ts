@@ -178,3 +178,58 @@ export function priceUsage(u: TurnUsage): TurnUsage {
 export function hasUsage(u: TurnUsage): boolean {
   return u.input > 0 || u.output > 0 || u.cache_read > 0 || u.cache_write > 0;
 }
+
+// ── The price a person sees ─────────────────────────────────────────────────
+//
+// Everything above counts in what the provider bills. A hosted household is
+// sold its thinking at Maurice's price — VAT and margin included — and since
+// 1 November 2026 that is the only price its people see: 10 € paid reads as
+// 10 € of thinking. MAURICE_PRICE_FACTOR is the ratio between the two (the
+// tower writes 1.452 into every hosted household's env; unset, 1: a household
+// on its own key sees what its provider bills). It applies at the edge only —
+// on the way out to a reader, and to an amount an admin types in. The ledger,
+// the caps and every sum the server compares stay at the provider's price.
+
+// Read on every call (a test, or the tower's next `up`, may change it) but
+// parsed — and a bad value warned about — once per value.
+let factorSeen: { raw: string | undefined; n: number } | null = null;
+
+export function priceFactor(): number {
+  const raw = process.env.MAURICE_PRICE_FACTOR?.trim();
+  if (factorSeen && factorSeen.raw === raw) return factorSeen.n;
+  let n = 1;
+  if (raw) {
+    n = Number(raw);
+    if (!Number.isFinite(n) || n <= 0) {
+      console.warn(`[pricing] ignoring MAURICE_PRICE_FACTOR=${JSON.stringify(raw)}: not a positive number`);
+      n = 1;
+    }
+  }
+  factorSeen = { raw, n };
+  return n;
+}
+
+/** A provider-priced amount, as a person reads it. */
+export function shownEur(eur: number): number;
+export function shownEur(eur: number | null): number | null;
+export function shownEur(eur: number | null): number | null {
+  return eur == null ? null : eur * priceFactor();
+}
+
+/** An amount a person typed (Maurice's price), as the server counts it. */
+export function countedEur(eur: number): number;
+export function countedEur(eur: number | null): number | null;
+export function countedEur(eur: number | null): number | null {
+  return eur == null ? null : eur / priceFactor();
+}
+
+type Priced = { cost: number | null; cost_uncached: number | null };
+
+/** A turn's usage as a reader sees it: a copy, its two figures at Maurice's
+ *  price. The original — persisted, and charged to the ledger — is untouched. */
+export function shownUsage<T extends Priced>(u: T): T;
+export function shownUsage<T extends Priced>(u: T | null): T | null;
+export function shownUsage<T extends Priced>(u: T | null): T | null {
+  if (!u) return u;
+  return { ...u, cost: shownEur(u.cost), cost_uncached: shownEur(u.cost_uncached) };
+}

@@ -51,7 +51,7 @@
 // ============================================================================
 
 import db from "../db";
-import { priceFor, type TurnUsage } from "./pricing";
+import { priceFor, shownEur, type TurnUsage } from "./pricing";
 import { isUnmetered } from "./providerPlugins";
 import { t, userLocale } from "./i18n";
 
@@ -234,7 +234,7 @@ export interface HouseholdBudget {
   /** Changes when the ring is filled again (a new month, a top-up): the
    *  apps tell each 20/10/5 % threshold once per period. Null when unlimited. */
   period: string | null;
-  /** What is left in euros — given to the admin only; null for a member. */
+  /** What is left in euros, at Maurice's price — given to the admin only; null for a member. */
   left_eur: number | null;
   /** Whether topping up is on offer (on the web). False until payment is wired. */
   can_top_up: boolean;
@@ -264,7 +264,7 @@ export function householdBudget(forAdmin = false): HouseholdBudget {
     left: v.left,
     resets_at: v.resets,
     period: v.period,
-    left_eur: forAdmin ? Math.round(v.leftEur * 100) / 100 : null,
+    left_eur: forAdmin ? Math.round(shownEur(v.leftEur) * 100) / 100 : null,
     can_top_up: false,
   };
 }
@@ -401,8 +401,9 @@ function totalCapMessage(cap: string): string | null {
  *  for their cap, the whole household's for the others. */
 function layers(userId?: string | null): Layer[] {
   const c = capsFor(userId);
-  // Euros since 24 September 2026, whatever the `Usd` in the names says.
-  const usd = (n: number) => `€${n.toFixed(2)}`;
+  // Euros since 24 September 2026, whatever the `Usd` in the names says;
+  // read by a person, so at Maurice's price (pricing.ts, priceFactor).
+  const usd = (n: number) => `€${shownEur(n).toFixed(2)}`;
   const out: Layer[] = [];
   if (c.memberDailyUsd != null && userId) {
     out.push({
@@ -525,5 +526,15 @@ export function usageFor(userId: string): MemberUsage {
     month_usd: spentMonthUsd(userId),
     cap_daily_usd: daily.length ? Math.min(...daily) : null,
     remaining_usd: applied.length ? Math.max(0, Math.min(...applied.map((l) => l.capUsd - l.spentUsd))) : null,
+  };
+}
+
+/** The same figures as a person reads them — at Maurice's price. */
+export function shownMemberUsage(u: MemberUsage): MemberUsage {
+  return {
+    today_usd: shownEur(u.today_usd),
+    month_usd: shownEur(u.month_usd),
+    cap_daily_usd: shownEur(u.cap_daily_usd),
+    remaining_usd: shownEur(u.remaining_usd),
   };
 }

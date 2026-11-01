@@ -2,7 +2,7 @@ import { publicPagesAvailableOn } from "../../data-api/services/publicPages";
 import { Hono } from "hono";
 import { requireAuth, requireAdmin } from "../middleware/auth";
 import { createPairingToken } from "../services/auth";
-import { SYSTEM_SPENDER, usageFor } from "../services/budget";
+import { SYSTEM_SPENDER, shownMemberUsage, usageFor } from "../services/budget";
 import { docsStatus } from "../services/mauriceDocsRefresh";
 import { openConversation, openingGuard } from "../services/openedConversations";
 import { mapMember, mappingNightlyStatus, runDomainMapping } from "../services/domainMapping";
@@ -36,7 +36,7 @@ admin.get("/usage", (c) => {
   rows.push({ id: SYSTEM_SPENDER, username: SYSTEM_SPENDER, display_name: "Maurice, at night" });
   return c.json(
     rows.map((u) => {
-      const usage = usageFor(u.id);
+      const usage = shownMemberUsage(usageFor(u.id));
       return {
         id: u.id,
         username: u.username,
