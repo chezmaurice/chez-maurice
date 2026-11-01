@@ -201,7 +201,12 @@ day at Maurice's price, since 1 November 2026 (10 € at the provider's
 before); these instances think on Candide's keys. A household's env file is
 copied from it when the household is added, so a change there is made in each
 existing file too. Raise or drop it per household in its own env file.
-`MAURICE_PRICE_FACTOR` travels through `compose.household.yml` the same way.
+`MAURICE_PRICE_FACTOR` travels through `compose.household.yml` the same way,
+and so, since 1 November 2026, does `TAVILY_API_KEY` (Candide's, in
+`defaults.env` and each household's file): before it a hosted household had
+no web search, and Maurice told its members he had no internet. **Gap**: the
+APNs key is not on the fleet, so a hosted household sends no push
+notification to the Apple apps.
 
 **Since 19 September the fuse has three layers, and the tightest wins.** The
 instance's env caps stay the operator's fuse, summed over the whole household.
