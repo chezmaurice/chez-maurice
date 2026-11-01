@@ -74,6 +74,10 @@ services:
       # amount a person reads is multiplied by it. The tower writes 1.452 for
       # a hosted household; unset, 1.
       MAURICE_PRICE_FACTOR: ${MAURICE_PRICE_FACTOR:-}
+      # Web search (services/webSearch.ts, Tavily): without it the web_search
+      # tool is not offered and Maurice says he has no internet. Set it in
+      # defaults.env for every household.
+      TAVILY_API_KEY: ${TAVILY_API_KEY:-}
       CORPUS_EMBEDDING_BASE_URL: ${CORPUS_EMBEDDING_BASE_URL:-}
       CORPUS_EMBEDDING_MODEL: ${CORPUS_EMBEDDING_MODEL:-}
       CORPUS_EMBEDDING_API_KEY: ${CORPUS_EMBEDDING_API_KEY:-}
