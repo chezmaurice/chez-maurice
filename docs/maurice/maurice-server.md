@@ -196,9 +196,12 @@ persisted turn passes through, whichever route produced it. See
 Since 17 September the two variables travel through `compose.household.yml`
 (they did not: the file lists its environment explicitly, and a cap set in a
 household's env file went nowhere), and the fleet host's `defaults.env` sets
-`MAURICE_SPEND_CAP_DAILY_USD=10` for every household it starts — these
-instances think on Candide's keys. Raise or drop it per household in its own
-env file.
+`MAURICE_SPEND_CAP_DAILY_USD=10.33` for every household it starts — 15 € a
+day at Maurice's price, since 1 November 2026 (10 € at the provider's
+before); these instances think on Candide's keys. A household's env file is
+copied from it when the household is added, so a change there is made in each
+existing file too. Raise or drop it per household in its own env file.
+`MAURICE_PRICE_FACTOR` travels through `compose.household.yml` the same way.
 
 **Since 19 September the fuse has three layers, and the tightest wins.** The
 instance's env caps stay the operator's fuse, summed over the whole household.
