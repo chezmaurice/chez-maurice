@@ -78,6 +78,11 @@ services:
       # tool is not offered and Maurice says he has no internet. Set it in
       # defaults.env for every household.
       TAVILY_API_KEY: ${TAVILY_API_KEY:-}
+      # Push to the Apple apps (services/apns.ts): one key signs for the whole
+      # team, so the host keeps one copy in secrets/apns.p8, mounted below,
+      # and defaults.env names its id. Without the file no push is sent.
+      APNS_KEY_ID: ${APNS_KEY_ID:-}
+      APNS_KEY_PATH: ${APNS_KEY_PATH:-/run/maurice-secrets/apns.p8}
       CORPUS_EMBEDDING_BASE_URL: ${CORPUS_EMBEDDING_BASE_URL:-}
       CORPUS_EMBEDDING_MODEL: ${CORPUS_EMBEDDING_MODEL:-}
       CORPUS_EMBEDDING_API_KEY: ${CORPUS_EMBEDDING_API_KEY:-}
@@ -86,6 +91,8 @@ services:
       # Everything that must survive: the databases, the gardens, images,
       # uploads, the corpus vector store.
       - home:/home/maurice/.maurice
+      # The host's secrets for every household (the APNs key), read-only.
+      - ./secrets:/run/maurice-secrets:ro
     networks:
       - maurice-edge
     restart: unless-stopped

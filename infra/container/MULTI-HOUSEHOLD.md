@@ -47,7 +47,10 @@ three times that — see `docs/garden-server-mode.md`.)
    holding what every household needs — the embedding endpoint and key
    (`CORPUS_EMBEDDING_*`, see `.env.prod.example`) and `MAURICE_ACME_EMAIL`,
    the address Let's Encrypt writes to about certificates. Every household's
-   env file starts as a copy of it, and the edge reads it too.
+   env file starts as a copy of it, and the edge reads it too. Web search
+   needs `TAVILY_API_KEY` there, and push to the Apple apps needs `APNS_KEY_ID`
+   plus the key itself at `/opt/maurice/secrets/apns.p8` (mode 600, the
+   directory 700), which every household mounts read-only.
 3. **The image and the compose files**: `scripts/deploy.sh <ssh-host>` builds
    here and ships there. Through a registry, or it pipes 2 GB over ssh every
    time: `export MAURICE_REGISTRY=rg.fr-par.scw.cloud/<namespace>` here, and on
