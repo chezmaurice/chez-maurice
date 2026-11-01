@@ -70,6 +70,10 @@ services:
       # What to say when the total above is spent, instead of the default
       # sentence; `{cap}` is the amount (see budget.ts).
       MAURICE_SPEND_CAP_MESSAGE: ${MAURICE_SPEND_CAP_MESSAGE:-}
+      # Maurice's price over the provider's (pricing.ts, priceFactor): every
+      # amount a person reads is multiplied by it. The tower writes 1.452 for
+      # a hosted household; unset, 1.
+      MAURICE_PRICE_FACTOR: ${MAURICE_PRICE_FACTOR:-}
       CORPUS_EMBEDDING_BASE_URL: ${CORPUS_EMBEDDING_BASE_URL:-}
       CORPUS_EMBEDDING_MODEL: ${CORPUS_EMBEDDING_MODEL:-}
       CORPUS_EMBEDDING_API_KEY: ${CORPUS_EMBEDDING_API_KEY:-}
