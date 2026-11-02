@@ -21,7 +21,7 @@ import { safeFetch } from "../../data-api/services/articleExtract";
 // a sibling directory and swapped in whole, so a failure half-way — network,
 // a bad hash — leaves the previous set as it was.
 
-export const DEFAULT_DOCS_URL = "https://raw.githubusercontent.com/ckemmler/chez-maurice/main/docs/maurice";
+export const DEFAULT_DOCS_URL = "https://raw.githubusercontent.com/chezmaurice/chez-maurice/main/docs/maurice";
 
 const MANIFEST = "manifest.json";
 const MANIFEST_CAP = 64 * 1024;

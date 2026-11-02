@@ -203,7 +203,7 @@ Maurice answers questions about himself through his documentation tool
 as its build. The server therefore fetches the published set itself
 (`server/src/services/mauriceDocsRefresh.ts`): 20 s after boot and then every
 24 h it GETs `manifest.json` from `MAURICE_DOCS_URL` — by default
-`https://raw.githubusercontent.com/ckemmler/chez-maurice/main/docs/maurice`,
+`https://raw.githubusercontent.com/chezmaurice/chez-maurice/main/docs/maurice`,
 the same files `scripts/sync-docs.sh` commits, as they stand on `main` — and,
 when that manifest is newer than the one it has, downloads the notes whose
 sha256 changed (2 MB cap each, hash verified), stages the whole set beside its

@@ -119,7 +119,7 @@ Enable Public Link**, then paste that URL into both the `mac` and `ios` cards.
 ## CI (future)
 
 `release-server.yml` / `release-*.yml` aren't set up. The repo is now public at
-`github.com/ckemmler/chez-maurice`, so nothing blocks it: export the certs above
+`github.com/chezmaurice/chez-maurice`, so nothing blocks it: export the certs above
 into a single `.p12`, add the `.p12` + the App Manager `.p8` + key-id/issuer +
 an ssh key for the fleet's host as Actions secrets, and the workflow
 runs these same scripts on a tag.
