@@ -51,6 +51,7 @@ import {
   type ParsedFiche,
 } from "./gardenFiche";
 import { indexGardenPaths } from "./gardenIndex";
+import { sharedBy, type MemberBrief } from "./entryShares";
 import { retakeText, writeTextStyles } from "./articleCleanup";
 
 const COLLECTION = "articles" as const;
@@ -645,6 +646,8 @@ export interface ArticleDescription extends ArticleFicheRef {
   text_rev: string | null;
   capture_error: string | null;
   source_client: string | null;
+  /** Who gave it, when it is the copy of an article another member shared. */
+  shared_by: MemberBrief | { username: string } | null;
   /** False until the member has written on it; a card is opened by definition. */
   opened: boolean;
   fiche_path: string;
@@ -699,6 +702,7 @@ export function describeArticle(garden: GardenRef, ref: ArticleFicheRef): Articl
     text_rev: ref.kind === "fiche" ? textRevision(ref.file) : null,
     capture_error: meta.capture_error ?? null,
     source_client: meta.source_client ?? null,
+    shared_by: sharedBy(meta.shared_by),
     opened: ref.kind !== "fiche" || isOpened(fm),
     fiche_path: path.relative(garden.root, ref.file),
     fiche_web_path: ficheWebPath(garden, COLLECTION, ref.locale, ref.slug),
@@ -720,6 +724,95 @@ export function readArticleBody(ref: ArticleFicheRef): string {
   } catch {
     return "";
   }
+}
+
+/**
+ * Give a member a copy of an article another member shared with them (Candide,
+ * 2 November 2026: sharing an article gives it, it does not lend it). The copy
+ * is the reader's own fiche: the metadata, the captured text with its styles,
+ * the cover and the summaries, as the owner has them. Not the owner's dated
+ * notes, nor their highlights: those are theirs. It is not opened, and says
+ * who it came from (`meta.shared_by`). From then on the two live apart.
+ *
+ * Nothing is copied when the reader already has the article (same canonical
+ * URL), so sharing again — or after a withdrawal — never makes a second one.
+ * Files are copied as they are: no network, the text is the one the owner
+ * captured, a paywalled one included.
+ */
+export function copyArticleTo(
+  owner: { id: string; username: string },
+  ref: ArticleFicheRef,
+  readerId: string,
+): "copied" | "exists" | "no-notes" {
+  const garden = gardenFor(readerId);
+  const ownerGarden = gardenFor(owner.id);
+  if (!garden || !ownerGarden) return "no-notes";
+  if (findArticleFiche(garden, ref.url, ref.canonical_url)) return "exists";
+
+  const parsed = parseFiche(fs.readFileSync(ref.file, "utf-8"));
+  if (!parsed) throw new ArticleSaveError(`Could not parse: ${ref.slug}`, 422);
+  const fm = parsed.frontmatter;
+  const source = (ref.kind === "fiche" ? (fm.meta ?? {}) : fm) as Record<string, any>;
+
+  const locale = ref.locale;
+  const slug = uniqueSlug(garden, locale, ref.slug);
+  const file = fichePath(garden, COLLECTION, locale, slug);
+  const written: string[] = [];
+
+  let image: string | undefined;
+  const from = resourceImagePaths(ownerGarden, COLLECTION, locale, ref.slug).file;
+  if (source.image && fs.existsSync(from)) {
+    const dest = resourceImagePaths(garden, COLLECTION, locale, slug);
+    fs.mkdirSync(path.dirname(dest.file), { recursive: true });
+    fs.copyFileSync(from, dest.file);
+    image = dest.url;
+    written.push(dest.file);
+  } else if (typeof source.image === "string" && /^https?:/.test(source.image)) {
+    image = source.image;
+  }
+
+  const savedAt = new Date().toISOString().slice(0, 10);
+  const meta: Record<string, any> = {
+    ...source,
+    image,
+    saved_at: savedAt,
+    status: "inbox",
+    source_client: "share",
+    shared_by: owner.username,
+    opened: false,
+  };
+  // What belongs to the owner's reading of it, not to the article.
+  for (const k of ["opened_at", "rating", "read_at", "progress"]) delete meta[k];
+
+  writeFiche(
+    file,
+    {
+      title: String(fm.title ?? ref.title),
+      resource_collection: COLLECTION,
+      resource_id: slug,
+      date: savedAt,
+      tags: [],
+      locale,
+      meta,
+    },
+    ficheBody({ comment: "", excerpt: source.excerpt }),
+  );
+  written.push(file);
+
+  // The captured text and its styles live beside the fiche, in its folder.
+  const fromDir = path.join(path.dirname(ref.file), path.basename(ref.file, ".md"));
+  if (ref.kind === "fiche" && fs.existsSync(fromDir)) {
+    const toDir = path.join(path.dirname(file), path.basename(file, ".md"));
+    fs.cpSync(fromDir, toDir, { recursive: true });
+    for (const f of fs.readdirSync(toDir, { recursive: true }) as string[]) {
+      const full = path.join(toDir, f);
+      if (fs.statSync(full).isFile()) written.push(full);
+    }
+  }
+
+  autoCommit(garden, written, `Article shared by @${owner.username}: ${COLLECTION}/${slug}`);
+  indexGardenPaths(readerId, written);
+  return "copied";
 }
 
 // ── Helpers ──

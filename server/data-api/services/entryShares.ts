@@ -50,6 +50,13 @@ export function memberBriefByUsername(username: string): MemberBrief | null {
   return db.query(`SELECT ${BRIEF} FROM users WHERE username = ?`).get(username) as MemberBrief | null;
 }
 
+/** An article's `meta.shared_by` (a username, gardenArticles.ts copyArticleTo) as the member it names, or that name alone
+ *  when they are no longer here. */
+export function sharedBy(username: unknown): MemberBrief | { username: string } | null {
+  if (typeof username !== "string" || !username) return null;
+  return memberBriefByUsername(username) ?? { username };
+}
+
 /** The members an entry is shared with, in the order they were added. The owner is not one. */
 export function participantsOf(ownerId: string, ref: Omit<SharedRef, "owner_id">): MemberBrief[] {
   return db

@@ -39,7 +39,7 @@ import { archivedIds } from "./shelfArchive";
 import { gardenFor } from "./gardenFiche";
 import { NOTE_AUTHOR } from "./gardenNote";
 import {
-  conversationInitiator, memberBrief, memberBriefByUsername, participantsByEntry, participantsOf, sharedWith,
+  conversationInitiator, memberBrief, memberBriefByUsername, participantsByEntry, participantsOf, sharedBy, sharedWith,
   type MemberBrief,
 } from "./entryShares";
 
@@ -76,6 +76,8 @@ export interface ArticleSource {
   url: string | null;
   /** False for a bookmark: the site refused the capture, only the link was kept. */
   captured: boolean;
+  /** Who gave it: an article shared with this member is a copy of theirs. */
+  shared_by?: MemberBrief | { username: string };
   word_count: number;
   reading_minutes: number;
   /**
@@ -455,10 +457,12 @@ function articleSource(card: Face | null, fiche: Face | null, garden: GardenRef,
   if (ficheRel && String(meta.status ?? "") !== NEEDS_CAPTURE) {
     captured = fs.existsSync(path.join(fragmentsDir(path.join(garden.root, ficheRel)), "001.frag"));
   }
+  const by = sharedBy(meta.shared_by);
   return {
     type: "article",
     url: (meta.url ?? card?.fm.url ?? null) as string | null,
     captured,
+    ...(by ? { shared_by: by } : {}),
     word_count: words,
     reading_minutes: Math.max(1, Math.round(words / 230)),
   };
@@ -653,6 +657,9 @@ export async function listShelf(
       (x) => x.collection === share.collection && x.locale === share.locale && x.slug === share.slug,
     );
     if (!from || !e || !KIND_OF[e.collection]) continue;
+    // An article shared with this member was given to them: their copy is in
+    // their own list (gardenArticles.ts, copyArticleTo), not the owner's fiche.
+    if (e.collection === "articles") continue;
     const { row } = await describe(memberId, from.garden, e, lib, counts);
     entries.push(foreignRow(row, from.owner, share.owner_id));
   }

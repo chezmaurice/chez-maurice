@@ -1095,3 +1095,6 @@
 "delete.confirm_footer" = "Para confirmar, escribe tu usuario: %@";
 "delete.field" = "Contraseña o PIN";
 "delete.confirm" = "Eliminar mi cuenta";
+
+/* An article another member shared: the copy says who gave it (2 November 2026). */
+"article.shared_by" = "Compartido por %@";

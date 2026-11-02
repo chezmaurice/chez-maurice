@@ -1082,3 +1082,6 @@
 "delete.confirm_footer" = "Typ ter bevestiging je gebruikersnaam: %@";
 "delete.field" = "Wachtwoord of pincode";
 "delete.confirm" = "Mijn account verwijderen";
+
+/* An article another member shared: the copy says who gave it (2 November 2026). */
+"article.shared_by" = "Gedeeld door %@";

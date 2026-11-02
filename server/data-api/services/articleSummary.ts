@@ -23,7 +23,7 @@ import type { TurnUsage } from "../../src/services/pricing";
 import { autoCommit, fragmentsDir, gardenFor, parseFiche, writeFiche } from "./gardenFiche";
 import { extractArticleFromUrl } from "./articleExtract";
 import { indexGardenPaths } from "./gardenIndex";
-import { ArticleSaveError, scanArticleFiches, type ArticleFicheRef } from "./gardenArticles";
+import { ArticleSaveError, copyArticleTo, scanArticleFiches, type ArticleFicheRef } from "./gardenArticles";
 
 
 /**
@@ -420,4 +420,32 @@ export function scheduleArticleSummary(
 /** Await every scheduled summary. For tests and for a clean shutdown. */
 export async function whenSummariesSettled(): Promise<void> {
   while (inFlight.size) await Promise.allSettled([...inFlight]);
+}
+
+/**
+ * Sharing an article gives it (Candide, 2 November 2026): its summary is
+ * brought up to date first, on the owner's account and in their language, then
+ * the reader gets their own copy (gardenArticles.ts, copyArticleTo). In the
+ * background, as summaries are: the share answers at once, and the copy lands
+ * a few seconds later. A bookmark, with no text, is copied as it is.
+ */
+export function giveSharedArticle(
+  owner: { id: string; username: string },
+  locale: string,
+  slug: string,
+  readerId: string,
+): void {
+  const task = (async () => {
+    const ref = findArticleBySlug(owner.id, slug, locale);
+    if (readFullText(ref.file)) {
+      await summarizeAndStore(owner.id, ref).catch((err) => {
+        console.warn(`[articles] could not summarise ${slug} before sharing it:`, (err as Error).message);
+      });
+    }
+    const done = copyArticleTo(owner, ref, readerId);
+    console.log(`[articles] shared ${locale}/${slug} with ${readerId}: ${done}`);
+  })()
+    .catch((err) => console.warn(`[articles] could not give ${slug}:`, (err as Error).message))
+    .finally(() => inFlight.delete(task));
+  inFlight.add(task);
 }

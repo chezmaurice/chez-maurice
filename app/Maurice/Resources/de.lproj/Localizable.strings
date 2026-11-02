@@ -1095,3 +1095,6 @@
 "delete.confirm_footer" = "Gib zur Bestätigung deinen Benutzernamen ein: %@";
 "delete.field" = "Passwort oder PIN";
 "delete.confirm" = "Mein Konto löschen";
+
+/* An article another member shared: the copy says who gave it (2 November 2026). */
+"article.shared_by" = "Geteilt von %@";

@@ -8,6 +8,7 @@
 
 import { Hono } from "hono";
 import { gardenFor } from "../services/gardenFiche";
+import { giveSharedArticle } from "../services/articleSummary";
 import { GARDEN_COLLECTIONS, listGardenEntries } from "../services/gardenEntries";
 import { cardsFace } from "../services/flashcards";
 import { getShelfEntry, listNotes, listShelf, siteFor } from "../services/gardenShelf";
@@ -155,6 +156,11 @@ app.post("/entries/:collection/:locale/:slug/participants", async (c) => {
   } catch (e) {
     if (e instanceof EntryShareError) return c.json({ error: e.message }, e.status);
     throw e;
+  }
+  // Sharing an article gives it: the member gets a copy of their own.
+  if (collection === "articles") {
+    const owner = memberBrief(memberId);
+    if (owner) giveSharedArticle(owner, locale, slug, target.id);
   }
   return c.json(await getShelfEntry(memberId, garden, collection, locale, slug), 201);
 });
