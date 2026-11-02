@@ -17,7 +17,7 @@ digest: true
 covers:
   maurice-applications: '2026-10-20'
   maurice-architecture: '2026-10-26'
-  maurice-carnet: '2026-10-23'
+  maurice-carnet: '2026-11-02'
   maurice-chat: '2026-11-01'
   maurice-composer: '2026-10-20'
   maurice-data-model: '2026-10-29'
@@ -294,7 +294,7 @@ Each member has folders and files (5 GB each), in **Settings**: text, images, PD
 
 ## 20. Carnet
 
-- **Joining:** the same household and identity as the Maurice app — an invite code on a fresh device (an open invitation too: a first name and a colour), then a PIN; several households on one device; a session ended on the server sends the device back to the member picker. The member sheet holds households, members, *Disconnect*, and a **Privacy** section (privacy policy, terms, **Delete my account**).
+- **Joining:** the same way in as the Maurice app, same steps and same words (§5): *Carnet* with *Chez Maurice* beneath, *Scan an invitation*, or *Enter a code or an address*; the invitation's link opens Carnet too; *Sign in as admin* under *Other options*; then *Who's here?* and a PIN. Several households on one device; a session ended on the server sends the device back to *Who's here?*. The member sheet, from your badge, holds households, members, captures waiting to be sent, *Add a device*, *Sign out*, *Forget this household*, and **Privacy** (privacy policy, terms, **Delete my account**). A member who does not run the household is told once, before entering, who controls it and what stays private.
 - **Home: one list of entries** of every kind — books, articles, films, series, music, podcasts, games, posts — each row saying what the member has on it (notes, *Draft*, *Published*, *Not opened*) and where they are in it. Filters by kind, search and sort, an offline copy of the list. Swipe right to archive, left to delete (with a confirmation saying what is removed).
 - **An entry's page:** identity and cover, the source (read, resume, chapters, original), and **one sheet with two faces**; an article opens on its summary instead — the essence, then *See more…* for the long one — its sheet a tap away (*Fiche*, beside *Read*) — the member's side (dated notes and quotes, with a page) and the shared side (write, publish, unpublish; publishing takes about 15 s). Dictation beside every field, in the entry's language on the device; Whisper recognises the language spoken.
 - **Reading:** books from the household's library with chapters, summaries, highlights, the exact position synced per member and offline; *pause tracking* to look ahead without it counting; *Resume* takes another device's position when it is newer. Articles with their styles, a Text/Summary switch, cached on the device.
@@ -303,9 +303,9 @@ Each member has folders and files (5 GB each), in **Settings**: text, images, PD
 - **Share extension** (*Save to Carnet*): saves the rendered page from Safari (past paywalls), or an address from other apps, with an optional first note; an offline queue keeps what could not be sent and sends it later as the member who shared it — kept, and listed in the member sheet, while that member has no session on the device.
 - **Open in the browser** opens the member's site signed in.
 - **The *Maurice* screen:** domains and their briefs (edit, rewrite, erase), reading companions, and older conversations Maurice opened (answered in the Maurice app). A book's page can create a reading companion.
-- No location tracking; a privacy manifest declares no tracking and nothing collected by the publisher. English only. Reading is iPhone/iPad only; on a Mac the notes are read in the browser.
+- No location tracking; a privacy manifest declares no tracking and nothing collected by the publisher. The way in and the member sheet speak seven languages; the rest is in English. Reading is iPhone/iPad only; on a Mac the notes are read in the browser.
 
-*Status:* in daily use at home; the build prepared for App Review is with Apple. *Gaps:* *Log* and *Dashboards* are experimental and not shipped; the hand-off to the Maurice app and the fiche's conversations were not yet tried on a phone, nor were the session, invitation and offline-queue fixes of 21 October (checked on a simulator); no flashcard review; notes cannot be edited or deleted from the phone; shared articles show no text; the iPad and a real publish from a phone were never exercised.
+*Status:* in daily use at home; the build prepared for App Review is with Apple. *Gaps:* *Log* and *Dashboards* are experimental and not shipped; the hand-off to the Maurice app and the fiche's conversations were not yet tried on a phone, nor were the session, invitation and offline-queue fixes of 21 October (checked on a simulator); no flashcard review; notes cannot be edited or deleted from the phone; shared articles show no text; the iPad and a real publish from a phone were never exercised; the new way in has run only in the simulator, and no TestFlight build opens invitation links yet.
 
 *Detail:* `carnet`.
 
