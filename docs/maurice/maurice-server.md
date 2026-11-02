@@ -117,7 +117,7 @@ Every model request logs one `[round]` line (`convo`, provider, model, round, `m
 
 A member's answer about the providers outside the house (29 October 2026, App Review 5.1.2(i); table `ai_consent`, `services/aiConsent.ts`, `tools/shared/ai_consent.py`) is held here, not only in the apps. `aiAllowed(member, provider)` is checked before each thing that would send their data: the chat turn (`streamTurn`, which ends with *Nothing was sent…* in the member's language), every background call made for a member (`AncillaryRequest.memberId`: summaries, domain briefs and first notes, the night's mapping, mail reading and documents, entry suggestions, life facts, the documentation tool, and the Python tools through `/api/ancillary`), fal.ai images, Tavily (the web tool is not offered), server dictation on Scaleway (`403 ai_consent_required`), and the corpus's embeddings of the member's conversations, files and queries. A local provider (Ollama) needs no yes. A `declined` member gets none of it; an `accepted` one only on the providers their yes names, so a provider added later waits for a new yes.
 
-**A member with no answer on file is let through**, deliberately: the iOS and macOS apps ask before anything is sent, but the Android app and the web do not ask yet, and must keep working.
+**A member with no answer on file is let through**, deliberately: the iOS, macOS and Android apps ask before anything is sent (Android since Maurice 0.5.3, 2 November 2026; the Windows and Linux builds share its screens), but the web does not ask yet, and must keep working.
 
 ## The spending fuse
 

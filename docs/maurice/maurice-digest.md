@@ -1,6 +1,6 @@
 ---
 title: Maurice — the digest
-date: '2026-11-01'
+date: '2026-11-02'
 flags: []
 locale: en
 description: 'The system documentation condensed to what a user needs: everything
@@ -363,7 +363,7 @@ Each member has folders and files (5 GB each), in **Settings**: text, images, PD
 
 - **Not built:** payment and top-ups; writing back to the notes from an Obsidian clone (push); a web chat client; OAuth for mail (Outlook.com, Google contacts); mail in the corpus; flashcard review in Carnet; demo servers for trying the apps without a household (designed, deferred); a hosted member's own domain; on-device inference.
 - **Not intended:** Maurice proposing notes from patterns he notices; automatic periodic reviews.
-- **Rough edges:** sessions never expire (only revoked); a reply in progress is lost on a server restart; no provider failover; external MCP clients see every mounted tool; some member-triggered background calls are not on the ledger; a member's erasure cannot reach off-site backups or exported archives (erasing a whole hosted Maurice does forget its backups); the databases are snapshot, not versioned (the notes are); after a household import the search index and git remotes are fixed by hand; the Android app and the web do not ask the AI-provider question yet (a member who never answered is let through), and in a room a member who declined still has their messages read when someone else summons Maurice; the experimental tools are partly documented and absent from hosted households.
+- **Rough edges:** sessions never expire (only revoked); a reply in progress is lost on a server restart; no provider failover; external MCP clients see every mounted tool; some member-triggered background calls are not on the ledger; a member's erasure cannot reach off-site backups or exported archives (erasing a whole hosted Maurice does forget its backups); the databases are snapshot, not versioned (the notes are); after a household import the search index and git remotes are fixed by hand; the web does not ask the AI-provider question yet (a member who never answered is let through), and in a room a member who declined still has their messages read when someone else summons Maurice; the experimental tools are partly documented and absent from hosted households.
 
 ## 25. Where to look
 
