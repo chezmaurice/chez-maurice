@@ -21,6 +21,7 @@
 		2A90B07E5E28A6BBC4C8F40B /* SourcesCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 988F2B4726342A3066B8B593 /* SourcesCard.swift */; };
 		2B268BBE8FAF1C5EE355B1D4 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 64254BB6519693E70459014E /* Localizable.strings */; };
 		32D68A2ACC7ECFB3E37DE97F /* ScopePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68242686E76201D100B8C3A9 /* ScopePickerView.swift */; };
+		3B74A159372BF53B010E29C7 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = FF7CB91B1C3FFD231182A484 /* AppIcon.icon */; };
 		3B8F2AC09DACB08C880BF36D /* MyDataView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20D9492CD169800719A16C6D /* MyDataView.swift */; };
 		3E96FF24D227953BEB5EA28F /* CarnetSuggestions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 128CD9E8B27DD3AD93E49524 /* CarnetSuggestions.swift */; };
 		40A5F2A1C32240D14842B8D2 /* DictateIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEB5E21AE21611A0C6FC115B /* DictateIntent.swift */; };
@@ -87,6 +88,7 @@
 		CCEF2532174820F615C4C61F /* ChatService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDFA39C22354B093CDDBB691 /* ChatService.swift */; };
 		CE90734410E4B676F48703A0 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = C492F1816D8C83E70D98A908 /* InfoPlist.strings */; };
 		D050F6CF74E2684FAF9E78A2 /* ChatService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDFA39C22354B093CDDBB691 /* ChatService.swift */; };
+		D0B19DE93072C5A2BFE78976 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = FF7CB91B1C3FFD231182A484 /* AppIcon.icon */; };
 		D0B48FA211BB0DB5BB28B7EA /* ChatSnippets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0093E2B2C16E646EA2A8E856 /* ChatSnippets.swift */; };
 		D8646EEFDB175A13C908F420 /* SwiftMath in Frameworks */ = {isa = PBXBuildFile; productRef = D1B845FF866B55501A5D0C68 /* SwiftMath */; };
 		D977B6BBCCE415DD7B9636E6 /* SearchKeyboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 437B5ED8350A54E9167D4BF5 /* SearchKeyboard.swift */; };
@@ -216,6 +218,7 @@
 		F6819EDCDB3EE127E1D35CAB /* ShareInbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareInbox.swift; sourceTree = "<group>"; };
 		FB572CC0CB51943373B23349 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		FD148722F24F06001FE66540 /* LifeFactCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifeFactCard.swift; sourceTree = "<group>"; };
+		FF7CB91B1C3FFD231182A484 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		FFEC5DA17CABDEC1BF693557 /* MauriceShareExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = MauriceShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -255,6 +258,7 @@
 		1494F6FE9E62E4610A005B68 /* Maurice */ = {
 			isa = PBXGroup;
 			children = (
+				FF7CB91B1C3FFD231182A484 /* AppIcon.icon */,
 				2E85AEEB530CF3C1C5C3E79F /* Assets.xcassets */,
 				1A0683126686701347E9871B /* MauriceApp.swift */,
 				C5F7A16D701B0F743DEDA0E9 /* PrivacyInfo.xcprivacy */,
@@ -533,6 +537,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D0B19DE93072C5A2BFE78976 /* AppIcon.icon in Resources */,
 				5421D4350871A4F9836C8B60 /* Assets.xcassets in Resources */,
 				CE90734410E4B676F48703A0 /* InfoPlist.strings in Resources */,
 				DE41C437D70BFE6F0A82015E /* Localizable.strings in Resources */,
@@ -546,6 +551,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3B74A159372BF53B010E29C7 /* AppIcon.icon in Resources */,
 				8354A2864D971667617A4546 /* Assets.xcassets in Resources */,
 				743D510D945AC1FC4DC6FE27 /* InfoPlist.strings in Resources */,
 				2B268BBE8FAF1C5EE355B1D4 /* Localizable.strings in Resources */,
