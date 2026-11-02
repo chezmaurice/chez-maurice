@@ -24,7 +24,7 @@ covers:
   maurice-docs: '2026-10-20'
   maurice-domains: '2026-10-20'
   maurice-files: '2026-06-19'
-  maurice-households-rooms: '2026-10-31'
+  maurice-households-rooms: '2026-11-02'
   maurice-knowledge: '2026-10-20'
   maurice-life: '2026-10-20'
   maurice-personas-hats: '2026-09-19'
@@ -334,7 +334,7 @@ Each member has folders and files (5 GB each), in **Settings**: text, images, PD
 
 ## 23. How do I…
 
-- **…join my household on a new phone?** Open the invitation link an admin sent you: the page installs the app (the TestFlight beta), then opens the invitation in it; or enter the server's address and type the code. Then choose your PIN. Carnet joins the same way.
+- **…join my household on a new phone?** Scan the invitation's QR code, or tap the link you were sent. With Maurice or Carnet installed, either opens the app (on a household under chezmaurice.eu). Without one, the page offers both apps for your device, then opens the invitation. You can also choose **Enter a code or an address** in the app. Then choose your PIN. Both apps accept the same invitation.
 - **…add another device of mine?** On a device where you are signed in: Settings → *Add one of my devices*, then scan the QR code with the new one (or send it the link). It works once, for ten minutes; no admin needed, no PIN to choose again.
 - **…come into a hosted Maurice the first time?** On your account page (the link in the *Your Maurice is ready* mail), scan the QR code with the iPhone's camera once the app is installed; on a Mac, type the address and the device code shown under it.
 - **…change the administrator password?** Settings → *Administrator password*: the current one, then the new one twice. Your other devices signed in as administrator must sign in again.

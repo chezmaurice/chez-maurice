@@ -109,6 +109,9 @@ publish)
     # is left to file_server, which adds the slash and serves it.
     printf '\t@slashed {\n\t\tpath_regexp slashed ^(.+)/$\n\t\tfile {re.slashed.1}.html\n\t}\n'
     printf '\tredir @slashed {re.slashed.1} 308\n'
+    # The app-link files (apple-app-site-association has no extension) must
+    # go out as JSON, or iOS and Android ignore them.
+    printf '\t@wellknown path /.well-known/*\n\theader @wellknown Content-Type application/json\n'
     printf '\ttry_files {path} {path}.html\n'
     printf '\tfile_server\n'
     printf '\tencode zstd gzip\n'
@@ -117,8 +120,14 @@ publish)
       printf '\t\trewrite @missing /404.html\n\t\tfile_server\n\t}\n'
     fi
     echo "}"
+    # An alias redirects to the site, except /.well-known/: Android verifies
+    # an app link for *.example.com on example.com itself and follows no
+    # redirect, so the bare name serves those files in place. The handle
+    # blocks are needed, since Caddy orders redir before file_server.
     for a in ${aliases[@]+"${aliases[@]}"}; do
-      printf '%s {\n\tredir https://%s{uri} permanent\n}\n' "$a" "$domain"
+      printf '%s {\n' "$a"
+      printf '\thandle /.well-known/* {\n\t\troot * /srv/www/%s\n\t\theader Content-Type application/json\n\t\tfile_server\n\t}\n' "$domain"
+      printf '\thandle {\n\t\tredir https://%s{uri} permanent\n\t}\n}\n' "$domain"
     done
   } > "$site"
 

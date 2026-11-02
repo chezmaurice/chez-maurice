@@ -82,6 +82,7 @@ import { avatarsDir } from "./src/services/avatars";
 import { proxyAuth, validateApiTokenRaw, validateHealthToken } from "./src/middleware/auth";
 import gitRoutes from "./src/routes/git";
 import { requestOrigin } from "./lib/requestOrigin";
+import { JOIN_APPS, joinPlatform, appleAppSiteAssociation, assetLinks } from "./src/services/appLinks";
 import { scheduleGardenExport } from "./src/services/gardenExport";
 import { scheduleConversationSummaries } from "./data-api/services/entryConversations";
 import { mergeDuplicateDomains } from "./src/services/domainMerge";
@@ -362,6 +363,8 @@ app.use("/*", async (c, next) => {
     path.startsWith("/api/") ||
     path === "/healthz" ||
     path === "/join" ||
+    path === "/.well-known/apple-app-site-association" ||
+    path === "/.well-known/assetlinks.json" ||
     path.startsWith("/git/") ||
     path.startsWith("/login") ||
     path.startsWith("/admin") ||
@@ -810,51 +813,91 @@ app.all("/calibre/*", async (c) => {
 
 // ── Invitation landing page ─────────────────────────────────────
 // What an invitation QR code points at: https://<household>/join?code=…. With
-// the app installed, "Open" hands the household's address and the code to it
-// (maurice://join); without, the page says what to install and shows the code
-// to type. The code is not checked here — a page that answered "valid" would be
-// an unthrottled oracle beside the rate-limited /api/auth/enroll.
-//
-// It is read by someone who often has no app yet — a link received by message,
-// a QR scanned with the camera — so it is two steps: install, then come back
-// and open (31 October 2026). Where the app installs from is
-// MAURICE_INSTALL_URL; until it is on the App Store, the public TestFlight link.
+// an app installed, the link opens it directly (Universal Links, App Links:
+// services/appLinks.ts); this page is what is left — no app yet, a household
+// the apps don't declare, a link opened in the browser. It offers both apps,
+// since an invitation names a household and never an app, with the install
+// links of the device it is read on, then "Open" in each (their own schemes)
+// and the code to type. The code is not checked here — a page that answered
+// "valid" would be an unthrottled oracle beside the rate-limited enroll.
 
-const INSTALL_URL = process.env.MAURICE_INSTALL_URL || "https://testflight.apple.com/join/CS3ufwEd";
+app.get("/.well-known/apple-app-site-association", (c) => c.json(appleAppSiteAssociation()));
+app.get("/.well-known/assetlinks.json", (c) => c.json(assetLinks()));
 
 app.get("/join", (c) => {
   const lang = langOf(c);
   const code = normalizeInviteCode(c.req.query("code") ?? "");
   const server = requestOrigin(c.req);
-  const open = `maurice://join?server=${encodeURIComponent(server)}&code=${encodeURIComponent(code)}`;
-  const testflight = /testflight\.apple\.com/.test(INSTALL_URL);
+  const platform = joinPlatform(c.req.header("user-agent"));
   const esc = (s: string) =>
     s.replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]!);
+  const query = `server=${encodeURIComponent(server)}&code=${encodeURIComponent(code)}`;
+
+  // Which apps, and which install links, for this device. "other" (a PC, an
+  // unknown browser) gets every link with the platform named on it.
+  const apple = platform === "ios" || platform === "mac";
+  const card = (a: (typeof JOIN_APPS)[number]) => {
+    const links: string[] = [];
+    const btn = (href: string, label: string, cls = "install") =>
+      `<a class="btn ${cls}" href="${esc(href)}">${esc(label)}</a>`;
+    if (apple && a.install.ios) links.push(btn(a.install.ios, t(lang, "join.install", a.name)));
+    if (platform === "android" && a.install.android) {
+      links.push(btn(a.install.android, t(lang, "join.install", a.name)));
+      links.push(`<a class="alt" href="${esc(a.androidReleases)}">${esc(t(lang, "join.apk"))}</a>`);
+    }
+    if (platform === "other") {
+      if (a.install.ios) links.push(btn(a.install.ios, t(lang, a.install.mac ? "join.on_apple_mac" : "join.on_apple")));
+      if (a.install.android) links.push(btn(a.install.android, t(lang, "join.on_android")));
+    }
+    const note = platform === "mac" && !a.install.mac ? `<p class="note">${esc(t(lang, "join.iphone_only", a.name))}</p>` : "";
+    return `<div class="app">
+      <h3>${esc(a.name)}</h3>
+      <p>${esc(t(lang, `join.${a.key}.promise`))}</p>
+      ${links.join("\n      ")}
+      ${note}
+    </div>`;
+  };
+  // Both buttons on a "Mac" too: Safari on an iPad says it is one.
+  const opens = JOIN_APPS
+    .map((a) => `<a class="btn open" href="${esc(`${a.scheme}://join?${query}`)}">${esc(t(lang, "join.open", a.name))}</a>`)
+    .join("\n    ");
+  const note =
+    apple ? t(lang, "join.testflight_note") : platform === "android" ? t(lang, "join.obtainium_note") : "";
+
   return c.html(`<!DOCTYPE html><html lang="${lang}"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Chez Maurice</title>
+<title>${esc(t(lang, "join.title", householdName()))}</title>
 <style>
-  body { font-family: ui-serif, Georgia, serif; max-width: 30rem; margin: 14vh auto; padding: 0 1.5rem; color: #2a2622; background: #f5efe6; text-align: center; }
-  h1 { font-size: 1.6rem; font-weight: 400; margin: 0 0 .75rem; }
+  body { font-family: ui-serif, Georgia, serif; max-width: 30rem; margin: 10vh auto; padding: 0 1.5rem; color: #2a2622; background: #f5efe6; text-align: center; }
+  h1 { font-size: 1.6rem; font-weight: 400; margin: 0 0 .25rem; }
+  .sub { font-family: ui-sans-serif, system-ui, sans-serif; font-size: .85rem; color: #6b6358; margin: 0 0 1rem; }
   p { color: #6b6358; line-height: 1.6; font-size: .98rem; }
-  a.btn { display: inline-block; margin: .5rem 0 .25rem; padding: .8rem 1.6rem; border-radius: 999px; text-decoration: none; font-family: ui-sans-serif, system-ui, sans-serif; }
+  a.btn { display: inline-block; margin: .4rem .2rem .2rem; padding: .8rem 1.6rem; border-radius: 999px; text-decoration: none; font-family: ui-sans-serif, system-ui, sans-serif; }
   a.open { background: #2a2622; color: #f5efe6; }
   a.install { border: 1px solid #2a2622; color: #2a2622; }
+  a.alt { display: block; font-family: ui-sans-serif, system-ui, sans-serif; font-size: .85rem; color: #6b6358; margin: .3rem 0 0; }
+  .apps { display: grid; gap: 1rem; margin: 1rem 0 0; }
+  .app { background: #ece3d6; border-radius: 16px; padding: 1rem 1rem 1.2rem; }
+  .app h3 { margin: 0; font-size: 1.25rem; font-weight: 400; }
+  .app p { margin: .25rem 0 .5rem; font-size: .92rem; }
   .step { margin: 2rem 0 0; }
   .step h2 { font-size: 1.05rem; font-weight: 600; margin: 0 0 .25rem; font-family: ui-sans-serif, system-ui, sans-serif; color: #2a2622; }
   .note { font-size: .85rem; margin: .5rem 0 0; }
   .code { font-family: ui-monospace, monospace; font-size: 1.6rem; letter-spacing: .2rem; background: #ece3d6; padding: .5rem 1rem; border-radius: 8px; display: inline-block; }
 </style></head><body>
   <h1>${esc(t(lang, "join.title", householdName()))}</h1>
+  <p class="sub">Chez Maurice</p>
   <p>${esc(t(lang, "join.lead"))}</p>
   <div class="step">
     <h2>${esc(t(lang, "join.step_install"))}</h2>
-    <a class="btn install" href="${esc(INSTALL_URL)}">${esc(t(lang, "join.install"))}</a>
-    ${testflight ? `<p class="note">${esc(t(lang, "join.testflight_note"))}</p>` : ""}
+    <div class="apps">
+    ${JOIN_APPS.map(card).join("\n    ")}
+    </div>
+    ${note ? `<p class="note">${esc(note)}</p>` : ""}
   </div>
   ${code ? `<div class="step">
     <h2>${esc(t(lang, "join.step_open"))}</h2>
-    <a class="btn open" href="${esc(open)}">${esc(t(lang, "join.open"))}</a>
+    ${opens}
     <p>${esc(t(lang, "join.code"))}</p>
     <div class="code">${esc(formatInviteCode(code))}</div>
   </div>` : ""}
