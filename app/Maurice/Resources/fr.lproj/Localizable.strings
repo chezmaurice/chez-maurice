@@ -1,6 +1,6 @@
 /* French — generated */
 "app.tagline" = "Un coin douillet pour discuter";
-"pairing.instructions" = "Chaque foyer a son propre Maurice.\nSaisissez l’adresse du vôtre pour connecter cet appareil.";
+"pairing.instructions" = "Chaque foyer a son propre Maurice. Votre invitation vous y fait entrer.";
 "pairing.connect" = "Se connecter";
 "pairing.error.status" = "Le serveur a renvoyé un statut inattendu";
 "pairing.error.connect" = "Connexion impossible : %@";
@@ -9,8 +9,8 @@
 "pairing.error.https_hint" = "Les serveurs Maurice utilisent https — essayez https:// au lieu de http://.";
 "picker.title" = "Qui est là ?";
 "picker.empty" = "Pour rejoindre ce foyer sur cet appareil, entrez le code d’invitation que vous avez reçu.";
-"picker.admin_signin" = "Se connecter en tant qu'admin";
-"picker.disconnect" = "Déconnecter cet appareil";
+"picker.admin_signin" = "Se connecter en admin";
+"picker.disconnect" = "Oublier ce foyer";
 "picker.pin.title" = "Saisissez votre code PIN";
 "picker.pin.placeholder" = "PIN";
 "picker.pin.error" = "Code PIN invalide";
@@ -211,7 +211,7 @@
 "context.section.conversations" = "Conversations";
 "context.searchPlaceholder" = "Rechercher notes, livres, conversations…";
 "context.nothingMatches" = "aucun résultat pour « %@ »";
-"pairing.url_placeholder" = "https://monfoyer.chezmaurice.eu";
+"pairing.url_placeholder" = "XXXX-XXXX ou monfoyer.chezmaurice.eu";
 
 /* Enrollment + PIN setup */
 "enroll.cta" = "Vous avez un code d'invitation ?";
@@ -652,9 +652,9 @@
 "members.new_device" = "Nouvel appareil";
 "members.new_device.hint" = "Touchez quelqu’un pour afficher un code qui installe l’app sur un autre de ses appareils.";
 "members.new_device.for" = "Un nouvel appareil pour %@";
-"devices.add" = "Ajouter un de mes appareils";
+"devices.add" = "Ajouter un appareil";
 "devices.add.sheet_title" = "Scannez ce code avec votre autre appareil, ou envoyez-lui le lien";
-"devices.add.done" = "Votre appareil est connecté.";
+"devices.add.done" = "Appareil connecté ✓";
 "devices.add.expired" = "Ce code a expiré. Fermez et demandez-en un nouveau.";
 "members.share" = "Envoyer le lien";
 "members.revoke" = "Retirer";
@@ -1058,3 +1058,40 @@
 "password.weak" = "Ce mot de passe est trop facile à deviner : choisissez-en un autre.";
 "password.too_many" = "Trop d’essais. Réessayez dans un quart d’heure.";
 "pinsetup.weak" = "Ce PIN est trop facile à deviner (un chiffre répété, une suite, un PIN courant) : choisissez-en un autre.";
+
+/* Login and devices, shared with Carnet (glossary of 2 November 2026). */
+"invite.code" = "Code d’invitation";
+"welcome.promise.maurice" = "Un assistant qui vous connaît, et vous montre ce qu’il sait.";
+"welcome.promise.carnet" = "Ce que vous lisez, regardez et notez, au même endroit.";
+"welcome.paste_link" = "Coller le lien d’invitation";
+"welcome.enter_code" = "Entrer un code ou une adresse";
+"welcome.more_options" = "Autres options";
+"welcome.address_needed" = "Adresse du foyer";
+"scanner.hint" = "Visez le QR de l’invitation";
+"scanner.camera_reason" = "L’appareil photo sert seulement à lire le QR de votre invitation.";
+"common.close" = "Fermer";
+"admin.create" = "Créer le compte admin";
+"devices.add.countdown" = "Valable encore %@";
+"member.switch" = "Changer de membre";
+"household.forget.title" = "Oublier %@ sur cet appareil ?";
+"household.forget.body" = "Les membres connectés ici en sont déconnectés, et ce que l’appareil garde pour eux est effacé.";
+"household.forget.pending.one" = "1 envoi n’a pas encore été transmis : il sera perdu.";
+"household.forget.pending.other" = "%d envois n’ont pas encore été transmis : ils seront perdus.";
+"household.forget.confirm" = "Oublier";
+"sheet.households" = "Foyers";
+"sheet.members" = "Membres";
+"sheet.pin_required" = "PIN requis";
+"sheet.active" = "Actif";
+"sheet.you" = "Vous";
+"pending.section" = "Envois en attente";
+"pending.one" = "1 envoi attend que %1$@ se reconnecte sur %2$@.";
+"pending.other" = "%1$d envois attendent que %2$@ se reconnecte sur %3$@.";
+"pending.one.nohousehold" = "1 envoi attend que %@ se reconnecte.";
+"pending.other.nohousehold" = "%1$d envois attendent que %2$@ se reconnecte.";
+"privacy.section" = "Confidentialité";
+"privacy.policy" = "Politique de confidentialité";
+"privacy.terms" = "Conditions d’utilisation";
+"delete.text" = "Tout ce que ce foyer garde de vous va être effacé, puis votre compte, définitivement.";
+"delete.confirm_footer" = "Pour confirmer, tapez votre nom d’utilisateur : %@";
+"delete.field" = "Mot de passe ou PIN";
+"delete.confirm" = "Supprimer mon compte";

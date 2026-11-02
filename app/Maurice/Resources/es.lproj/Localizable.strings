@@ -1,6 +1,6 @@
 /* Spanish — generated */
 "app.tagline" = "Un rincón acogedor para charlar";
-"pairing.instructions" = "Cada hogar tiene su propio Maurice.\nEscribe la dirección del tuyo para conectar este dispositivo.";
+"pairing.instructions" = "Cada hogar tiene su propio Maurice. Tu invitación te deja entrar.";
 "pairing.connect" = "Conectar";
 "pairing.error.status" = "El servidor devolvió un estado inesperado";
 "pairing.error.connect" = "No se pudo conectar: %@";
@@ -10,7 +10,7 @@
 "picker.title" = "¿Quién anda por aquí?";
 "picker.empty" = "Para unirte a este hogar en este dispositivo, introduce el código de invitación que has recibido.";
 "picker.admin_signin" = "Entrar como administrador";
-"picker.disconnect" = "Desconectar este dispositivo";
+"picker.disconnect" = "Olvidar este hogar";
 "picker.pin.title" = "Introduce tu PIN";
 "picker.pin.placeholder" = "PIN";
 "picker.pin.error" = "PIN incorrecto";
@@ -47,7 +47,7 @@
 "settings.palette.dark" = "OSCURO";
 "settings.locale.title" = "Idioma";
 "settings.locale.system" = "Predeterminado del sistema";
-"settings.disconnect" = "Desconectar";
+"settings.disconnect" = "Cerrar sesión";
 "settings.mcp.title" = "TOKEN DE AUTENTICACIÓN MCP";
 "settings.mcp.loading" = "Generando token…";
 "settings.mcp.hint" = "Usa este token como Bearer en la configuración de Claude Desktop.";
@@ -211,7 +211,7 @@
 "context.section.conversations" = "Conversaciones";
 "context.searchPlaceholder" = "Buscar notas, libros, conversaciones…";
 "context.nothingMatches" = "nada coincide con “%@”";
-"pairing.url_placeholder" = "https://monfoyer.chezmaurice.eu";
+"pairing.url_placeholder" = "XXXX-XXXX o mihogar.chezmaurice.eu";
 
 /* Enrollment + PIN setup */
 "enroll.cta" = "¿Tienes un código de invitación?";
@@ -652,9 +652,9 @@
 "members.new_device" = "Nuevo dispositivo";
 "members.new_device.hint" = "Toca a alguien para mostrar un código que instala la app en otro de sus dispositivos.";
 "members.new_device.for" = "Un nuevo dispositivo para %@";
-"devices.add" = "Añadir uno de mis dispositivos";
+"devices.add" = "Añadir un dispositivo";
 "devices.add.sheet_title" = "Escanea este código con tu otro dispositivo o envíale el enlace";
-"devices.add.done" = "Tu dispositivo está conectado.";
+"devices.add.done" = "Dispositivo conectado ✓";
 "devices.add.expired" = "Este código ha caducado. Cierra y pide uno nuevo.";
 "members.share" = "Enviar el enlace";
 "members.revoke" = "Retirar";
@@ -1058,3 +1058,40 @@
 "password.weak" = "Esta contraseña es demasiado fácil de adivinar: elige otra.";
 "password.too_many" = "Demasiados intentos. Vuelve a intentarlo en un cuarto de hora.";
 "pinsetup.weak" = "Este PIN es demasiado fácil de adivinar (un dígito repetido, una serie, un PIN común): elige otro.";
+
+/* Login and devices, shared with Carnet (glossary of 2 November 2026). */
+"invite.code" = "Código de invitación";
+"welcome.promise.maurice" = "Un asistente que te conoce y te enseña lo que sabe.";
+"welcome.promise.carnet" = "Lo que lees, ves y anotas, en un solo lugar.";
+"welcome.paste_link" = "Pegar el enlace de invitación";
+"welcome.enter_code" = "Escribir un código o una dirección";
+"welcome.more_options" = "Otras opciones";
+"welcome.address_needed" = "Dirección del hogar";
+"scanner.hint" = "Apunta al código QR de la invitación";
+"scanner.camera_reason" = "La cámara solo sirve para leer el código QR de tu invitación.";
+"common.close" = "Cerrar";
+"admin.create" = "Crear la cuenta de administrador";
+"devices.add.countdown" = "Válido durante %@";
+"member.switch" = "Cambiar de miembro";
+"household.forget.title" = "¿Olvidar %@ en este dispositivo?";
+"household.forget.body" = "Los miembros conectados aquí cierran sesión, y lo que el dispositivo guarda para ellos se borra.";
+"household.forget.pending.one" = "1 envío aún no se ha transmitido: se perderá.";
+"household.forget.pending.other" = "%d envíos aún no se han transmitido: se perderán.";
+"household.forget.confirm" = "Olvidar";
+"sheet.households" = "Hogares";
+"sheet.members" = "Miembros";
+"sheet.pin_required" = "PIN necesario";
+"sheet.active" = "Activo";
+"sheet.you" = "Tú";
+"pending.section" = "Envíos pendientes";
+"pending.one" = "1 envío espera a que %1$@ vuelva a iniciar sesión en %2$@.";
+"pending.other" = "%1$d envíos esperan a que %2$@ vuelva a iniciar sesión en %3$@.";
+"pending.one.nohousehold" = "1 envío espera a que %@ vuelva a iniciar sesión.";
+"pending.other.nohousehold" = "%1$d envíos esperan a que %2$@ vuelva a iniciar sesión.";
+"privacy.section" = "Privacidad";
+"privacy.policy" = "Política de privacidad";
+"privacy.terms" = "Condiciones de uso";
+"delete.text" = "Todo lo que este hogar guarda de ti se borrará, y después tu cuenta, para siempre.";
+"delete.confirm_footer" = "Para confirmar, escribe tu usuario: %@";
+"delete.field" = "Contraseña o PIN";
+"delete.confirm" = "Eliminar mi cuenta";

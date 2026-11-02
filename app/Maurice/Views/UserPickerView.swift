@@ -24,7 +24,6 @@ enum PinRules {
 /// User picker: tap an avatar, enter PIN if needed, start chatting.
 struct UserPickerView: View {
     @Environment(SessionStore.self) private var session
-    @Environment(\.colorScheme) private var colorScheme
     @State private var users: [ServerUser] = []
     @State private var isLoading = true
     @State private var error: String?
@@ -44,186 +43,152 @@ struct UserPickerView: View {
     /// An open invitation: the code is good and the server asks who is joining.
     @State private var enrollNeedsProfile = false
     @State private var enrollName = ""
-    @State private var enrollColor = InviteEnrollOverlay.colors[0]
+    @State private var enrollColor = InviteEnrollSheet.colors[0]
     /// A redeemed enrollment held until a member sets their PIN (members only).
     @State private var pendingEnroll: (userId: String, token: String, user: DeviceUser)?
     @State private var pinSetupText = ""
     @State private var pinSetupConfirm = ""
     @State private var pinSetupError: String?
+    @State private var confirmForget = false
 
     var body: some View {
-        let theme = MauriceTheme.current(for: colorScheme)
+        VStack(spacing: 28) {
+            Spacer()
 
-        ZStack {
-            theme.surface.ignoresSafeArea()
+            VStack(spacing: 10) {
+                Image("BowlerEmblem")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 56)
+                    .foregroundStyle(.primary)
+                    .accessibilityHidden(true)
+                Text(session.localized("picker.title"))
+                    .font(.wordmark(30))
+                householdMenu
+            }
 
-            VStack(spacing: 32) {
-                Spacer()
-
-                // Header
-                VStack(spacing: 8) {
-                    BoaterHat(size: 32, color: theme.ink)
-
-                    Text(session.localized("picker.title"))
-                        .font(.system(size: 28, design: .serif))
-                        .foregroundStyle(theme.ink)
-                }
-
-                // Household switcher — pick which household, or add another.
-                if !session.households.isEmpty {
-                    HStack(spacing: 8) {
-                        ForEach(session.households) { h in
-                            let on = h.id == session.currentHouseholdId
-                            Button { session.switchHousehold(h.id) } label: {
-                                HStack(spacing: 7) {
-                                    FoyerBadge(household: h, size: 20, radius: 6)
-                                    Text(h.name)
-                                        .font(.system(size: 13, weight: .medium))
-                                        .foregroundStyle(on ? theme.ink : theme.inkSoft)
-                                }
-                                .padding(.leading, 6).padding(.trailing, 12).padding(.vertical, 5)
-                                .background(Capsule().fill(on ? theme.ink.opacity(0.08) : .clear))
-                                .overlay(Capsule().strokeBorder(on ? theme.ink : theme.ruleHard, lineWidth: 0.5))
-                            }
-                            .buttonStyle(.plain)
-                        }
-                        Button { showAddHousehold = true } label: {
-                            Image(systemName: "plus")
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundStyle(theme.inkSoft)
-                                .frame(width: 30, height: 30)
-                                .overlay(Circle().strokeBorder(theme.ruleHard, lineWidth: 0.5))
-                        }
-                        .buttonStyle(.plain)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.horizontal, 24)
-                }
-
-                // User grid
-                if isLoading {
-                    ProgressView()
-                        .padding(40)
-                } else if users.isEmpty {
-                    VStack(spacing: 16) {
-                        Text(session.localized("picker.empty"))
-                            .font(.system(size: 14))
-                            .foregroundStyle(theme.inkMute)
-                            .multilineTextAlignment(.center)
-
-                        Button(session.localized("enroll.cta")) {
-                            showEnroll = true
-                        }
-                        .glassProminentButton()
-
-                        Button(session.localized("picker.admin_signin")) {
-                            showAdminLogin = true
-                        }
-                        .glassBorderedButton()
-                    }
-                } else {
-                    LazyVGrid(
-                        columns: [GridItem(.adaptive(minimum: 90, maximum: 120), spacing: 24)],
-                        spacing: 24
-                    ) {
-                        ForEach(users) { user in
-                            UserAvatarButton(user: user, serverURL: session.serverURL) {
-                                handleUserTap(user)
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 48)
-                }
-
-                if let error {
-                    Text(error)
-                        .font(.caption)
-                        .foregroundStyle(.red)
-                } else if session.sessionEnded {
-                    Text(session.localized("picker.session_ended"))
-                        .font(.caption)
-                        .foregroundStyle(theme.inkSoft)
+            // User grid
+            if isLoading {
+                ProgressView()
+                    .padding(40)
+            } else if users.isEmpty {
+                VStack(spacing: 14) {
+                    Text(session.localized("picker.empty"))
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 32)
+                    Button { openEnroll() } label: {
+                        Text(session.localized("enroll.cta")).frame(maxWidth: 320)
+                    }
+                    .controlSize(.large)
+                    .glassProminentButton()
                 }
-
-                Spacer()
-                Spacer()
-
-                // Invite-code entry (also reachable when the device already has
-                // users — for adding another household member) + disconnect.
-                VStack(spacing: 14) {
-                    if !users.isEmpty {
-                        Button(session.localized("enroll.cta")) { showEnroll = true }
-                            .font(.system(size: 13))
-                            .buttonStyle(.plain)
-                            .foregroundStyle(theme.inkSoft)
+            } else {
+                LazyVGrid(
+                    columns: [GridItem(.adaptive(minimum: 90, maximum: 120), spacing: 24)],
+                    spacing: 24
+                ) {
+                    ForEach(users) { user in
+                        UserAvatarButton(user: user, serverURL: session.serverURL) {
+                            handleUserTap(user)
+                        }
                     }
-                    Button {
-                        session.unpair()
-                    } label: {
-                        Text(session.localized("picker.disconnect"))
-                            .font(.system(size: 12, design: .monospaced))
-                            .foregroundStyle(theme.inkMute)
-                    }
-                    .buttonStyle(.plain)
                 }
-                .padding(.bottom, 24)
+                .padding(.horizontal, 48)
             }
 
-            // PIN overlay
-            if let target = pinTarget {
-                PinOverlay(
-                    user: target,
-                    pinText: $pinText,
-                    pinError: $pinError,
-                    onSubmit: { submitPin(for: target) },
-                    onCancel: { pinTarget = nil; pinText = ""; pinError = nil }
-                )
+            if let error {
+                Text(error)
+                    .font(.footnote)
+                    .foregroundStyle(.red)
+            } else if session.sessionEnded {
+                Text(session.localized("picker.session_ended"))
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
             }
 
-            // Admin login overlay
-            if showAdminLogin {
-                AdminLoginOverlay(
-                    username: $adminUsername,
-                    password: $adminPassword,
-                    error: $adminError,
-                    onSubmit: { Task { await adminLogin() } },
-                    onCancel: {
-                        showAdminLogin = false
-                        adminUsername = ""
-                        adminPassword = ""
-                        adminError = nil
-                    }
-                )
-            }
+            Spacer()
+            Spacer()
 
-            // Invite-code enrollment
-            if showEnroll {
-                InviteEnrollOverlay(
-                    code: $enrollCode,
-                    error: $enrollError,
-                    needsProfile: enrollNeedsProfile,
-                    name: $enrollName,
-                    color: $enrollColor,
-                    busy: enrollBusy,
-                    onSubmit: { Task { await enrollWithCode() } },
-                    onCancel: {
-                        showEnroll = false; enrollCode = ""; enrollError = nil
-                        enrollNeedsProfile = false; enrollName = ""
-                    }
-                )
+            // Everything that is not "pick yourself": an invitation code, the
+            // admin's password, and forgetting this household on this device.
+            Menu {
+                Button { openEnroll() } label: {
+                    Label(session.localized("enroll.cta"), systemImage: "envelope.open")
+                }
+                Button { showAdminLogin = true } label: {
+                    Label(session.localized("picker.admin_signin"), systemImage: "key")
+                }
+                Divider()
+                Button(role: .destructive) { confirmForget = true } label: {
+                    Label(session.localized("picker.disconnect"), systemImage: "rectangle.portrait.and.arrow.right")
+                }
+            } label: {
+                Text(session.localized("welcome.more_options"))
             }
-
-            // Self-service PIN setup (members only, after enrolling — required)
-            if pendingEnroll != nil {
-                PinSetupOverlay(
-                    pin: $pinSetupText,
-                    confirm: $pinSetupConfirm,
-                    error: $pinSetupError,
-                    onSubmit: { Task { await submitPinSetup() } }
-                )
-            }
+            .menuStyle(.button)
+            .fixedSize()
+            .glassBorderedButton()
+            .padding(.bottom, 24)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.platformBackground.ignoresSafeArea())
+        .sheet(item: $pinTarget, onDismiss: { pinText = ""; pinError = nil }) { target in
+            PinSheet(
+                user: target,
+                serverURL: session.serverURL,
+                pinText: $pinText,
+                pinError: $pinError,
+                onSubmit: { submitPin(for: target) },
+                onCancel: { pinTarget = nil }
+            )
+        }
+        .sheet(isPresented: $showAdminLogin, onDismiss: {
+            adminUsername = ""; adminPassword = ""; adminError = nil
+        }) {
+            AdminLoginSheet(
+                username: $adminUsername,
+                password: $adminPassword,
+                error: $adminError,
+                onSubmit: { Task { await adminLogin() } },
+                onCancel: { showAdminLogin = false }
+            )
+        }
+        .sheet(isPresented: $showEnroll, onDismiss: {
+            enrollCode = ""; enrollError = nil; enrollNeedsProfile = false; enrollName = ""
+        }) {
+            InviteEnrollSheet(
+                code: $enrollCode,
+                error: $enrollError,
+                needsProfile: enrollNeedsProfile,
+                name: $enrollName,
+                color: $enrollColor,
+                busy: enrollBusy,
+                onSubmit: { Task { await enrollWithCode() } },
+                onCancel: { showEnroll = false }
+            )
+        }
+        // Self-service PIN setup (members only, after enrolling — required)
+        .sheet(isPresented: Binding(get: { pendingEnroll != nil }, set: { _ in })) {
+            PinSetupSheet(
+                pin: $pinSetupText,
+                confirm: $pinSetupConfirm,
+                error: $pinSetupError,
+                onSubmit: { Task { await submitPinSetup() } }
+            )
+            .interactiveDismissDisabled()
+        }
+        .confirmationDialog(
+            session.localized("household.forget.title", session.currentHousehold?.name ?? ""),
+            isPresented: $confirmForget, titleVisibility: .visible
+        ) {
+            Button(session.localized("household.forget.confirm"), role: .destructive) { session.unpair() }
+            Button(session.localized("common.cancel"), role: .cancel) {}
+        } message: {
+            Text(session.localized("household.forget.body"))
         }
         .task(id: session.currentHouseholdId) {
             await fetchUsers()
@@ -249,6 +214,46 @@ struct UserPickerView: View {
             PairingView(onPaired: { showAddHousehold = false })
                 .environment(session)
         }
+    }
+
+    /// The household this picker is for, as a menu: the others paired on
+    /// this device, and adding one more.
+    private var householdMenu: some View {
+        Menu {
+            ForEach(session.households) { h in
+                Button { session.switchHousehold(h.id) } label: {
+                    if h.id == session.currentHouseholdId {
+                        Label(h.name, systemImage: "checkmark")
+                    } else {
+                        Text(h.name)
+                    }
+                }
+            }
+            Divider()
+            Button { showAddHousehold = true } label: {
+                Label(session.localized("household.add"), systemImage: "plus")
+            }
+        } label: {
+            HStack(spacing: 6) {
+                if let h = session.currentHousehold {
+                    FoyerBadge(household: h, size: 18, radius: 5)
+                }
+                Text(session.currentHousehold?.name ?? "")
+                Image(systemName: "chevron.down").font(.caption2.weight(.semibold))
+            }
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+        }
+        .menuStyle(.button)
+        .buttonStyle(.plain)
+        .fixedSize()
+    }
+
+    private func openEnroll() {
+        enrollCode = ""
+        enrollError = nil
+        enrollNeedsProfile = false
+        showEnroll = true
     }
 
     private func enrollWithCode() async {
@@ -456,14 +461,11 @@ struct UserPickerView: View {
 // MARK: - User Avatar Button
 
 private struct UserAvatarButton: View {
-    @Environment(\.colorScheme) private var colorScheme
     let user: ServerUser
     var serverURL: String? = nil
     let action: () -> Void
 
     var body: some View {
-        let theme = MauriceTheme.current(for: colorScheme)
-
         Button(action: action) {
             VStack(spacing: 10) {
                 UserAvatar(avatarURL: user.avatar_url, serverURL: serverURL,
@@ -473,12 +475,12 @@ private struct UserAvatarButton: View {
                 VStack(spacing: 2) {
                     Text(user.display_name)
                         .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(theme.ink)
+                        .foregroundStyle(.primary)
 
                     if user.has_pin {
                         Image(systemName: "lock.fill")
                             .font(.system(size: 9))
-                            .foregroundStyle(theme.inkMute)
+                            .foregroundStyle(.secondary)
                     }
                 }
             }
@@ -487,70 +489,102 @@ private struct UserAvatarButton: View {
     }
 }
 
-// MARK: - PIN Overlay
+// MARK: - Sheets
+//
+// The steps of signing in are system sheets with a form: the same chrome as
+// the rest of the OS, and the same steps as Carnet (glossary of 2 November
+// 2026). Each says what it asks in its title and keeps its buttons in the bar.
 
-private struct PinOverlay: View {
-    @Environment(\.colorScheme) private var colorScheme
+/// A sheet's frame: a navigation bar with Cancel and the action, a grouped form.
+private struct StepSheet<Content: View>: View {
+    let title: String
+    var cancel: (label: String, action: () -> Void)?
+    let confirm: String
+    let canConfirm: Bool
+    var busy = false
+    let onConfirm: () -> Void
+    @ViewBuilder var content: () -> Content
+
+    var body: some View {
+        NavigationStack {
+            Form { content() }
+                .formStyle(.grouped)
+                .navigationTitle(title)
+                #if os(iOS)
+                .navigationBarTitleDisplayMode(.inline)
+                #endif
+                .toolbar {
+                    if let cancel {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button(cancel.label, action: cancel.action)
+                        }
+                    }
+                    ToolbarItem(placement: .confirmationAction) {
+                        if busy {
+                            ProgressView().controlSize(.small)
+                        } else {
+                            Button(confirm, action: onConfirm).disabled(!canConfirm)
+                        }
+                    }
+                }
+        }
+        #if os(iOS)
+        .presentationDetents([.medium, .large])
+        #else
+        .frame(minWidth: 380, minHeight: 280)
+        #endif
+    }
+}
+
+/// An error under the fields, in the form's own footer style.
+private struct SheetError: View {
+    let text: String?
+    var body: some View {
+        if let text { Text(text).foregroundStyle(.red) }
+    }
+}
+
+private struct PinSheet: View {
     let user: ServerUser
+    let serverURL: String?
     @Binding var pinText: String
     @Binding var pinError: String?
     let onSubmit: () -> Void
     let onCancel: () -> Void
 
     var body: some View {
-        let theme = MauriceTheme.current(for: colorScheme)
-
-        ZStack {
-            Color.black.opacity(0.4)
-                .ignoresSafeArea()
-                .onTapGesture { onCancel() }
-
-            VStack(spacing: 20) {
-                Text(user.display_name)
-                    .font(.system(size: 22, design: .serif))
-                    .foregroundStyle(theme.ink)
-
-                Text(L("picker.pin.title"))
-                    .font(.system(size: 14))
-                    .foregroundStyle(theme.inkSoft)
-
+        StepSheet(title: user.display_name,
+                  cancel: (L("picker.pin.cancel"), onCancel),
+                  confirm: L("picker.pin.submit"),
+                  canConfirm: !pinText.isEmpty,
+                  onConfirm: onSubmit) {
+            Section {
+                HStack {
+                    Spacer()
+                    UserAvatar(avatarURL: user.avatar_url, serverURL: serverURL,
+                               initial: String(user.display_name.prefix(1)),
+                               color: Color(hex: user.avatar_color), size: 64)
+                    Spacer()
+                }
+                .listRowBackground(Color.clear)
+            }
+            Section {
                 SecureField(L("picker.pin.placeholder"), text: $pinText)
-                    .textFieldStyle(.roundedBorder)
                     #if os(iOS)
                     .keyboardType(.numberPad)
                     #endif
-                    .frame(width: 160)
-                    .multilineTextAlignment(.center)
+                    .textContentType(.oneTimeCode)
                     .onSubmit { onSubmit() }
-
-                if let pinError {
-                    Text(pinError)
-                        .font(.caption)
-                        .foregroundStyle(.red)
-                }
-
-                HStack(spacing: 16) {
-                    Button(L("picker.pin.cancel")) { onCancel() }
-                        .glassBorderedButton()
-                    Button(L("picker.pin.submit")) { onSubmit() }
-                        .glassProminentButton()
-                        .disabled(pinText.isEmpty)
-                }
+            } header: {
+                Text(L("picker.pin.title"))
+            } footer: {
+                SheetError(text: pinError)
             }
-            .padding(32)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(theme.surface)
-                    .shadow(radius: 20)
-            )
         }
     }
 }
 
-// MARK: - Admin Login Overlay
-
-private struct AdminLoginOverlay: View {
-    @Environment(\.colorScheme) private var colorScheme
+private struct AdminLoginSheet: View {
     @Binding var username: String
     @Binding var password: String
     @Binding var error: String?
@@ -558,65 +592,32 @@ private struct AdminLoginOverlay: View {
     let onCancel: () -> Void
 
     var body: some View {
-        let theme = MauriceTheme.current(for: colorScheme)
-
-        ZStack {
-            Color.black.opacity(0.4)
-                .ignoresSafeArea()
-                .onTapGesture { onCancel() }
-
-            VStack(spacing: 20) {
-                Text(L("picker.admin.title"))
-                    .font(.system(size: 22, design: .serif))
-                    .foregroundStyle(theme.ink)
-
-                Text(L("picker.admin.subtitle"))
-                    .font(.system(size: 14))
-                    .foregroundStyle(theme.inkSoft)
-
-                VStack(spacing: 12) {
-                    TextField(L("picker.admin.username"), text: $username)
-                        .textFieldStyle(.roundedBorder)
-                        #if os(iOS)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        #endif
-                        .frame(width: 220)
-
-                    SecureField(L("picker.admin.password"), text: $password)
-                        .textFieldStyle(.roundedBorder)
-                        .frame(width: 220)
-                        .onSubmit { onSubmit() }
-                }
-
-                if let error {
-                    Text(error)
-                        .font(.caption)
-                        .foregroundStyle(.red)
-                }
-
-                HStack(spacing: 16) {
-                    Button(L("picker.admin.cancel")) { onCancel() }
-                        .glassBorderedButton()
-                    Button(L("picker.admin.submit")) { onSubmit() }
-                        .glassProminentButton()
-                        .disabled(username.isEmpty || password.isEmpty)
+        StepSheet(title: L("picker.admin.title"),
+                  cancel: (L("picker.admin.cancel"), onCancel),
+                  confirm: L("picker.admin.submit"),
+                  canConfirm: !username.isEmpty && !password.isEmpty,
+                  onConfirm: onSubmit) {
+            Section {
+                TextField(L("picker.admin.username"), text: $username)
+                    #if os(iOS)
+                    .textInputAutocapitalization(.never)
+                    #endif
+                    .autocorrectionDisabled()
+                    .textContentType(.username)
+                SecureField(L("picker.admin.password"), text: $password)
+                    .textContentType(.password)
+                    .onSubmit { onSubmit() }
+            } footer: {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(L("picker.admin.subtitle"))
+                    SheetError(text: error)
                 }
             }
-            .padding(32)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(theme.surface)
-                    .shadow(radius: 20)
-            )
         }
     }
 }
 
-// MARK: - Invite Enroll Overlay
-
-private struct InviteEnrollOverlay: View {
-    @Environment(\.colorScheme) private var colorScheme
+private struct InviteEnrollSheet: View {
     @Binding var code: String
     @Binding var error: String?
     /// Second step of an open invitation: the newcomer names themselves.
@@ -631,111 +632,91 @@ private struct InviteEnrollOverlay: View {
     static let colors = ["#2c5aa0", "#7a4f6e", "#b97a1e", "#3d6b4f", "#a6452e", "#e3a7c2", "#44504f", "#9c6b4a"]
 
     var body: some View {
-        let theme = MauriceTheme.current(for: colorScheme)
-        ZStack {
-            Color.black.opacity(0.4).ignoresSafeArea().onTapGesture { onCancel() }
-            VStack(spacing: 20) {
-                Text(L(needsProfile ? "enroll.profile.title" : "enroll.title"))
-                    .font(.system(size: 22, design: .serif)).foregroundStyle(theme.ink)
-                Text(L(needsProfile ? "enroll.profile.subtitle" : "enroll.subtitle"))
-                    .font(.system(size: 14)).foregroundStyle(theme.inkSoft)
-                    .multilineTextAlignment(.center)
-
-                if needsProfile {
+        StepSheet(title: L(needsProfile ? "enroll.profile.title" : "invite.code"),
+                  cancel: (L("picker.admin.cancel"), onCancel),
+                  confirm: L("enroll.submit"),
+                  canConfirm: !(needsProfile ? name : code).trimmingCharacters(in: .whitespaces).isEmpty,
+                  busy: busy,
+                  onConfirm: onSubmit) {
+            if needsProfile {
+                Section {
                     TextField(L("enroll.profile.name"), text: $name)
-                        .textFieldStyle(.roundedBorder)
                         #if os(iOS)
                         .textInputAutocapitalization(.words)
                         #endif
-                        .frame(width: 220)
-                        .multilineTextAlignment(.center)
+                        .textContentType(.givenName)
                         .onSubmit { onSubmit() }
                     HStack(spacing: 10) {
                         ForEach(Self.colors, id: \.self) { hex in
                             Button { color = hex } label: {
                                 Circle()
                                     .fill(Color(hex: hex))
-                                    .frame(width: 24, height: 24)
-                                    .overlay(Circle().strokeBorder(theme.ink, lineWidth: color == hex ? 2 : 0).padding(-4))
+                                    .frame(width: 26, height: 26)
+                                    .overlay(Circle().strokeBorder(.primary, lineWidth: color == hex ? 2 : 0).padding(-4))
                             }
                             .buttonStyle(.plain)
                         }
                     }
-                    .padding(.vertical, 4)
-                } else {
+                    .padding(.vertical, 6)
+                } footer: {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(L("enroll.profile.subtitle"))
+                        SheetError(text: error)
+                    }
+                }
+            } else {
+                Section {
                     TextField(L("enroll.placeholder"), text: $code)
-                        .textFieldStyle(.roundedBorder)
-                        .font(.system(.body, design: .monospaced))
+                        .font(.body.monospaced())
                         #if os(iOS)
                         .textInputAutocapitalization(.characters)
-                        .autocorrectionDisabled()
                         #endif
-                        .frame(width: 220)
-                        .multilineTextAlignment(.center)
+                        .autocorrectionDisabled()
                         .onSubmit { onSubmit() }
-                }
-
-                if let error {
-                    Text(error).font(.caption).foregroundStyle(.red).multilineTextAlignment(.center)
-                }
-
-                HStack(spacing: 16) {
-                    Button(L("picker.admin.cancel")) { onCancel() }.glassBorderedButton()
-                    Button(L("enroll.submit")) { onSubmit() }
-                        .glassProminentButton()
-                        .disabled((needsProfile ? name : code).trimmingCharacters(in: .whitespaces).isEmpty || busy)
+                } header: {
+                    Text(L("enroll.title"))
+                } footer: {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(L("enroll.subtitle"))
+                        SheetError(text: error)
+                    }
                 }
             }
-            .padding(32)
-            .background(RoundedRectangle(cornerRadius: 16).fill(theme.surface).shadow(radius: 20))
         }
     }
 }
 
-// MARK: - PIN Setup Overlay (required for members after enrolling)
-
-private struct PinSetupOverlay: View {
-    @Environment(\.colorScheme) private var colorScheme
+/// Required for members after enrolling: no Cancel, and the sheet cannot be
+/// swiped away.
+private struct PinSetupSheet: View {
     @Binding var pin: String
     @Binding var confirm: String
     @Binding var error: String?
     let onSubmit: () -> Void
 
     var body: some View {
-        let theme = MauriceTheme.current(for: colorScheme)
-        ZStack {
-            Color.black.opacity(0.4).ignoresSafeArea()
-            VStack(spacing: 18) {
-                Text(L("pinsetup.title"))
-                    .font(.system(size: 22, design: .serif)).foregroundStyle(theme.ink)
-                Text(L("pinsetup.subtitle"))
-                    .font(.system(size: 14)).foregroundStyle(theme.inkSoft)
-                    .multilineTextAlignment(.center)
-
+        StepSheet(title: L("pinsetup.title"),
+                  confirm: L("pinsetup.submit"),
+                  canConfirm: !pin.isEmpty && !confirm.isEmpty,
+                  onConfirm: onSubmit) {
+            Section {
                 SecureField(L("pinsetup.placeholder"), text: $pin)
-                    .textFieldStyle(.roundedBorder)
                     #if os(iOS)
                     .keyboardType(.numberPad)
                     #endif
-                    .frame(width: 160).multilineTextAlignment(.center)
+                    .textContentType(.newPassword)
                 SecureField(L("pinsetup.confirm"), text: $confirm)
-                    .textFieldStyle(.roundedBorder)
                     #if os(iOS)
                     .keyboardType(.numberPad)
                     #endif
-                    .frame(width: 160).multilineTextAlignment(.center)
+                    .textContentType(.newPassword)
                     .onSubmit { onSubmit() }
-
-                if let error {
-                    Text(error).font(.caption).foregroundStyle(.red)
+            } footer: {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(L("pinsetup.subtitle"))
+                    SheetError(text: error)
                 }
-
-                Button(L("pinsetup.submit")) { onSubmit() }
-                    .glassProminentButton()
-                    .disabled(pin.isEmpty || confirm.isEmpty)
             }
-            .padding(32)
-            .background(RoundedRectangle(cornerRadius: 16).fill(theme.surface).shadow(radius: 20))
         }
     }
 }

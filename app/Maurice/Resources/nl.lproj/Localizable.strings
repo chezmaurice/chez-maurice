@@ -1,6 +1,6 @@
 /* Dutch — generated */
 "app.tagline" = "Een gezellige plek om te kletsen";
-"pairing.instructions" = "Elk huishouden heeft zijn eigen Maurice.\nVoer het adres van het jouwe in om dit apparaat te verbinden.";
+"pairing.instructions" = "Elk huishouden heeft zijn eigen Maurice. Met je uitnodiging kom je binnen.";
 "pairing.connect" = "Verbinden";
 "pairing.error.status" = "Server gaf een onverwachte status terug";
 "pairing.error.connect" = "Verbinden mislukt: %@";
@@ -10,7 +10,7 @@
 "picker.title" = "Wie is er?";
 "picker.empty" = "Om je op dit apparaat bij dit huishouden aan te sluiten, voer je de uitnodigingscode in die je hebt gekregen.";
 "picker.admin_signin" = "Aanmelden als beheerder";
-"picker.disconnect" = "Dit apparaat ontkoppelen";
+"picker.disconnect" = "Dit huishouden vergeten";
 "picker.pin.title" = "Voer je pincode in";
 "picker.pin.placeholder" = "Pincode";
 "picker.pin.error" = "Ongeldige pincode";
@@ -18,7 +18,7 @@
 "picker.needs_invite" = "%@ heeft geen pincode: voer een uitnodigingscode in om op dit apparaat aan te melden.";
 "picker.pin.cancel" = "Annuleren";
 "picker.pin.submit" = "Bevestigen";
-"picker.admin.title" = "Beheerderslogin";
+"picker.admin.title" = "Aanmelding beheerder";
 "picker.admin.subtitle" = "Meld je aan om gezinsleden te laden";
 "picker.admin.username" = "Gebruikersnaam";
 "picker.admin.password" = "Wachtwoord";
@@ -47,7 +47,7 @@
 "settings.palette.dark" = "DONKER";
 "settings.locale.title" = "Taal";
 "settings.locale.system" = "Systeemstandaard";
-"settings.disconnect" = "Ontkoppelen";
+"settings.disconnect" = "Afmelden";
 "settings.mcp.title" = "MCP-AUTHTOKEN";
 "settings.mcp.loading" = "Token aanmaken…";
 "settings.mcp.hint" = "Gebruik dit token als Bearer in je Claude Desktop-configuratie.";
@@ -211,7 +211,7 @@
 "context.section.conversations" = "Gesprekken";
 "context.searchPlaceholder" = "Zoek in notities, boeken, gesprekken…";
 "context.nothingMatches" = "niets komt overeen met “%@”";
-"pairing.url_placeholder" = "https://monfoyer.chezmaurice.eu";
+"pairing.url_placeholder" = "XXXX-XXXX of mijnhuis.chezmaurice.eu";
 
 /* Enrollment + PIN setup */
 "enroll.cta" = "Heb je een uitnodigingscode?";
@@ -652,9 +652,9 @@
 "members.new_device" = "Nieuw apparaat";
 "members.new_device.hint" = "Tik op iemand om een code te tonen die de app op een ander apparaat van die persoon installeert.";
 "members.new_device.for" = "Een nieuw apparaat voor %@";
-"devices.add" = "Een van mijn apparaten toevoegen";
+"devices.add" = "Apparaat toevoegen";
 "devices.add.sheet_title" = "Scan deze code met je andere apparaat, of stuur het de link";
-"devices.add.done" = "Je apparaat is verbonden.";
+"devices.add.done" = "Apparaat verbonden ✓";
 "devices.add.expired" = "Deze code is verlopen. Sluit en vraag een nieuwe aan.";
 "members.share" = "Link versturen";
 "members.revoke" = "Intrekken";
@@ -1045,3 +1045,40 @@
 "password.weak" = "Dit wachtwoord is te makkelijk te raden: kies een ander.";
 "password.too_many" = "Te veel pogingen. Probeer het over een kwartier opnieuw.";
 "pinsetup.weak" = "Deze pincode is te makkelijk te raden (een herhaald cijfer, een reeks, een veelgebruikte pincode): kies een andere.";
+
+/* Login and devices, shared with Carnet (glossary of 2 November 2026). */
+"invite.code" = "Uitnodigingscode";
+"welcome.promise.maurice" = "Een assistent die je kent en je laat zien wat hij weet.";
+"welcome.promise.carnet" = "Wat je leest, kijkt en noteert, op één plek.";
+"welcome.paste_link" = "Uitnodigingslink plakken";
+"welcome.enter_code" = "Code of adres invoeren";
+"welcome.more_options" = "Andere opties";
+"welcome.address_needed" = "Adres van je huishouden";
+"scanner.hint" = "Richt op de QR-code van de uitnodiging";
+"scanner.camera_reason" = "De camera dient alleen om de QR-code van je uitnodiging te lezen.";
+"common.close" = "Sluiten";
+"admin.create" = "Beheerdersaccount aanmaken";
+"devices.add.countdown" = "Nog %@ geldig";
+"member.switch" = "Ander lid kiezen";
+"household.forget.title" = "%@ vergeten op dit apparaat?";
+"household.forget.body" = "De leden die hier zijn aangemeld, worden afgemeld, en wat het apparaat voor hen bewaart, wordt gewist.";
+"household.forget.pending.one" = "1 verzending is nog niet verstuurd: die gaat verloren.";
+"household.forget.pending.other" = "%d verzendingen zijn nog niet verstuurd: ze gaan verloren.";
+"household.forget.confirm" = "Vergeten";
+"sheet.households" = "Huishoudens";
+"sheet.members" = "Leden";
+"sheet.pin_required" = "Pincode vereist";
+"sheet.active" = "Actief";
+"sheet.you" = "Jij";
+"pending.section" = "Wachtende verzendingen";
+"pending.one" = "1 verzending wacht tot %1$@ zich opnieuw aanmeldt bij %2$@.";
+"pending.other" = "%1$d verzendingen wachten tot %2$@ zich opnieuw aanmeldt bij %3$@.";
+"pending.one.nohousehold" = "1 verzending wacht tot %@ zich opnieuw aanmeldt.";
+"pending.other.nohousehold" = "%1$d verzendingen wachten tot %2$@ zich opnieuw aanmeldt.";
+"privacy.section" = "Privacy";
+"privacy.policy" = "Privacybeleid";
+"privacy.terms" = "Gebruiksvoorwaarden";
+"delete.text" = "Alles wat dit huishouden over je bewaart, wordt gewist, daarna je account, voorgoed.";
+"delete.confirm_footer" = "Typ ter bevestiging je gebruikersnaam: %@";
+"delete.field" = "Wachtwoord of pincode";
+"delete.confirm" = "Mijn account verwijderen";

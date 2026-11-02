@@ -1,6 +1,6 @@
 /* Portuguese — generated */
 "app.tagline" = "Um cantinho acolhedor para conversar";
-"pairing.instructions" = "Cada casa tem o seu próprio Maurice.\nIntroduza o endereço da sua para ligar este dispositivo.";
+"pairing.instructions" = "Cada casa tem o seu próprio Maurice. O teu convite deixa-te entrar.";
 "pairing.connect" = "Ligar";
 "pairing.error.status" = "O servidor devolveu um estado inesperado";
 "pairing.error.connect" = "Não foi possível ligar: %@";
@@ -9,9 +9,9 @@
 "pairing.error.https_hint" = "Os servidores Maurice usam https — tente https:// em vez de http://.";
 "picker.title" = "Quem está por aqui?";
 "picker.empty" = "Para se juntar a esta casa neste dispositivo, introduza o código de convite que recebeu.";
-"picker.admin_signin" = "Iniciar sessão como administrador";
-"picker.disconnect" = "Desligar este dispositivo";
-"picker.pin.title" = "Introduza o seu PIN";
+"picker.admin_signin" = "Entrar como administrador";
+"picker.disconnect" = "Esquecer esta casa";
+"picker.pin.title" = "Introduz o teu PIN";
 "picker.pin.placeholder" = "PIN";
 "picker.pin.error" = "PIN inválido";
 "picker.session_ended" = "A tua sessão nesta casa terminou. Inicia sessão de novo.";
@@ -47,7 +47,7 @@
 "settings.palette.dark" = "ESCURO";
 "settings.locale.title" = "Idioma";
 "settings.locale.system" = "Predefinição do sistema";
-"settings.disconnect" = "Desligar";
+"settings.disconnect" = "Terminar sessão";
 "settings.mcp.title" = "TOKEN DE AUTENTICAÇÃO MCP";
 "settings.mcp.loading" = "A gerar token…";
 "settings.mcp.hint" = "Use este token como Bearer na configuração do Claude Desktop.";
@@ -211,7 +211,7 @@
 "context.section.conversations" = "Conversas";
 "context.searchPlaceholder" = "Pesquisar notas, livros, conversas…";
 "context.nothingMatches" = "nada corresponde a “%@”";
-"pairing.url_placeholder" = "https://monfoyer.chezmaurice.eu";
+"pairing.url_placeholder" = "XXXX-XXXX ou minhacasa.chezmaurice.eu";
 
 /* Enrollment + PIN setup */
 "enroll.cta" = "Tens um código de convite?";
@@ -226,9 +226,9 @@
 "pinsetup.submit" = "Definir PIN";
 "pinsetup.invalid" = "O PIN deve ter 4 a 6 dígitos";
 "pinsetup.mismatch" = "Os PIN não coincidem";
-"household.add" = "Adicionar agregado";
-"foyer.switch_overline" = "Os seus agregados";
-"foyer.switch_title" = "Mudar de agregado";
+"household.add" = "Adicionar uma casa";
+"foyer.switch_overline" = "As tuas casas";
+"foyer.switch_title" = "Mudar de casa";
 "common.cancel" = "Cancelar";
 "common.save" = "Guardar";
 "common.create" = "Criar";
@@ -652,9 +652,9 @@
 "members.new_device" = "Novo dispositivo";
 "members.new_device.hint" = "Toque em alguém para mostrar um código que instala a app noutro dispositivo seu.";
 "members.new_device.for" = "Um novo dispositivo para %@";
-"devices.add" = "Adicionar um dos meus dispositivos";
+"devices.add" = "Adicionar um dispositivo";
 "devices.add.sheet_title" = "Digitalize este código com o seu outro dispositivo ou envie-lhe a ligação";
-"devices.add.done" = "O seu dispositivo está ligado.";
+"devices.add.done" = "Dispositivo ligado ✓";
 "devices.add.expired" = "Este código expirou. Feche e peça um novo.";
 "members.share" = "Enviar a ligação";
 "members.revoke" = "Retirar";
@@ -1045,3 +1045,40 @@
 "password.weak" = "Esta palavra-passe é demasiado fácil de adivinhar: escolha outra.";
 "password.too_many" = "Demasiadas tentativas. Tente de novo dentro de um quarto de hora.";
 "pinsetup.weak" = "Este PIN é demasiado fácil de adivinhar (um dígito repetido, uma sequência, um PIN comum): escolha outro.";
+
+/* Login and devices, shared with Carnet (glossary of 2 November 2026). */
+"invite.code" = "Código de convite";
+"welcome.promise.maurice" = "Um assistente que te conhece e te mostra o que sabe.";
+"welcome.promise.carnet" = "O que lês, vês e anotas, num só lugar.";
+"welcome.paste_link" = "Colar a ligação do convite";
+"welcome.enter_code" = "Introduzir um código ou um endereço";
+"welcome.more_options" = "Outras opções";
+"welcome.address_needed" = "Endereço da casa";
+"scanner.hint" = "Aponta para o QR do convite";
+"scanner.camera_reason" = "A câmara só serve para ler o QR do teu convite.";
+"common.close" = "Fechar";
+"admin.create" = "Criar a conta de administrador";
+"devices.add.countdown" = "Válido durante %@";
+"member.switch" = "Mudar de membro";
+"household.forget.title" = "Esquecer %@ neste dispositivo?";
+"household.forget.body" = "Os membros com sessão iniciada aqui saem, e o que o dispositivo guarda para eles é apagado.";
+"household.forget.pending.one" = "1 envio ainda não foi transmitido: vai perder-se.";
+"household.forget.pending.other" = "%d envios ainda não foram transmitidos: vão perder-se.";
+"household.forget.confirm" = "Esquecer";
+"sheet.households" = "Casas";
+"sheet.members" = "Membros";
+"sheet.pin_required" = "PIN necessário";
+"sheet.active" = "Ativa";
+"sheet.you" = "Tu";
+"pending.section" = "Envios pendentes";
+"pending.one" = "1 envio espera que %1$@ volte a entrar em %2$@.";
+"pending.other" = "%1$d envios esperam que %2$@ volte a entrar em %3$@.";
+"pending.one.nohousehold" = "1 envio espera que %@ volte a entrar.";
+"pending.other.nohousehold" = "%1$d envios esperam que %2$@ volte a entrar.";
+"privacy.section" = "Privacidade";
+"privacy.policy" = "Política de privacidade";
+"privacy.terms" = "Termos de utilização";
+"delete.text" = "Tudo o que esta casa guarda de ti será apagado, e depois a tua conta, para sempre.";
+"delete.confirm_footer" = "Para confirmar, escreve o teu nome de utilizador: %@";
+"delete.field" = "Palavra-passe ou PIN";
+"delete.confirm" = "Eliminar a minha conta";

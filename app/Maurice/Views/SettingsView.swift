@@ -38,6 +38,7 @@ struct SettingsView: View {
     @State private var showSourceDialog = false
     @State private var showSafety = false
     @State private var showReportQueue = false
+    @State private var confirmForget = false
     /// The code this member made for another device of theirs, shown as a QR.
     @State private var ownDeviceCode: MemberInviteCode?
     @State private var ownDeviceError: String?
@@ -353,7 +354,7 @@ struct SettingsView: View {
                     } else {
                         // Non-guests can hop to another household member.
                         Button { dismiss(); session.activeUserId = nil } label: {
-                            Text(session.localized("sidebar.switch"))
+                            Text(session.localized("member.switch"))
                                 .font(.system(size: 11, weight: .medium)).foregroundStyle(accent.legible(onDark: theme.isDark))
                                 .padding(.horizontal, 10).padding(.vertical, 4)
                                 .overlay(Capsule().strokeBorder(theme.ruleHard, lineWidth: 0.5))
@@ -376,7 +377,7 @@ struct SettingsView: View {
                     .font(.system(size: 10.5, design: .monospaced)).foregroundStyle(theme.inkMute)
                     .lineLimit(1).truncationMode(.middle)
                 Spacer(minLength: 8)
-                Button { session.unpair() } label: {
+                Button { dismiss(); session.signOut() } label: {
                     Text(session.localized("settings.disconnect"))
                         .font(.system(size: 10.5, design: .monospaced)).foregroundStyle(.red.opacity(0.8))
                 }
@@ -525,8 +526,29 @@ struct SettingsView: View {
                 }
                 AddHouseholdRow(label: session.localized("household.add")) { showAddHousehold = true }
             }
+            // Forgetting is for the household in use, every member on this
+            // device with it: said before it is done.
+            Button(role: .destructive) { confirmForget = true } label: {
+                Text(session.localized("picker.disconnect"))
+                    .font(.system(size: 13, weight: .medium))
+                    .frame(maxWidth: .infinity)
+            }
+            .glassBorderedButton()
+            .padding(.top, 6)
         }
         .task { await session.refreshFoyers() }
+        .confirmationDialog(
+            session.localized("household.forget.title", session.currentHousehold?.name ?? ""),
+            isPresented: $confirmForget, titleVisibility: .visible
+        ) {
+            Button(session.localized("household.forget.confirm"), role: .destructive) {
+                dismiss()
+                session.unpair()
+            }
+            Button(session.localized("common.cancel"), role: .cancel) {}
+        } message: {
+            Text(session.localized("household.forget.body"))
+        }
     }
 
     private var gardenPane: some View {
@@ -992,8 +1014,13 @@ private struct InviteQRSheet: View {
                     .tracking(3)
                     .foregroundStyle(theme.ink)
                     .textSelection(.enabled)
-                Text(Self.expiry(expiresAt, session: session) ?? "")
-                    .font(.system(size: 12)).foregroundStyle(theme.inkMute)
+                // Within the hour (a member's own code lasts minutes), the time
+                // left, counting down; further off, the date.
+                TimelineView(.periodic(from: .now, by: 1)) { ctx in
+                    Text(Self.remaining(expiresAt, now: ctx.date, session: session)
+                         ?? Self.expiry(expiresAt, session: session) ?? "")
+                        .font(.system(size: 12).monospacedDigit()).foregroundStyle(theme.inkMute)
+                }
                 HStack(spacing: 12) {
                     if let url = URL(string: invitation.link) {
                         ShareLink(item: url) {
@@ -1033,6 +1060,16 @@ private struct InviteQRSheet: View {
 
     /// "Valid until 2 Oct", in the member's language — "until 14:32" for a
     /// code that lasts minutes.
+    /// "Valid for 4:32" when the code lapses within the hour, else nil.
+    static func remaining(_ iso: String, now: Date, session: SessionStore) -> String? {
+        let parser = ISO8601DateFormatter()
+        parser.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        guard let date = parser.date(from: iso) ?? ISO8601DateFormatter().date(from: iso) else { return nil }
+        let left = Int(date.timeIntervalSince(now))
+        guard left > 0, left < 3_600 else { return nil }
+        return session.localized("devices.add.countdown", String(format: "%d:%02d", left / 60, left % 60))
+    }
+
     static func expiry(_ iso: String, session: SessionStore) -> String? {
         let parser = ISO8601DateFormatter()
         parser.formatOptions = [.withInternetDateTime, .withFractionalSeconds]

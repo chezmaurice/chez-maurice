@@ -2,6 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- An invitation link, https://<household>.chezmaurice.eu/join?code=…,
+	     opens the app (the household serves apple-app-site-association). -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:*.chezmaurice.eu</string>
+	</array>
 	<key>aps-environment</key>
 	<string>development</string>
 	<!-- The share extension's inbox (Shared/ShareInbox.swift). -->

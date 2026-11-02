@@ -296,6 +296,22 @@ final class SessionStore {
         if activeUserId == userId { activeUserId = nil }
     }
 
+    /// "Sign out": this member's session ends — on the server too, so the
+    /// token is dead even if a copy survives — and the device goes back to
+    /// "Who's here?". The household stays paired; "Forget this household"
+    /// (`unpair`) is the other, bigger step.
+    func signOut() {
+        guard let uid = activeUserId else { return }
+        if let url = serverURL, let token = tokenForUser(uid) {
+            Task {
+                let _: OkResponse? = try? await APIClient(baseURL: url)
+                    .post("/api/auth/logout", body: [String: String](), token: token)
+            }
+        }
+        clearMcpToken(for: uid)
+        logoutUser(uid)
+    }
+
     func logoutAll() {
         for user in deviceUsers { removeToken(for: user.id) }
         activeUserId = nil

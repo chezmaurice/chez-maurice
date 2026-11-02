@@ -1,6 +1,6 @@
 /* Italian — generated */
 "app.tagline" = "Un angolo accogliente per chiacchierare";
-"pairing.instructions" = "Ogni casa ha il suo Maurice.\nInserisci l’indirizzo della tua per collegare questo dispositivo.";
+"pairing.instructions" = "Ogni casa ha il suo Maurice. Il tuo invito ti fa entrare.";
 "pairing.connect" = "Connetti";
 "pairing.error.status" = "Il server ha restituito uno stato imprevisto";
 "pairing.error.connect" = "Connessione non riuscita: %@";
@@ -10,7 +10,7 @@
 "picker.title" = "Chi c'è?";
 "picker.empty" = "Per unirti a questa casa su questo dispositivo, inserisci il codice d’invito che hai ricevuto.";
 "picker.admin_signin" = "Accedi come amministratore";
-"picker.disconnect" = "Scollega questo dispositivo";
+"picker.disconnect" = "Dimentica questa casa";
 "picker.pin.title" = "Inserisci il tuo PIN";
 "picker.pin.placeholder" = "PIN";
 "picker.pin.error" = "PIN non valido";
@@ -19,7 +19,7 @@
 "picker.pin.cancel" = "Annulla";
 "picker.pin.submit" = "Entra";
 "picker.admin.title" = "Accesso amministratore";
-"picker.admin.subtitle" = "Accedi per caricare i membri della famiglia";
+"picker.admin.subtitle" = "Accedi per caricare i membri della casa";
 "picker.admin.username" = "Nome utente";
 "picker.admin.password" = "Password";
 "picker.admin.cancel" = "Annulla";
@@ -47,7 +47,7 @@
 "settings.palette.dark" = "SCURA";
 "settings.locale.title" = "Lingua";
 "settings.locale.system" = "Predefinita di sistema";
-"settings.disconnect" = "Scollega";
+"settings.disconnect" = "Esci";
 "settings.mcp.title" = "TOKEN DI AUTENTICAZIONE MCP";
 "settings.mcp.loading" = "Generazione del token…";
 "settings.mcp.hint" = "Usa questo token come Bearer nella configurazione di Claude Desktop.";
@@ -211,7 +211,7 @@
 "context.section.conversations" = "Conversazioni";
 "context.searchPlaceholder" = "Cerca note, libri, conversazioni…";
 "context.nothingMatches" = "nessun risultato per “%@”";
-"pairing.url_placeholder" = "https://monfoyer.chezmaurice.eu";
+"pairing.url_placeholder" = "XXXX-XXXX o miacasa.chezmaurice.eu";
 
 /* Enrollment + PIN setup */
 "enroll.cta" = "Hai un codice d'invito?";
@@ -226,9 +226,9 @@
 "pinsetup.submit" = "Imposta PIN";
 "pinsetup.invalid" = "Il PIN deve avere 4–6 cifre";
 "pinsetup.mismatch" = "I PIN non corrispondono";
-"household.add" = "Aggiungi famiglia";
-"foyer.switch_overline" = "Le tue famiglie";
-"foyer.switch_title" = "Cambia famiglia";
+"household.add" = "Aggiungi una casa";
+"foyer.switch_overline" = "Le tue case";
+"foyer.switch_title" = "Cambia casa";
 "common.cancel" = "Annulla";
 "common.save" = "Salva";
 "common.create" = "Crea";
@@ -340,7 +340,7 @@
 "dictation.error.audio_session" = "Non è stato possibile acquisire il microfono.";
 "dictation.error.interrupted" = "Dettatura interrotta — il microfono è passato ad altro. Ciò che è stato sentito è conservato.";
 "dictation.error.audio_engine" = "Non è stato possibile avviare la registrazione.";
-"dictation.error.transcription_failed" = "La dettatura si è fermata, ma la registrazione non è stata trascritta, né dal server della famiglia né su questo dispositivo.";
+"dictation.error.transcription_failed" = "La dettatura si è fermata, ma la registrazione non è stata trascritta, né dal server della casa né su questo dispositivo.";
 "dictation.downloading_model" = "Apple sta scaricando il modello di dettatura — %d %%. Solo la prima volta; continua anche se esci dall'app.";
 
 /* Dictation consent */
@@ -652,9 +652,9 @@
 "members.new_device" = "Nuovo dispositivo";
 "members.new_device.hint" = "Tocca qualcuno per mostrare un codice che installa l’app su un altro suo dispositivo.";
 "members.new_device.for" = "Un nuovo dispositivo per %@";
-"devices.add" = "Aggiungi un mio dispositivo";
+"devices.add" = "Aggiungi un dispositivo";
 "devices.add.sheet_title" = "Scansiona questo codice con l’altro dispositivo, o inviagli il link";
-"devices.add.done" = "Il tuo dispositivo è connesso.";
+"devices.add.done" = "Dispositivo connesso ✓";
 "devices.add.expired" = "Questo codice è scaduto. Chiudi e chiedine uno nuovo.";
 "members.share" = "Invia il link";
 "members.revoke" = "Ritira";
@@ -1058,3 +1058,40 @@
 "password.weak" = "Questa password è troppo facile da indovinare: scegline un’altra.";
 "password.too_many" = "Troppi tentativi. Riprova tra un quarto d’ora.";
 "pinsetup.weak" = "Questo PIN è troppo facile da indovinare (una cifra ripetuta, una sequenza, un PIN comune): scegline un altro.";
+
+/* Login and devices, shared with Carnet (glossary of 2 November 2026). */
+"invite.code" = "Codice d’invito";
+"welcome.promise.maurice" = "Un assistente che ti conosce e ti mostra ciò che sa.";
+"welcome.promise.carnet" = "Ciò che leggi, guardi e annoti, in un unico posto.";
+"welcome.paste_link" = "Incolla il link d’invito";
+"welcome.enter_code" = "Inserisci un codice o un indirizzo";
+"welcome.more_options" = "Altre opzioni";
+"welcome.address_needed" = "Indirizzo della casa";
+"scanner.hint" = "Inquadra il QR dell’invito";
+"scanner.camera_reason" = "La fotocamera serve solo a leggere il QR del tuo invito.";
+"common.close" = "Chiudi";
+"admin.create" = "Crea l’account amministratore";
+"devices.add.countdown" = "Valido ancora %@";
+"member.switch" = "Cambia membro";
+"household.forget.title" = "Dimenticare %@ su questo dispositivo?";
+"household.forget.body" = "I membri collegati qui vengono disconnessi, e ciò che il dispositivo conserva per loro viene cancellato.";
+"household.forget.pending.one" = "1 invio non è ancora stato trasmesso: andrà perso.";
+"household.forget.pending.other" = "%d invii non sono ancora stati trasmessi: andranno persi.";
+"household.forget.confirm" = "Dimentica";
+"sheet.households" = "Case";
+"sheet.members" = "Membri";
+"sheet.pin_required" = "PIN richiesto";
+"sheet.active" = "Attiva";
+"sheet.you" = "Tu";
+"pending.section" = "Invii in attesa";
+"pending.one" = "1 invio aspetta che %1$@ rientri in %2$@.";
+"pending.other" = "%1$d invii aspettano che %2$@ rientri in %3$@.";
+"pending.one.nohousehold" = "1 invio aspetta che %@ rientri.";
+"pending.other.nohousehold" = "%1$d invii aspettano che %2$@ rientri.";
+"privacy.section" = "Privacy";
+"privacy.policy" = "Informativa sulla privacy";
+"privacy.terms" = "Condizioni d’uso";
+"delete.text" = "Tutto ciò che questa casa conserva di te verrà cancellato, poi il tuo account, definitivamente.";
+"delete.confirm_footer" = "Per confermare, scrivi il tuo nome utente: %@";
+"delete.field" = "Password o PIN";
+"delete.confirm" = "Elimina il mio account";
