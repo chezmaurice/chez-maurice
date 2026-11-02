@@ -52,9 +52,11 @@ struct UserPickerView: View {
     @State private var confirmForget = false
 
     var body: some View {
-        VStack(spacing: 28) {
-            Spacer()
-
+        ZStack {
+        EntryBackground()
+        GeometryReader { geo in
+        ScrollView {
+        VStack(spacing: 22) {
             VStack(spacing: 10) {
                 Image("BowlerEmblem")
                     .resizable()
@@ -77,9 +79,12 @@ struct UserPickerView: View {
                         .font(.callout)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
-                        .padding(.horizontal, 32)
+                        .fixedSize(horizontal: false, vertical: true)
                     Button { openEnroll() } label: {
-                        Text(session.localized("enroll.cta")).frame(maxWidth: 320)
+                        // Ink button: its label in the card's own ground colour.
+                        Text(session.localized("enroll.cta"))
+                            .foregroundStyle(Color.platformBackground)
+                            .frame(maxWidth: 320)
                     }
                     .controlSize(.large)
                     .glassProminentButton()
@@ -95,7 +100,6 @@ struct UserPickerView: View {
                         }
                     }
                 }
-                .padding(.horizontal, 48)
             }
 
             if let error {
@@ -107,11 +111,8 @@ struct UserPickerView: View {
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-
-            Spacer()
-            Spacer()
 
             // Everything that is not "pick yourself": an invitation code, the
             // admin's password, and forgetting this household on this device.
@@ -132,10 +133,15 @@ struct UserPickerView: View {
             .menuStyle(.button)
             .fixedSize()
             .glassBorderedButton()
-            .padding(.bottom, 24)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.platformBackground.ignoresSafeArea())
+        .entryCard()
+        .padding(20)
+        // Centred when it fits, scrolling when the household is large.
+        .frame(maxWidth: .infinity, minHeight: geo.size.height)
+        }
+        .scrollBounceBehavior(.basedOnSize)
+        }
+        }
         .sheet(item: $pinTarget, onDismiss: { pinText = ""; pinError = nil }) { target in
             PinSheet(
                 user: target,

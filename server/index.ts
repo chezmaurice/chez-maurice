@@ -363,6 +363,7 @@ app.use("/*", async (c, next) => {
     path.startsWith("/api/") ||
     path === "/healthz" ||
     path === "/join" ||
+    path === "/join/maurice-tile.svg" ||
     path === "/.well-known/apple-app-site-association" ||
     path === "/.well-known/assetlinks.json" ||
     path.startsWith("/git/") ||
@@ -824,6 +825,20 @@ app.all("/calibre/*", async (c) => {
 app.get("/.well-known/apple-app-site-association", (c) => c.json(appleAppSiteAssociation()));
 app.get("/.well-known/assetlinks.json", (c) => c.json(assetLinks()));
 
+// The icons' background, repeated: the ground of the entry screens in the apps
+// and of this page (2 November 2026).
+const JOIN_TILE = (() => {
+  try {
+    return readFileSync(join(import.meta.dir, "assets/join/maurice-tile.svg"), "utf-8");
+  } catch {
+    return null;
+  }
+})();
+app.get("/join/maurice-tile.svg", (c) => {
+  if (!JOIN_TILE) return c.notFound();
+  return c.body(JOIN_TILE, 200, { "Content-Type": "image/svg+xml", "Cache-Control": "public, max-age=86400" });
+});
+
 app.get("/join", (c) => {
   const lang = langOf(c);
   const code = normalizeInviteCode(c.req.query("code") ?? "");
@@ -868,23 +883,31 @@ app.get("/join", (c) => {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(t(lang, "join.title", householdName()))}</title>
 <style>
-  body { font-family: ui-serif, Georgia, serif; max-width: 30rem; margin: 10vh auto; padding: 0 1.5rem; color: #2a2622; background: #f5efe6; text-align: center; }
+  :root { --ink: #2a2622; --soft: #6b6358; --paper: #faf6ef; --card: rgba(250, 246, 239, .92); --well: #ece3d6; --veil: transparent; }
+  @media (prefers-color-scheme: dark) {
+    :root { --ink: #f2ece2; --soft: #b5ab9e; --paper: #1e1c1a; --card: rgba(30, 28, 26, .92); --well: #3a3530; --veil: rgba(18, 17, 16, .55); }
+  }
+  html { min-height: 100%; background: #f5f0e8 url(/join/maurice-tile.svg) 0 0 / 320px repeat; }
+  body { margin: 0; min-height: 100vh; background: var(--veil); color: var(--ink); font-family: ui-serif, Georgia, serif; text-align: center;
+         display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
+  main { width: 100%; max-width: 420px; box-sizing: border-box; padding: 24px; border-radius: 28px; background: var(--card);
+         -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); box-shadow: 0 10px 40px rgba(0,0,0,.12); }
   h1 { font-size: 1.6rem; font-weight: 400; margin: 0 0 .25rem; }
-  .sub { font-family: ui-sans-serif, system-ui, sans-serif; font-size: .85rem; color: #6b6358; margin: 0 0 1rem; }
-  p { color: #6b6358; line-height: 1.6; font-size: .98rem; }
+  .sub { font-family: ui-sans-serif, system-ui, sans-serif; font-size: .85rem; color: var(--soft); margin: 0 0 1rem; }
+  p { color: var(--soft); line-height: 1.6; font-size: .98rem; }
   a.btn { display: inline-block; margin: .4rem .2rem .2rem; padding: .8rem 1.6rem; border-radius: 999px; text-decoration: none; font-family: ui-sans-serif, system-ui, sans-serif; }
-  a.open { background: #2a2622; color: #f5efe6; }
-  a.install { border: 1px solid #2a2622; color: #2a2622; }
-  a.alt { display: block; font-family: ui-sans-serif, system-ui, sans-serif; font-size: .85rem; color: #6b6358; margin: .3rem 0 0; }
+  a.open { background: var(--ink); color: var(--paper); }
+  a.install { border: 1px solid var(--ink); color: var(--ink); }
+  a.alt { display: block; font-family: ui-sans-serif, system-ui, sans-serif; font-size: .85rem; color: var(--soft); margin: .3rem 0 0; }
   .apps { display: grid; gap: 1rem; margin: 1rem 0 0; }
-  .app { background: #ece3d6; border-radius: 16px; padding: 1rem 1rem 1.2rem; }
+  .app { background: var(--well); border-radius: 16px; padding: 1rem 1rem 1.2rem; }
   .app h3 { margin: 0; font-size: 1.25rem; font-weight: 400; }
   .app p { margin: .25rem 0 .5rem; font-size: .92rem; }
   .step { margin: 2rem 0 0; }
-  .step h2 { font-size: 1.05rem; font-weight: 600; margin: 0 0 .25rem; font-family: ui-sans-serif, system-ui, sans-serif; color: #2a2622; }
+  .step h2 { font-size: 1.05rem; font-weight: 600; margin: 0 0 .25rem; font-family: ui-sans-serif, system-ui, sans-serif; color: var(--ink); }
   .note { font-size: .85rem; margin: .5rem 0 0; }
-  .code { font-family: ui-monospace, monospace; font-size: 1.6rem; letter-spacing: .2rem; background: #ece3d6; padding: .5rem 1rem; border-radius: 8px; display: inline-block; }
-</style></head><body>
+  .code { font-family: ui-monospace, monospace; font-size: 1.6rem; letter-spacing: .2rem; background: var(--well); padding: .5rem 1rem; border-radius: 8px; display: inline-block; }
+</style></head><body><main>
   <h1>${esc(t(lang, "join.title", householdName()))}</h1>
   <p class="sub">Chez Maurice</p>
   <p>${esc(t(lang, "join.lead"))}</p>
@@ -901,7 +924,7 @@ app.get("/join", (c) => {
     <p>${esc(t(lang, "join.code"))}</p>
     <div class="code">${esc(formatInviteCode(code))}</div>
   </div>` : ""}
-</body></html>`);
+</main></body></html>`);
 });
 
 // ── Health / status ─────────────────────────────────────────────

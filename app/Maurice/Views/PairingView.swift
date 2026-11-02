@@ -20,64 +20,66 @@ struct PairingView: View {
     @State private var entryPrefill = ""
 
     var body: some View {
-        VStack(spacing: 28) {
-            Spacer()
-
-            VStack(spacing: 14) {
-                Image("BowlerEmblem")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 92)
-                    .foregroundStyle(.primary)
-                    .accessibilityHidden(true)
-                VStack(spacing: 4) {
-                    Text("Maurice")
-                        .font(.wordmark(40))
-                    Text("Chez Maurice")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-                Text(session.localized("welcome.promise.maurice"))
-                    .font(.body)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
-            }
-
-            Spacer()
-
-            VStack(spacing: 12) {
-                Text(session.localized("pairing.instructions"))
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.bottom, 4)
-
-                GlassGroup {
-                    VStack(spacing: 12) {
-                        primaryAction
-                        Button { entryPrefill = ""; showEntry = true } label: {
-                            Text(session.localized("welcome.enter_code"))
-                                .frame(maxWidth: .infinity)
+        ZStack {
+            EntryBackground()
+            GeometryReader { geo in
+            ScrollView {
+                VStack(spacing: 24) {
+                    VStack(spacing: 14) {
+                        Image("BowlerEmblem")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 84)
+                            .foregroundStyle(.primary)
+                            .accessibilityHidden(true)
+                        VStack(spacing: 4) {
+                            Text("Maurice")
+                                .font(.wordmark(40))
+                            Text("Chez Maurice")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
                         }
-                        .controlSize(.large)
-                        .glassBorderedButton()
+                        Text(session.localized("welcome.promise.maurice"))
+                            .font(.body)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+
+                    VStack(spacing: 12) {
+                        Text(session.localized("pairing.instructions"))
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.bottom, 4)
+
+                        GlassGroup {
+                            VStack(spacing: 12) {
+                                primaryAction
+                                Button { entryPrefill = ""; showEntry = true } label: {
+                                    Text(session.localized("welcome.enter_code"))
+                                        .frame(maxWidth: .infinity)
+                                }
+                                .controlSize(.large)
+                                .glassBorderedButton()
+                            }
+                        }
+
+                        if let error {
+                            Text(error)
+                                .font(.footnote)
+                                .foregroundStyle(.red)
+                                .multilineTextAlignment(.center)
+                        }
                     }
                 }
-
-                if let error {
-                    Text(error)
-                        .font(.footnote)
-                        .foregroundStyle(.red)
-                        .multilineTextAlignment(.center)
-                }
+                .entryCard()
+                .padding(20)
+                // Centred when it fits, scrolling when it does not.
+                .frame(maxWidth: .infinity, minHeight: geo.size.height)
             }
-            .frame(maxWidth: 400)
-            .padding(.horizontal, 28)
-            .padding(.bottom, 28)
+            .scrollBounceBehavior(.basedOnSize)
+            }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.platformBackground.ignoresSafeArea())
         .sheet(isPresented: $showEntry) {
             EntrySheet(prefill: entryPrefill, onDone: { showEntry = false; onPaired?() })
                 .environment(session)
@@ -104,6 +106,7 @@ struct PairingView: View {
         if QRScannerView.isAvailable {
             Button { error = nil; showScanner = true } label: {
                 Label(session.localized("invite.scan"), systemImage: "qrcode.viewfinder")
+                    .foregroundStyle(Color.platformBackground)
                     .frame(maxWidth: .infinity)
             }
             .controlSize(.large)
@@ -119,6 +122,7 @@ struct PairingView: View {
     private var pasteButton: some View {
         Button { pasteInvitation() } label: {
             Label(session.localized("welcome.paste_link"), systemImage: "doc.on.clipboard")
+                .foregroundStyle(Color.platformBackground)
                 .frame(maxWidth: .infinity)
         }
         .controlSize(.large)

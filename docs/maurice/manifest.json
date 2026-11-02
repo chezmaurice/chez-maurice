@@ -1,7 +1,7 @@
 {
   "format": "maurice-docs",
   "version": 1,
-  "generated_at": "2026-11-02T16:24:48Z",
+  "generated_at": "2026-11-02T21:38:05Z",
   "notes": [
     { "file": "maurice-applications.md", "slug": "maurice-applications", "date": "2026-10-20", "bytes": 13985, "sha256": "309ebda8442d3ee0005ad5989355d4679e8c0ea1d7aea5bade516ee47f019452" },
     { "file": "maurice-architecture.md", "slug": "maurice-architecture", "date": "2026-10-26", "bytes": 39359, "sha256": "b8b73dbf1f84cd185583ce368e9e9d0ef9481a9d7c2764633356debba012d568" },
@@ -13,7 +13,7 @@
     { "file": "maurice-docs.md", "slug": "maurice-docs", "date": "2026-10-20", "bytes": 7988, "sha256": "a842779ec5a832eb627a8f3e340aa70a5aaa1782230a5f7373ed5a28db971d99" },
     { "file": "maurice-domains.md", "slug": "maurice-domains", "date": "2026-10-20", "bytes": 45676, "sha256": "4610beb01b7deb3761315a48725d3d84f68437afca7da5c503394e1b0cbe0b02" },
     { "file": "maurice-files.md", "slug": "maurice-files", "date": "2026-06-19", "bytes": 2618, "sha256": "efcfdcde55ae0036dede5249af40155debc54b2711290f1d9fae22fde7660c82" },
-    { "file": "maurice-households-rooms.md", "slug": "maurice-households-rooms", "date": "2026-11-02", "bytes": 22445, "sha256": "e44d11300f6a85fc0cefbbbc9679caee0488a093b93fbf75b41909854a18f611" },
+    { "file": "maurice-households-rooms.md", "slug": "maurice-households-rooms", "date": "2026-11-02", "bytes": 22940, "sha256": "b65eabe7bc614404b766fcf36833abbccf76e3819a6456df8db6f192ecdcb1fd" },
     { "file": "maurice-knowledge.md", "slug": "maurice-knowledge", "date": "2026-11-02", "bytes": 42994, "sha256": "a07e246d6300e76a23813f02c44d8adac6069c7221d828e8bf5a430b49ab6c40" },
     { "file": "maurice-life.md", "slug": "maurice-life", "date": "2026-10-20", "bytes": 4932, "sha256": "4a6474e3284e97ede426730051d388d962a8946e5238758e830639dfe846680c" },
     { "file": "maurice-personas-hats.md", "slug": "maurice-personas-hats", "date": "2026-09-19", "bytes": 10367, "sha256": "614e09adfab99ff0457eb9f2eb9937e6a3e38838a981e1867dd5eebfebe1a9a0" },
