@@ -750,3 +750,179 @@ describe("opening a conversation from an entry", () => {
     expect((await post({ entry: "series/fr/nope" })).status).toBe(404);
   });
 });
+
+// Carnet's « Que voulez-vous ajouter ? » (3 November 2026): what the member
+// types, offered as a conversation's list would be, with no conversation.
+describe("what the member typed", () => {
+  const typed = (text: unknown, auth = annaAuth, extra: Record<string, unknown> = {}) =>
+    req(auth, "/from-text", { method: "POST", body: JSON.stringify({ text, ...extra }) });
+
+  beforeEach(() => sug.forgetTextRequests());
+
+  test("named, looked up in the garden then the catalogue, filed as a batch", async () => {
+    searchResults.search_book = [{ id: "gb1", title: "Anéantir", year: 2022, subtitle: "Michel Houellebecq", image: "https://img/a.jpg" }];
+    modelSays = { subjects: [
+      { kind: "books", title: "Anéantir", year: 2022, creator: "Michel Houellebecq" },
+      { kind: "series", title: "Sugar" },
+    ] };
+    const res = await typed("  le dernier Houellebecq  ");
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.batch).toMatch(/^[0-9a-f-]{36}$/);
+    expect(body.entry).toBeNull();
+    expect(body.pending).toBe(2);
+    expect(body.kept).toBe(0);
+    // The model's likeliest first.
+    expect(body.suggestions.map((s: any) => s.title)).toEqual(["Anéantir", "Sugar"]);
+    const [book, sugar] = body.suggestions;
+    expect(book.conversation_id).toBeNull();
+    expect(book.batch).toBe(body.batch);
+    expect(book.note).toBe("");
+    expect(book.bound).toBe(false);
+    expect(book.links).toBe(false);
+    expect(book.searchable).toBe(true);
+    expect(book.image).toBe("https://img/a.jpg");
+    // The garden answered for Sugar: no provider asked about it.
+    expect(sugar.existing).toBe(true);
+    expect(sugar.entry).toBe("series/fr/sugar");
+    expect(toolCalls.map((c) => c.tool)).toEqual(["search_book"]);
+    expect(toolCalls[0]!.args.author).toBe("Michel Houellebecq");
+    // What was typed is what the model read.
+    expect(lastPrompt).toContain("le dernier Houellebecq");
+    // No conversation's list sees them.
+    expect(sug.suggestionsFor(ANNA, convo)).toEqual([]);
+    expect(((await (await req(annaAuth, `/?conversation=${convo}`)).json()) as any).pending).toBe(0);
+  });
+
+  test("kept: the fiche is opened, nothing written on it, no link to a conversation", async () => {
+    searchResults.search_series = [{ id: 136315, title: "The Bear", year: 2022, subtitle: "", image: "" }];
+    modelSays = { subjects: [{ kind: "series", title: "The Bear", year: 2022 }] };
+    const { batch, suggestions: [row] } = await (await typed("The Bear saison 3")).json() as any;
+    const kept = await req(annaAuth, `/${row.id}/keep`, { method: "POST", body: "{}" });
+    expect(kept.status).toBe(200);
+    const body = await kept.json() as any;
+    expect(body.state).toBe("kept");
+    expect(body.batch).toBe(batch);
+    expect(body.entry).toBe("series/fr/the-bear");
+    expect(toolCalls.find((c) => c.tool === "open_fiche")!.args.tmdb_id).toBe(136315);
+    const fiche = fs.readFileSync(path.join(root, "series/fr/the-bear-fiche.md"), "utf-8");
+    expect(fiche).not.toContain("maurice://conversations");
+    expect(fiche).not.toContain("saison 3");
+    // Read again by its batch.
+    const list = await (await req(annaAuth, `/?batch=${batch}`)).json() as any;
+    expect(list.kept).toBe(1);
+    expect(list.pending).toBe(0);
+    expect(list.suggestions[0].state).toBe("kept");
+  });
+
+  test("an entry of theirs, kept: opened, its notes untouched", async () => {
+    modelSays = { subjects: [{ kind: "series", title: "Sugar" }] };
+    const { suggestions: [row] } = await (await typed("Sugar")).json() as any;
+    const before = fs.readFileSync(path.join(root, "series/fr/sugar-fiche.md"), "utf-8");
+    expect((await req(annaAuth, `/${row.id}/keep`, { method: "POST", body: "{}" })).status).toBe(200);
+    const after = fs.readFileSync(path.join(root, "series/fr/sugar-fiche.md"), "utf-8");
+    expect(after).toContain("Vu le pilote.");
+    expect(after.match(/^\d{4}-\d{2}-\d{2} —/gm)?.length).toBe(before.match(/^\d{4}-\d{2}-\d{2} —/gm)?.length);
+    expect(toolCalls).toEqual([]);
+  });
+
+  test("several candidates: a pick, a new look with what was typed, a dismissal", async () => {
+    searchResults.search_movie = [
+      { id: 1, title: "Solaris", year: 2002, subtitle: "", image: "" },
+      { id: 2, title: "Solaris", year: 1972, subtitle: "", image: "" },
+    ];
+    modelSays = { subjects: [{ kind: "movies", title: "Solaris" }] };
+    const { batch, suggestions: [row] } = await (await typed("Solaris")).json() as any;
+    expect(row.candidates).toHaveLength(2);
+    expect((await req(annaAuth, `/${row.id}/keep`, { method: "POST", body: "{}" })).status).toBe(409);
+    // Another look: Maurice is told what the member typed.
+    modelSays = { query: "Solaris Tarkovski" };
+    searchResults.search_movie = [{ id: 3, title: "Dune: Part Two", year: 2024, subtitle: "", image: "" }];
+    const again = await req(annaAuth, `/${row.id}/search`, { method: "POST", body: "{}" });
+    expect(again.status).toBe(200);
+    expect(lastPrompt).toContain("THE PERSON SAID:\nSolaris");
+    expect(((await again.json()) as any).batch).toBe(batch);
+    expect((await req(annaAuth, `/${row.id}/dismiss`, { method: "POST" })).status).toBe(200);
+    const list = await (await req(annaAuth, `/?batch=${batch}`)).json() as any;
+    expect(list.suggestions).toEqual([]);
+  });
+
+  test("a subject once turned down still comes when they type it", async () => {
+    modelSays = { subjects: [{ kind: "people", title: "Marc Lambert", public: false, note: "Le voisin." }] };
+    await turn();
+    sug.dismissSuggestion(ANNA, sug.suggestionsFor(ANNA, convo)[0]!.id);
+    modelSays = { subjects: [{ kind: "people", title: "Marc Lambert", public: false }] };
+    const body = await (await typed("Marc Lambert")).json() as any;
+    expect(body.suggestions).toHaveLength(1);
+    expect(body.suggestions[0].searchable).toBe(false);
+  });
+
+  test("nothing named: an empty batch", async () => {
+    const body = await (await typed("acheter du pain")).json() as any;
+    expect(body.suggestions).toEqual([]);
+    expect(body.pending).toBe(0);
+    expect(modelCalls).toBe(1);
+  });
+
+  test("empty, too long, not a member with a garden: refused before the model", async () => {
+    for (const [text, status, code] of [["", 400, "empty_text"], ["   ", 400, "empty_text"], [42, 400, "empty_text"], ["x".repeat(501), 413, "text_too_long"]] as const) {
+      const res = await typed(text);
+      expect(res.status).toBe(status);
+      expect(((await res.json()) as any).code).toBe(code);
+    }
+    const ben = await typed("Hannah Arendt", benAuth);
+    expect(ben.status).toBe(403);
+    expect(((await ben.json()) as any).code).toBe("not_eligible");
+    expect(modelCalls).toBe(0);
+  });
+
+  test("a batch is its member's: another sees an empty list, a malformed id is not found", async () => {
+    modelSays = { subjects: [{ kind: "series", title: "Sugar" }] };
+    const { batch, suggestions: [row] } = await (await typed("Sugar")).json() as any;
+    expect(((await (await req(benAuth, `/?batch=${batch}`)).json()) as any).suggestions).toEqual([]);
+    expect((await req(benAuth, `/${row.id}/keep`, { method: "POST", body: "{}" })).status).toBe(404);
+    expect((await req(annaAuth, `/?batch=nope`)).status).toBe(404);
+  });
+
+  test("no consent to the provider, or no budget left: refused, nothing spent", async () => {
+    const { ancillaryModel } = await import("../src/services/ancillary");
+    const { getModel } = await import("../src/services/models");
+    const { setConsent } = await import("../src/services/aiConsent");
+    const { setHouseholdMonthlyBudget } = await import("../src/services/budget");
+    const local = getModel(ancillaryModel("entry_suggest"))?.tier === "local";
+    try {
+      setConsent(ANNA, "declined", []);
+      const res = await typed("Hannah Arendt");
+      if (!local) {
+        expect(res.status).toBe(403);
+        expect(((await res.json()) as any).code).toBe("ai_consent_required");
+      }
+    } finally {
+      db.run(`DELETE FROM ai_consent WHERE user_id = ?`, [ANNA]);
+    }
+    try {
+      setHouseholdMonthlyBudget(0);
+      const res = await typed("Hannah Arendt");
+      expect(res.status).toBe(402);
+      const body = await res.json() as any;
+      expect(body.code).toBe("budget");
+      expect(body.error).not.toMatch(/€|\d+[.,]\d{2}/);
+    } finally {
+      setHouseholdMonthlyBudget(null);
+    }
+    if (!local) expect(modelCalls).toBe(0);
+  });
+
+  test("twenty in ten minutes, then 429 with when to come back", async () => {
+    for (let i = 0; i < 20; i++) expect(sug.textRateLimit(ANNA, 1_000_000 + i)).toBeNull();
+    expect(sug.textRateLimit(ANNA, 1_000_100)).toBe(600);
+    expect(sug.textRateLimit(BEN, 1_000_100)).toBeNull();
+    expect(sug.textRateLimit(ANNA, 1_000_000 + 600_000)).toBeNull();
+    sug.forgetTextRequests();
+    for (let i = 0; i < 20; i++) sug.textRateLimit(ANNA);
+    const res = await typed("Hannah Arendt");
+    expect(res.status).toBe(429);
+    expect(res.headers.get("Retry-After")).toBeTruthy();
+    expect(((await res.json()) as any).code).toBe("rate_limited");
+  });
+});

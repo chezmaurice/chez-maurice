@@ -1,7 +1,13 @@
 import { Hono } from "hono";
 import { requireAuth } from "../middleware/auth";
 import { isParticipant } from "../services/conversations";
+import { AncillaryError } from "../services/ancillary";
 import {
+  batchKey,
+  batchOf,
+  suggestFromText,
+  textRateLimit,
+  textRefusal,
   boundRef,
   dismissSuggestion,
   episodesFor,
@@ -25,9 +31,14 @@ const suggestions = new Hono();
 
 suggestions.use("/*", requireAuth);
 
-const view = (memberId: string, s: EntrySuggestion, bound: string | null = boundRef(memberId, s.conversation_id)) => ({
+const view = (
+  memberId: string, s: EntrySuggestion,
+  bound: string | null = batchOf(s.conversation_id) ? null : boundRef(memberId, s.conversation_id),
+) => ({
   id: s.id,
-  conversation_id: s.conversation_id,
+  /** Null for a row of what the member typed (`batch`): no conversation. */
+  conversation_id: batchOf(s.conversation_id) ? null : s.conversation_id,
+  batch: batchOf(s.conversation_id),
   message_id: s.message_id,
   kind: s.kind,
   title: s.title,
@@ -57,9 +68,59 @@ const view = (memberId: string, s: EntrySuggestion, bound: string | null = bound
   web_path: s.existing || s.kept_path ? keptWebPath(memberId, s) : null,
 });
 
-/** The conversation's list: what waits first, then what was kept. */
+/** A batch's list, as the conversation's below — `batch` is not a conversation's. */
+const batchList = (uid: string, batch: string) => {
+  const key = batchKey(batch);
+  return {
+    batch,
+    entry: null,
+    suggestions: suggestionsFor(uid, key).map((s) => view(uid, s, null)),
+    pending: pendingCount(uid, key),
+    kept: keptCount(uid, key),
+  };
+};
+
+const BATCH_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+/**
+ * What the member typed — « le dernier Houellebecq », « Hannah Arendt » —
+ * offered as the list a conversation would have offered (Carnet's « Que
+ * voulez-vous ajouter ? », 3 November 2026). `{text, locale?}`; answers once
+ * the pass is done, with the batch the rows belong to. The rows are then
+ * kept, searched again and dismissed by the routes below, as any other.
+ */
+suggestions.post("/from-text", async (c) => {
+  const uid = c.get("userId");
+  const body = await c.req.json().catch(() => ({}));
+  const text = typeof body?.text === "string" ? body.text : "";
+  const refused = textRefusal(uid, text);
+  if (refused) return c.json({ error: refused.error, code: refused.code }, refused.status);
+  const wait = textRateLimit(uid);
+  if (wait != null) {
+    c.header("Retry-After", String(wait));
+    return c.json({ error: "too many requests", code: "rate_limited", retry_after: wait }, 429);
+  }
+  try {
+    const { batch } = await suggestFromText(uid, text, typeof body?.locale === "string" ? body.locale : null);
+    return c.json(batchList(uid, batch));
+  } catch (e) {
+    if (e instanceof AncillaryError && e.status === 403) {
+      return c.json({ error: e.message, code: "ai_consent_required" }, 403);
+    }
+    console.error("[suggest] from text failed:", e);
+    return c.json({ error: "Failed to read what was typed", code: "failed" }, 502);
+  }
+});
+
+/** The conversation's list: what waits first, then what was kept. With
+ *  `batch` instead, the list of what the member typed. */
 suggestions.get("/", async (c) => {
   const uid = c.get("userId");
+  const batch = c.req.query("batch");
+  if (batch !== undefined) {
+    if (!BATCH_ID.test(batch)) return c.json({ error: "not found" }, 404);
+    return c.json(batchList(uid, batch));
+  }
   const conversationId = c.req.query("conversation") ?? "";
   if (!conversationId || !isParticipant(conversationId, uid)) return c.json({ error: "not found" }, 404);
   // `settle=1`: answer once the pass the last reply started is done — for a

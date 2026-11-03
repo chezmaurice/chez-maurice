@@ -1084,6 +1084,11 @@ try { db.run(`CREATE INDEX IF NOT EXISTS idx_entry_suggestions_member ON entry_s
 // does not bring back.
 try { db.run(`ALTER TABLE entry_suggestions ADD COLUMN query TEXT`); } catch {}
 try { db.run(`ALTER TABLE entry_suggestions ADD COLUMN seen TEXT`); } catch {}
+// What the member typed in Carnet's « Que voulez-vous ajouter ? » (3 November
+// 2026), for the rows that came from it rather than from a conversation: they
+// carry `text:<batch>` as their conversation_id, and this is what they said —
+// read again when the member asks for another look or a podcast's episode.
+try { db.run(`ALTER TABLE entry_suggestions ADD COLUMN said TEXT`); } catch {}
 
 // A member's mail accounts (25 September 2026, services/mailAccounts.ts), read
 // by the `email` tool through a loopback route. Only the member sees or edits

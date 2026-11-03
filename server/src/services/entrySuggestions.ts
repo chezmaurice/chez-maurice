@@ -19,8 +19,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import db from "../db";
-import { ancillaryComplete, type AncillaryRequest, type AncillaryResult } from "./ancillary";
-import { recordSpend } from "./budget";
+import { ancillaryComplete, ancillaryModel, type AncillaryRequest, type AncillaryResult } from "./ancillary";
+import { aiAllowed, providerInfo } from "./aiConsent";
+import { recordSpend, verdict } from "./budget";
+import { getModel } from "./models";
 import { countParticipants, getConversation } from "./conversations";
 import { McpSession } from "./mcpClient";
 import { publishToUser } from "./roomBus";
@@ -32,7 +34,7 @@ import { listGardenEntries, type GardenEntry } from "../../data-api/services/gar
 import { indexGardenPaths } from "../../data-api/services/gardenIndex";
 import { noteBlock, withNote } from "../../data-api/services/gardenNote";
 import { appendResonance } from "../../data-api/services/gardenLinks";
-import { userLocale } from "./i18n";
+import { t, userLocale } from "./i18n";
 import { entriesOf, linkConversation } from "../../data-api/services/entryConversations";
 // The articles pipeline (gardenArticles, articleSummary, articleCleanup) is
 // loaded where it is used, not here: through the cleanup it reaches
@@ -89,6 +91,9 @@ export interface EntrySuggestion {
   query: string | null;
   /** Every candidate id already shown: a new look does not bring them back. */
   seen: string[];
+  /** What the member typed, for a row of a batch (`text:<batch>`): no
+   *  conversation behind it. */
+  said: string | null;
 }
 
 /** What the pass says of one subject, before anything is resolved. */
@@ -109,7 +114,29 @@ function hydrate(row: any): EntrySuggestion {
   try { candidates = row.candidates ? JSON.parse(row.candidates) : []; } catch {}
   try { seen = row.seen ? JSON.parse(row.seen) : []; } catch {}
   // Rows filed before the copies were folded (14 October 2026) fold on read.
-  return { ...row, public: !!row.public, candidates: distinct(candidates), query: row.query ?? null, seen };
+  return { ...row, public: !!row.public, candidates: distinct(candidates), query: row.query ?? null, seen, said: row.said ?? null };
+}
+
+// ── A batch: what the member typed, with no conversation ─────────────────────
+//
+// Carnet's « Que voulez-vous ajouter ? » (3 November 2026): the member types
+// « le dernier Houellebecq » and gets the list a conversation would have
+// offered, kept, searched again and dismissed the same way. Its rows have no
+// conversation: their conversation_id is `text:<batch>`, a value no
+// conversation can have, so that every query by conversation — the list, the
+// counts, the uniqueness of a subject — reads a batch as it reads a
+// conversation, and no conversation ever sees them.
+
+const BATCH_PREFIX = "text:";
+
+/** The batch a row's conversation_id stands for, or null for a conversation. */
+export function batchOf(conversationId: string): string | null {
+  return conversationId.startsWith(BATCH_PREFIX) ? conversationId.slice(BATCH_PREFIX.length) : null;
+}
+
+/** The conversation_id a batch's rows are filed under. */
+export function batchKey(batch: string): string {
+  return `${BATCH_PREFIX}${batch}`;
 }
 
 // ── A conversation held from an entry ───────────────────────────────────────
@@ -232,7 +259,7 @@ export function clipNote(note: string, max = NOTE_MAX_CHARS): string {
 }
 
 /** The first JSON object in a model's answer — fenced, prefixed, or bare. */
-export function parseNamed(text: string, alsoKind: string | null = null): Named[] {
+export function parseNamed(text: string, alsoKind: string | null = null, noteRequired = true): Named[] {
   const start = text.indexOf("{");
   const end = text.lastIndexOf("}");
   if (start < 0 || end <= start) return [];
@@ -244,7 +271,7 @@ export function parseNamed(text: string, alsoKind: string | null = null): Named[
     const kind = String(s?.kind ?? "");
     const title = String(s?.title ?? "").replace(/\s+/g, " ").trim();
     const note = clipNote(String(s?.note ?? ""));
-    if (!((SUGGESTION_KINDS as readonly string[]).includes(kind) || kind === alsoKind) || !title || !note) continue;
+    if (!((SUGGESTION_KINDS as readonly string[]).includes(kind) || kind === alsoKind) || !title || (noteRequired && !note)) continue;
     // A first name alone is nobody in particular.
     if (kind === "people" && title.split(" ").length < 2) continue;
     const year = Number.isInteger(s?.year) && s.year > 1000 && s.year < 2200 ? (s.year as number) : null;
@@ -592,10 +619,13 @@ function decidedElsewhere(memberId: string, kind: string, key: string, state: "d
  * - Already in this conversation: the note moves on; a kept row comes back
  *   as a note to add, since the pass only names it again for something new.
  */
-function record(memberId: string, conversationId: string, messageId: string | null, named: Named, r: Resolved): boolean {
+function record(
+  memberId: string, conversationId: string, messageId: string | null, named: Named, r: Resolved, said: string | null = null,
+): boolean {
   // A refusal is of a subject. A note turned down on an entry they already
-  // have says nothing about the next note on it.
-  if (!r.existing && decidedElsewhere(memberId, named.kind, r.key, "dismissed")) return false;
+  // have says nothing about the next note on it. Typed by the member, it is
+  // asked for: an earlier refusal does not hide it.
+  if (!said && !r.existing && decidedElsewhere(memberId, named.kind, r.key, "dismissed")) return false;
   const here = db
     .query(`SELECT id, state, note FROM entry_suggestions WHERE conversation_id = ? AND kind = ? AND key = ?`)
     .get(conversationId, named.kind, r.key) as { id: string; state: string; note: string } | null;
@@ -610,11 +640,11 @@ function record(memberId: string, conversationId: string, messageId: string | nu
     return true;
   }
   db.run(
-    `INSERT INTO entry_suggestions (id, member_id, conversation_id, message_id, kind, key, title, year, subtitle, image, public, candidates, existing, note)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO entry_suggestions (id, member_id, conversation_id, message_id, kind, key, title, year, subtitle, image, public, candidates, existing, note, said)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       crypto.randomUUID(), memberId, conversationId, messageId, named.kind, r.key, r.title, r.year, r.subtitle, r.image,
-      named.public === false ? 0 : 1, r.candidates.length ? JSON.stringify(r.candidates) : null, r.existing, named.note,
+      named.public === false ? 0 : 1, r.candidates.length ? JSON.stringify(r.candidates) : null, r.existing, named.note, said,
     ],
   );
   return true;
@@ -647,6 +677,8 @@ export function keptCount(memberId: string, conversationId: string): number {
 /** Tell the member's devices the conversation's list moved: how many wait,
  *  how many were kept — what the header's mark draws. */
 function announce(memberId: string, conversationId: string): void {
+  // A batch has no header to draw a mark in: its client holds the list.
+  if (batchOf(conversationId)) return;
   publishToUser(memberId, {
     type: "suggestions",
     conversationId,
@@ -717,6 +749,125 @@ function aboutRefs(memberId: string, conversationId: string, bound: GardenEntry 
     .all(conversationId, memberId) as Array<{ id: string | null }>;
   for (const r of rows) if (r.id) refs.add(String(r.id).replace(/-fiche$/, ""));
   return refs;
+}
+
+// ── What the member typed ───────────────────────────────────────────────────
+
+/** How long a typed request may be: a title, a name, a line — not a text. */
+export const TEXT_MAX_CHARS = 500;
+
+const NAME_SYSTEM = `A person typed, in their notebook, something they want to add to it: a work or a person. Name what they mean.
+
+An entry is a WORK or a PERSON:
+- movies, series, books, music (an album, or a song: it is kept under its album), podcasts, games
+- people: someone public (an actor, an author) or someone the person knows, named by first and last name
+
+Answer with JSON only: {"subjects": [...]}, at most ${MAX_PER_TURN}, the likeliest first.
+
+Each subject: {"kind": "movies|series|books|music|podcasts|games|people", "title": "...", "year": 2015, "creator": "...", "track": "...", "public": true}
+- "title": the work's usual title, or the person's full name. When they describe a work rather than title it — "the latest Houellebecq", "the film with the shark" — the title of the work it is, when you are sure. A season or an episode of a series is the series.
+- "year": the work's first release, when you are sure. Omit otherwise.
+- "creator": the author, the artist, the director — when the text or common knowledge gives it. Omit for people.
+- "track": for music only, when they mean a song rather than an album: the song's title; "title" is then its album when you are sure of it, the song's title otherwise.
+- "public": for people only. true for a public figure, false for someone from the person's own life.
+One subject when the text says which work or person it is. Two or three only when it could equally be several (a novel and its film), never to pad the list.
+Nothing that is not a work or a person — a place, a product, a task, a question: {"subjects": []}.`;
+
+export interface TextRefusal {
+  status: 400 | 402 | 403 | 413;
+  code: "empty_text" | "text_too_long" | "not_eligible" | "ai_consent_required" | "budget";
+  error: string;
+}
+
+/**
+ * Why this member's typed request cannot run now, or null. The same gates as
+ * a turn's pass: a member, not a guest nor a child, with a garden; a provider
+ * they agreed to send their words to (ancillaryComplete refuses it too); and
+ * the household's caps — weighed before a turn's reply, whose pass follows
+ * it; here there is no reply, so they are weighed before the pass itself.
+ */
+export function textRefusal(memberId: string, text: string): TextRefusal | null {
+  const typed = text.trim();
+  if (!typed) return { status: 400, code: "empty_text", error: "text is required" };
+  if (typed.length > TEXT_MAX_CHARS) {
+    return { status: 413, code: "text_too_long", error: `text is too long (${TEXT_MAX_CHARS} characters at most)` };
+  }
+  const garden = gardenFor(memberId);
+  if (isGuest(memberId) || getUser(memberId)?.is_child || !garden || !fs.existsSync(garden.root)) {
+    return { status: 403, code: "not_eligible", error: "not available for this member" };
+  }
+  const modelId = ancillaryModel("entry_suggest");
+  const model = getModel(modelId);
+  const provider = model?.provider ?? "anthropic";
+  if (model?.tier !== "local" && !aiAllowed(memberId, provider)) {
+    return {
+      status: 403, code: "ai_consent_required",
+      error: t(userLocale(memberId), "chat.ai_consent_required", providerInfo(provider).name),
+    };
+  }
+  // The refusal's prose is the chat's own: no member's spending in it.
+  const v = verdict(model?.provider ?? null, modelId, 0, memberId);
+  if (!v.ok) return { status: 402, code: "budget", error: v.reason ?? "budget reached" };
+  return null;
+}
+
+/** Typed requests per member: each is a model call and up to three lookups. */
+const TEXT_WINDOW_MS = 10 * 60_000;
+const TEXT_PER_WINDOW = 20;
+const textRequests = new Map<string, number[]>();
+
+/** Count one typed request for the member: the seconds to wait before the
+ *  next is allowed when they are past the limit, null when it may run. */
+export function textRateLimit(memberId: string, now = Date.now()): number | null {
+  const recent = (textRequests.get(memberId) ?? []).filter((at) => now - at < TEXT_WINDOW_MS);
+  if (recent.length >= TEXT_PER_WINDOW) {
+    textRequests.set(memberId, recent);
+    return Math.max(1, Math.ceil((recent[0]! + TEXT_WINDOW_MS - now) / 1000));
+  }
+  recent.push(now);
+  textRequests.set(memberId, recent);
+  return null;
+}
+
+/** Tests start from no request counted. */
+export function forgetTextRequests(): void {
+  textRequests.clear();
+}
+
+/**
+ * The pass on what the member typed, with no conversation: named by the
+ * ancillary model, looked for in their garden first, then in the catalogues,
+ * and filed as the rows of a new batch. Gate it with textRefusal first.
+ * `locale` is the catalogues' language for a book (`fr` or `en`); the fiche
+ * a keep opens is filed on the garden's side, as for a conversation.
+ */
+export async function suggestFromText(
+  memberId: string, text: string, locale?: string | null,
+): Promise<{ batch: string; named: number }> {
+  const typed = text.replace(/\s+/g, " ").trim().slice(0, TEXT_MAX_CHARS);
+  const batch = crypto.randomUUID();
+  const result = await completeWith({
+    memberId,
+    invocation: "entry_suggest",
+    system: NAME_SYSTEM,
+    prompt: `THE PERSON TYPED:\n${typed}`,
+    maxTokens: 600,
+    temperature: 0,
+    reasoning: "none",
+  });
+  recordSpend(result.usage, memberId, null, "suggestions");
+  // Nothing was said of them: the rows carry no note.
+  const named = parseNamed(result.text, null, false).map((n) => ({ ...n, note: "" }));
+  if (!named.length) return { batch, named: 0 };
+  const garden = gardenFor(memberId)!;
+  const searchLocale = locale === "fr" || locale === "en" ? locale : gardenLocale(memberId);
+  // The member waits for this one: the lookups run side by side.
+  const resolved = await Promise.all(named.map((n) => resolve(memberId, garden, n, searchLocale, null)));
+  const key = batchKey(batch);
+  // Filed last to first: the list reads the newest row first, and the
+  // likeliest subject is the model's first.
+  for (let i = named.length - 1; i >= 0; i--) record(memberId, key, null, named[i]!, resolved[i]!, typed);
+  return { batch, named: named.length };
 }
 
 // ── An article shared in the conversation ───────────────────────────────────
@@ -935,8 +1086,9 @@ function noteOnFiche(memberId: string, garden: GardenRef, ref: string, text: str
   }
   const parsed = parseFiche(fs.readFileSync(file, "utf-8"));
   if (!parsed) throw new SuggestionError(`Could not parse: ${ref}`, 422);
-  const block = noteBlock(new Date().toISOString().slice(0, 10), { text });
-  const body = parsed.body.includes(block) ? parsed.body : withNote(parsed.body, block);
+  // Nothing said (a row of a batch): the fiche is opened, and nothing written on it.
+  const block = text.trim() ? noteBlock(new Date().toISOString().slice(0, 10), { text }) : "";
+  const body = !block || parsed.body.includes(block) ? parsed.body : withNote(parsed.body, block);
   // Kept by the member's own hand: read, and theirs.
   markOpened(parsed.frontmatter);
   if (collection === "people" && !parsed.frontmatter.status) parsed.frontmatter.status = "confirmed";
@@ -947,6 +1099,8 @@ function noteOnFiche(memberId: string, garden: GardenRef, ref: string, text: str
 
 /** The note as it lands on the fiche: what was said, and where it was said. */
 export function noteText(s: EntrySuggestion, conversationTitle: string | null, locale: string): string {
+  // No conversation behind a batch's row: nothing to link back to.
+  if (batchOf(s.conversation_id)) return s.note.trim();
   return `${s.note.trim()} ${provenance(s.conversation_id, conversationTitle, locale)}`;
 }
 
@@ -975,7 +1129,8 @@ export async function keepSuggestion(
   if (s.state === "kept") return s;
   // No note to file: an article shared here, or an entry whose fiche is in
   // the context — keeping it is saying the conversation is about it.
-  if (!s.note) return keepAsAbout(memberId, s);
+  // A batch's row has neither: keeping it opens the fiche, and that is all.
+  if (!s.note && !batchOf(s.conversation_id)) return keepAsAbout(memberId, s);
   const garden = gardenFor(memberId);
   if (!garden) throw new SuggestionError("No notes for this member", 404);
   const episodes = [...new Set(episodeIds.map(String).filter(Boolean))];
@@ -1215,6 +1370,7 @@ const CATALOGUE: Record<string, string> = {
 
 /** What the person asked in the turn the row came from. */
 function questionOf(s: EntrySuggestion): string {
+  if (batchOf(s.conversation_id)) return s.said ?? "";
   const row = (s.message_id
     ? db.query(
         `SELECT content FROM messages WHERE conversation_id = ? AND role = 'user'
