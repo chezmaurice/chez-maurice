@@ -14,7 +14,7 @@ import { cardsFace } from "../services/flashcards";
 import { getShelfEntry, listNotes, listShelf, siteFor } from "../services/gardenShelf";
 import { conversationsAbout, EntryConversationError, summaryFor } from "../services/entryConversations";
 import {
-  addNote, archiveEntry, completeCard, completeDetails, deleteEntry, setCover, deployState, entryForBook, EntryWriteError, setPublished, writeShared, type EntryRef,
+  addNote, archiveEntry, completeCard, completeDetails, deleteEntry, deleteNote, editNote, setCover, deployState, entryForBook, EntryWriteError, setPublished, writeShared, type EntryRef,
 } from "../services/gardenWrite";
 
 import {
@@ -36,7 +36,7 @@ app.use("/entries/*", async (c, next) => {
   const named = (c.req.query("owner") ?? "").trim().replace(/^@/, "");
   if (!named || c.req.method === "GET") return next();
   const mine = memberBrief(c.get("userId") as string)?.username;
-  const allowed = /\/notes$|\/participants\/[^/]+$/.test(c.req.path);
+  const allowed = /\/notes(\/[^/]+)?$|\/participants\/[^/]+$/.test(c.req.path);
   if (named !== mine && !allowed) return c.json({ error: "Only the owner changes this" }, 403);
   return next();
 });
@@ -289,6 +289,39 @@ app.post("/entries/:collection/:locale/:slug/notes", async (c) => {
     addNote(memberId, garden, ref, { text: body.text, quote: body.quote, where: body.where }, bookId);
   });
 });
+
+/**
+ * Change or take off a note, by the id the entry's page gives it — on the
+ * caller's entry, or (`?owner=`) one shared with them. Who may do what:
+ * gardenShelf.ts noteRights. A note changed or gone meanwhile: 404
+ * `note_not_found`, and the client reloads.
+ */
+async function onNote(c: any, work: (at: NonNullable<ReturnType<typeof reach>>, ref: EntryRef, id: string) => Response | Promise<Response>) {
+  const at = reach(c);
+  if (!at) return c.json({ error: "No such entry" }, 404);
+  const { collection, locale, slug, id } = c.req.param();
+  try {
+    return await work(at, { collection, locale, slug }, id);
+  } catch (e) {
+    if (e instanceof EntryWriteError) return c.json({ error: e.message }, e.status);
+    if (e instanceof Error && /^invalid (slug|locale)/.test(e.message)) return c.json({ error: e.message }, 400);
+    console.error("[garden-entries] note change failed:", e);
+    return c.json({ error: "Failed to write" }, 500);
+  }
+}
+
+app.patch("/entries/:collection/:locale/:slug/notes/:id", async (c) => {
+  const body = await jsonBody(c);
+  if (!body) return c.json({ error: "Body must be JSON" }, 400);
+  return onNote(c, (at, ref, id) =>
+    c.json({ note: editNote(at.memberId, at.ownerId, at.garden, ref, id, body) }));
+});
+
+app.delete("/entries/:collection/:locale/:slug/notes/:id", (c) =>
+  onNote(c, (at, ref, id) => {
+    deleteNote(at.memberId, at.ownerId, at.garden, ref, id);
+    return c.body(null, 204);
+  }));
 
 /** The same, on a book of the library that has no entry yet: the fiche is made first. */
 app.post("/entries/from-book", async (c) => {

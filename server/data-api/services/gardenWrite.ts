@@ -35,13 +35,13 @@ import {
 import { listGardenEntries, type GardenEntry } from "./gardenEntries";
 import { indexGardenPaths, unindexGardenPath } from "./gardenIndex";
 import {
-  bookFor, isShelfCollection, isWritten, loadLibrary, ownSiteFor, preferredLocale, readFace, siteFor, subjectKey,
+  bookFor, isShelfCollection, isWritten, loadLibrary, noteRights, ownSiteFor, parseMine, preferredLocale, readFace, siteFor, subjectKey,
 } from "./gardenShelf";
 import { setArchived } from "./shelfArchive";
 import { buildPublicPages } from "./publicPages";
 
 export class EntryWriteError extends Error {
-  constructor(message: string, readonly status: 400 | 404 | 409 | 422) {
+  constructor(message: string, readonly status: 400 | 403 | 404 | 409 | 422) {
     super(message);
   }
 }
@@ -49,8 +49,8 @@ export class EntryWriteError extends Error {
 export interface EntryRef { collection: string; locale: string; slug: string }
 
 // The note as text lives in gardenNote.ts, free of the shelf's imports.
-import { noteBlock, withNote, type NoteInput } from "./gardenNote";
-import { isSharedWith, memberBriefByUsername } from "./entryShares";
+import { COMMENT_HEADING, noteBlock, splitEdited, withNote, type NoteInput } from "./gardenNote";
+import { isSharedWith, memberBrief, memberBriefByUsername, type MemberBrief } from "./entryShares";
 export { noteBlock, withNote, type NoteInput };
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -118,6 +118,108 @@ export function addNote(
   writeFiche(file, parsed.frontmatter, body);
   autoCommit(garden, [file], `Note on ${entry.collection}/${entry.slug}`);
   indexGardenPaths(memberId, [file]);
+}
+
+// ── Changing a note once written ──
+//
+// A note is found by its id (gardenNote.ts noteIdOf: its block as written),
+// never by its position: one changed or gone since the reader loaded the fiche
+// is `note_not_found`, and the reader reloads. Who may do what is
+// gardenShelf.ts noteRights — what the entry's page says, the routes enforce.
+
+/** A note as PATCH answers it. */
+export interface WrittenNote {
+  id: string; date: string | null; author: MemberBrief | null; text: string; quote: string | null;
+  page: string | null; edited: string | null; editable: boolean; deletable: boolean;
+}
+
+export interface NoteChange { text?: unknown; quote?: unknown; page?: unknown }
+
+function locateNote(garden: GardenRef, ref: EntryRef, id: string, readerId: string, ownerId: string) {
+  const entry = findEntry(garden, ref);
+  if (!entry.fiche) throw new EntryWriteError("note_not_found", 404);
+  const file = path.join(garden.root, entry.fiche.file);
+  const parsed = parseFiche(fs.readFileSync(file, "utf-8"));
+  if (!parsed) throw new EntryWriteError(`Could not parse: ${entry.fiche.file}`, 422);
+  const mine = parseMine({ body: parsed.body }, entry.collection, memberBriefByUsername);
+  const item = mine.items.find((i) => (i.kind === "note" || i.kind === "quote") && i.id === id);
+  const span = mine.spans.get(id);
+  if (!item || item.kind === "resonance" || item.kind === "highlight" || item.kind === "fragment" || !span) {
+    throw new EntryWriteError("note_not_found", 404);
+  }
+  return { entry, file, parsed, item, span, rights: noteRights(item, readerId, ownerId) };
+}
+
+/**
+ * Change a note's words — its text, its quote, its page — in place. It keeps
+ * its date and its signature, and gains the edit mark of the day. `change` is
+ * the whole note: a quote or a page left out is taken off.
+ */
+export function editNote(
+  readerId: string, ownerId: string, garden: GardenRef, ref: EntryRef, id: string, change: NoteChange,
+): WrittenNote {
+  if (typeof change.text !== "string" && change.text != null) throw new EntryWriteError("text must be a string", 400);
+  const at = locateNote(garden, ref, id, readerId, ownerId);
+  if (!at.rights.editable) throw new EntryWriteError("not_allowed", 403);
+  const { item } = at;
+  const asText = (v: unknown) => (typeof v === "string" ? v : v == null ? "" : String(v));
+
+  // The body is the whole note: a quote or a page left out is taken off.
+  // An edit mark sent back with the text is the old one: today's replaces it.
+  const text = splitEdited(asText(change.text).trim()).text;
+  const quote = asText(change.quote).trim();
+  if (!text && !quote) throw new EntryWriteError("text or quote required", 400);
+  const page = asText(change.page).trim();
+  // A chapter, which the reader does not edit, stays where it was.
+  const where = page ? { page } : item.where?.chapter_title ? { chapter_title: item.where.chapter_title } : undefined;
+
+  const block = noteBlock(item.date!, { text, quote, where, author: item.author?.username }, today());
+  const lines = at.parsed.body.split("\n");
+  lines.splice(at.span.start, at.span.end - at.span.start + 1, ...block.split("\n"));
+  const body = lines.join("\n");
+  writeFiche(at.file, at.parsed.frontmatter, body);
+  autoCommit(garden, [at.file], `Edit note on ${at.entry.collection}/${at.entry.slug}`);
+  indexGardenPaths(ownerId, [at.file]);
+
+  // Read back as any reader will: its new id, its mark.
+  const again = parseMine({ body }, at.entry.collection, memberBriefByUsername);
+  const id2 = [...again.spans].find(([, s]) => s.start === at.span.start)?.[0];
+  const now = again.items.find((i) => i.id === id2);
+  if (!now || (now.kind !== "note" && now.kind !== "quote")) throw new Error("the edited note does not read back");
+  return {
+    id: now.id, date: now.date, author: now.author ?? memberBrief(ownerId), text: now.text, quote: now.quote,
+    page: now.where?.page ?? null, edited: now.edited, ...noteRights(now, readerId, ownerId),
+  };
+}
+
+/** Take a note off the fiche — and its section's heading, when it was the last. */
+export function deleteNote(readerId: string, ownerId: string, garden: GardenRef, ref: EntryRef, id: string): void {
+  const at = locateNote(garden, ref, id, readerId, ownerId);
+  if (!at.rights.deletable) throw new EntryWriteError("not_allowed", 403);
+  const lines = at.parsed.body.split("\n");
+  const blank = (i: number) => !(lines[i] ?? "").trim();
+  /** The blank lines at `i`, when a blank line already comes before. */
+  const closeGap = (i: number) => {
+    while (i < lines.length && blank(i) && (i === 0 || blank(i - 1))) lines.splice(i, 1);
+  };
+  const start = at.span.start;
+  lines.splice(start, at.span.end - start + 1);
+  closeGap(start);
+
+  let h = start - 1;
+  while (h >= 0 && !/^##\s/.test(lines[h]!.trim())) h--;
+  if (h >= 0 && lines[h]!.trim() === COMMENT_HEADING) {
+    let end = h + 1;
+    while (end < lines.length && !/^##\s/.test(lines[end]!.trim())) end++;
+    if (lines.slice(h + 1, end).every((l) => !l.trim())) {
+      lines.splice(h, end - h);
+      closeGap(h);
+    }
+  }
+  const rest = lines.join("\n").replace(/\s*$/, "\n");
+  writeFiche(at.file, at.parsed.frontmatter, rest.startsWith("\n") ? rest : `\n${rest}`);
+  autoCommit(garden, [at.file], `Delete note on ${at.entry.collection}/${at.entry.slug}`);
+  indexGardenPaths(ownerId, [at.file]);
 }
 
 /**

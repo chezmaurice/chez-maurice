@@ -37,7 +37,7 @@ import { userLocale } from "../../src/services/i18n";
 import { isConversationFragment } from "./entryConversations";
 import { archivedIds } from "./shelfArchive";
 import { gardenFor } from "./gardenFiche";
-import { NOTE_AUTHOR } from "./gardenNote";
+import { NOTE_AUTHOR, noteIdOf, splitEdited } from "./gardenNote";
 import {
   conversationInitiator, memberBrief, memberBriefByUsername, participantsByEntry, participantsOf, sharedBy, sharedWith,
   type MemberBrief,
@@ -125,10 +125,15 @@ export interface ShelfEntry {
  * `author` is who wrote the item: on an entry's page it is always named, the
  * owner for a note that carries no signature. `conversation` is the exchange
  * with Maurice a note was kept from, and who started it.
+ *
+ * A note's `id` is stable (gardenNote.ts noteIdOf); `edited` is the day it was
+ * last changed (its edit mark), and `editable`/`deletable` say what the reader
+ * may do with it (noteRights).
  */
 export type MineItem =
-  | { kind: "note" | "quote"; id: null; date: string | null; text: string; quote: string | null;
+  | { kind: "note" | "quote"; id: string; date: string | null; text: string; quote: string | null;
       where: { page?: string; chapter_title?: string } | null;
+      edited: string | null; editable?: boolean; deletable?: boolean;
       author?: MemberBrief | null; conversation?: { id: string; initiator: MemberBrief | null } | null }
   | { kind: "resonance"; id: null; date: string | null; text: string; quote: string | null;
       from: { label: string; entry_id: string | null; published_url: string | null } | null;
@@ -250,22 +255,51 @@ function byline(collection: string, card: Face | null, fiche: Face | null): stri
 const SECTIONS = { note: "## Commentaire", resonance: "## Résonances" } as const;
 const DATED = /^(\d{4}-\d{2}-\d{2})(?:\s+—\s+(.*?))?\s*(:)?\s*$/;
 
-interface Parsed { prose: string; items: MineItem[] }
+/** Where a note's block lies in the fiche's body: its first and last lines (0-based, inclusive). */
+export interface NoteSpan { start: number; end: number }
+
+interface Parsed { prose: string; items: MineItem[]; spans: Map<string, NoteSpan> }
 
 /** A member by username — how a signed note finds its author. */
 type Members = (username: string) => MemberBrief | null;
 const CONVERSATION_LINK = /maurice:\/\/conversations\/([A-Za-z0-9_-]+)/;
 
-function parseBlocks(kind: "note" | "resonance", text: string, members?: Members): MineItem[] {
+/**
+ * What the reader of a note may do with it. On their own entry: edit and
+ * delete their notes, delete (not edit) one another member signed. On an entry
+ * shared with them: edit and delete the notes they signed. Never what Maurice
+ * put there — a note kept from a conversation (it links back to it), a
+ * conversation's summary — nor the undated comment an article was saved with.
+ */
+export function noteRights(
+  item: { date: string | null; text: string; author?: { id: string } | null; conversation?: unknown },
+  readerId: string, ownerId: string,
+): { editable: boolean; deletable: boolean } {
+  const filed = !item.date || !!item.conversation || CONVERSATION_LINK.test(item.text)
+    || /^Conversation (avec|with) Maurice\b/.test(item.text);
+  if (filed) return { editable: false, deletable: false };
+  const authorId = item.author?.id ?? ownerId;
+  if (authorId === readerId) return { editable: true, deletable: true };
+  return { editable: false, deletable: readerId === ownerId };
+}
+
+function parseBlocks(
+  kind: "note" | "resonance", text: string, members: Members | undefined,
+  /** Line of the body the section's text starts on; ids seen so far on the fiche; where each note lies. */
+  offset = 0, seen = new Map<string, number>(), spans = new Map<string, NoteSpan>(),
+): MineItem[] {
   const items: MineItem[] = [];
-  let cur: { date: string | null; head: string; colon: boolean; lines: string[]; author: MemberBrief | null } | null = null;
+  let cur: { date: string | null; head: string; colon: boolean; lines: string[]; author: MemberBrief | null;
+    start: number; end: number; raw: string[] } | null = null;
   const flush = () => {
     if (!cur) return;
     const quote = cur.lines.filter((l) => l.startsWith(">")).map((l) => l.replace(/^>\s?/, "")).join("\n").trim();
     const rest = cur.lines.filter((l) => !l.startsWith(">")).join("\n").trim();
     // `DATE — text` is a whole note on one line; `DATE — <where> :` opens a
     // block whose text follows.
-    const text = cur.colon ? rest : [cur.head, rest].filter(Boolean).join("\n\n");
+    const marked = cur.colon ? rest : [cur.head, rest].filter(Boolean).join("\n\n");
+    // The edit mark is the note's, not its text (only a note carries one).
+    const { text, edited } = kind === "note" ? splitEdited(marked) : { text: marked, edited: null };
     if (!text && !quote) {
       cur = null;
       return;
@@ -282,16 +316,24 @@ function parseBlocks(kind: "note" | "resonance", text: string, members?: Members
       // `p. 112` names a page, `ch. Chapitre VII` the chapter being read.
       const place = cur.colon ? cur.head.match(/^(p|ch)\.\s*(.+)$/) : null;
       const from = text.match(CONVERSATION_LINK);
+      // The id is the block as written — whoever reads it, signature resolved or not.
+      const raw = cur.raw.join("\n");
+      const n = seen.get(raw) ?? 0;
+      seen.set(raw, n + 1);
+      const id = noteIdOf(raw, n);
+      spans.set(id, { start: cur.start, end: cur.end });
       items.push({
-        kind: quote ? "quote" : "note", id: null, date: cur.date, text, quote: quote || null,
+        kind: quote ? "quote" : "note", id, date: cur.date, text, quote: quote || null,
         where: !place ? null : place[1] === "p" ? { page: place[2]! } : { chapter_title: place[2]! },
+        edited,
         author: cur.author,
         conversation: from ? { id: from[1]!, initiator: null } : null,
       });
     }
     cur = null;
   };
-  for (const line of text.split("\n")) {
+  text.split("\n").forEach((line, i) => {
+    const at = offset + i;
     const m = line.match(DATED);
     if (m) {
       flush();
@@ -301,33 +343,45 @@ function parseBlocks(kind: "note" | "resonance", text: string, members?: Members
       const signed = members ? head.match(NOTE_AUTHOR) : null;
       const author = signed ? members!(signed[1]!) : null;
       if (author) head = (signed![2] ?? "").trim();
-      cur = { date: m[1]!, head, colon: !!m[3], lines: [], author };
+      cur = { date: m[1]!, head, colon: !!m[3], lines: [], author, start: at, end: at, raw: [line] };
     } else {
       // Text before the first date: the comment an article was saved with.
-      cur ??= { date: null, head: "", colon: true, lines: [], author: null };
+      if (!cur) {
+        if (!line.trim()) return;
+        cur = { date: null, head: "", colon: true, lines: [], author: null, start: at, end: at, raw: [] };
+      }
       cur.lines.push(line);
+      if (line.trim()) {
+        // Up to its last line that says something: the blank ones after are the gap to the next.
+        cur.raw.push(...Array(at - cur.end - (cur.raw.length ? 1 : 0)).fill(""), line);
+        cur.end = at;
+      }
     }
-  }
+  });
   flush();
   return items;
 }
 
-function parseMine(fiche: Face, collection: string, members?: Members): Parsed {
+/** The member's side of a fiche: its prose, then the dated items of its sections. */
+export function parseMine(fiche: Pick<Face, "body">, collection: string, members?: Members): Parsed {
   const lines = fiche.body.split("\n");
-  const chunks: { kind: "prose" | "note" | "resonance"; lines: string[] }[] = [{ kind: "prose", lines: [] }];
-  for (const line of lines) {
+  const chunks: { kind: "prose" | "note" | "resonance"; lines: string[]; start: number }[] = [{ kind: "prose", lines: [], start: 0 }];
+  lines.forEach((line, i) => {
     const t = line.trim();
-    if (t === SECTIONS.note) chunks.push({ kind: "note", lines: [] });
-    else if (t === SECTIONS.resonance) chunks.push({ kind: "resonance", lines: [] });
+    if (t === SECTIONS.note) chunks.push({ kind: "note", lines: [], start: i + 1 });
+    else if (t === SECTIONS.resonance) chunks.push({ kind: "resonance", lines: [], start: i + 1 });
     // Any other heading the member wrote after a section is prose again.
-    else if (/^##\s/.test(t) && chunks.at(-1)!.kind !== "prose") chunks.push({ kind: "prose", lines: [line] });
+    else if (/^##\s/.test(t) && chunks.at(-1)!.kind !== "prose") chunks.push({ kind: "prose", lines: [line], start: i });
     else chunks.at(-1)!.lines.push(line);
-  }
+  });
   let prose = chunks.filter((c) => c.kind === "prose").map((c) => c.lines.join("\n").trim()).filter(Boolean).join("\n\n");
   // An article's fiche opens on the page's own excerpt, quoted: not the member's.
   if (collection === "articles") prose = prose.replace(/^(?:>.*(?:\n|$))+/, "").trim();
-  const items = chunks.flatMap((c) => (c.kind === "prose" ? [] : parseBlocks(c.kind, c.lines.join("\n"), members)));
-  return { prose, items };
+  const seen = new Map<string, number>();
+  const spans = new Map<string, NoteSpan>();
+  const items = chunks.flatMap((c) => (c.kind === "prose" ? []
+    : parseBlocks(c.kind, c.lines.join("\n"), members, c.start, seen, spans)));
+  return { prose, items, spans };
 }
 
 /** What Maurice filed from a conversation. An article's first fragment is its text: the source. */
@@ -742,13 +796,24 @@ export async function listNotes(
     if (fiche && row.mine?.opened) {
       // The comment an article was saved with carries no date: the save's.
       const saved = /^\d{4}-\d{2}-\d{2}/.test(String(fiche.fm.date ?? "")) ? String(fiche.fm.date).slice(0, 10) : null;
+      // Who signed what, for what the member may do with it — the list itself
+      // shows the notes as written. Ids are the same either way.
+      const signers = new Map<string, MemberBrief | null | undefined>();
+      if (fiche.body.includes("— @")) {
+        for (const i of parseMine(fiche, e.collection, memberBriefByUsername).items) {
+          if (i.kind === "note" || i.kind === "quote") signers.set(i.id, i.author);
+        }
+      }
       // Sections are append-only: the last block of the file is the newest.
       for (const item of parseMine(fiche, e.collection).items.reverse()) {
         if (item.kind === "fragment" || item.kind === "highlight") continue;
         items.push(item.kind === "resonance"
           // The link is a basename, resolved on the entry's page; the label is enough here.
           ? { ...item, entry_id: row.id, date: item.date ?? saved, from: item.from && { ...item.from, entry_id: null } }
-          : { ...item, entry_id: row.id, date: item.date ?? saved });
+          : {
+              ...item, entry_id: row.id, date: item.date ?? saved,
+              ...noteRights({ ...item, author: signers.get(item.id) }, memberId, memberId),
+            });
       }
     }
     if (book) items.push(...await noted(book.id, row.id));
@@ -861,6 +926,7 @@ export async function getShelfEntry(
           conversation: item.conversation && {
             id: item.conversation.id, initiator: conversationInitiator(item.conversation.id),
           },
+          ...noteRights(item, memberId, ownerId),
         };
       }
       return item;

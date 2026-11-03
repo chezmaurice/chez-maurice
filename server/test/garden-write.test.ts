@@ -91,8 +91,8 @@ describe("my side", () => {
     expect(e.mine!.prose).toBe("Roman de l'éco-anxiété.");
     const today = new Date().toISOString().slice(0, 10);
     expect(e.mine!.items.filter((i) => i.kind !== "resonance")).toMatchObject([
-      { kind: "note", id: null, date: today, text: "Arthur = caricature.", quote: null, where: null },
-      { kind: "quote", id: null, date: today, text: "C'est tout le livre.", quote: "en cessant d'enlever", where: { chapter_title: "Chapitre VII" } },
+      { kind: "note", id: expect.stringMatching(/^n-/), date: today, text: "Arthur = caricature.", quote: null, where: null },
+      { kind: "quote", id: expect.stringMatching(/^n-/), date: today, text: "C'est tout le livre.", quote: "en cessant d'enlever", where: { chapter_title: "Chapitre VII" } },
     ]);
     expect(e.mine!.items.filter((i) => i.kind === "resonance")).toHaveLength(1);
     // The book the shelf matched is recorded once and for all.
