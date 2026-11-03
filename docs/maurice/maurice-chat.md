@@ -1,6 +1,6 @@
 ---
 title: The chat experience
-date: '2026-11-01'
+date: '2026-11-03'
 flags: []
 locale: en
 description: Streaming render, tool-result data cards, math, markdown, images, dictation,
@@ -95,6 +95,10 @@ Since 19 September 2026 a conversation can begin with Maurice. The server create
 What the model sees: the history would start with an assistant turn, which the Messages API refuses, so one constant user lead (`[Maurice opened this conversation on his own. His first message follows.]`) is placed before it, after the context window is cut, for every provider.
 
 Who may receive one: never a child (`users.is_child`, a box in the console's member page), never a guest (their life is in another household), and never twice within the household's number of days (fifteen by default; "Days between two conversations Maurice opens" in the console's settings). Two callers open one: the operator — `POST /api/admin/conversations/open` with `{username | member_id, text, title?, maurice_id?, force?, dry_run?}`, or `scripts/open-conversation.sh <username> "<text>"`, no model called — and, since the evening of 19 September 2026, **the night that proposes [[maurice-domains|domains]]**: since 20 September 2026 its first message is **rendered by the server** from what the mapping found — the model writes only the introduction, the nuances and the invitation; the server writes what a domain is and what it feeds, then every alive proposal with its weight on five dots, its conversations, its share and its recent ones, the lived ones named apart — the row carries the proposals, and in that conversation alone Maurice holds four tools — propose, adjust, adopt, seed — to settle them in the member's words; nothing becomes a domain without their yes ([[maurice-tools]]). Under that first message the app draws one button, **"Define my domains"**, for as long as the server lists open proposals (`GET /api/domains/proposals` — the state is the route's, never read off the text), which opens the drawer described in [[maurice-domains]]; what the member decides there comes back into the thread as a message of Maurice's, over the room channel. Replying is an ordinary turn on the member's own model.
+
+## A conversation received from another household *(3 November 2026)*
+
+A conversation can arrive from another household with an entry given there ([[maurice-carnet]]): a copy, its messages and data cards, with the giver and the friend as participants, marked `read_only` and `imported_from`. The app replaces the message field with a band — *Conversation reçue du foyer … — en lecture seule* — and a button, *Nouvelle conversation à partir de celle-ci*, which opens a new conversation from the same entry, its fiche as context (`POST /api/conversations {entry}`, which accepts an entry shared with the caller, `@owner/…`). Posting to it answers 409; the settling summary skips it.
 
 ## Streaming
 

@@ -1,6 +1,6 @@
 ---
 title: Maurice — the digest
-date: '2026-11-02'
+date: '2026-11-03'
 flags: []
 locale: en
 description: 'The system documentation condensed to what a user needs: everything
@@ -17,14 +17,14 @@ digest: true
 covers:
   maurice-applications: '2026-10-20'
   maurice-architecture: '2026-10-26'
-  maurice-carnet: '2026-11-02'
-  maurice-chat: '2026-11-01'
+  maurice-carnet: '2026-11-03'
+  maurice-chat: '2026-11-03'
   maurice-composer: '2026-10-20'
   maurice-data-model: '2026-10-29'
   maurice-docs: '2026-10-20'
   maurice-domains: '2026-10-20'
   maurice-files: '2026-06-19'
-  maurice-households-rooms: '2026-11-02'
+  maurice-households-rooms: '2026-11-03'
   maurice-knowledge: '2026-11-02'
   maurice-life: '2026-10-20'
   maurice-personas-hats: '2026-09-19'
@@ -93,12 +93,12 @@ There is also a **browser clipper** that saves the page being read into the memb
 - **Roles:**
   - **admin** — manages members, keys, models, budgets and the household's identity;
   - **standard** — a full member with a mandatory PIN;
-  - **guest** — full capabilities but a limited *reach*: an explicit contact list, checked both ways, and only the domains shared with them. This is how you host someone, or are hosted;
+  - **guest** — full capabilities but a limited *reach*: an explicit contact list, checked both ways, and only the domains shared with them. This is how you host someone, or are hosted. Any member (a child only if the admin allows it) can **invite a friend as their guest** from Settings or Carnet's member sheet — single use, 7 days: the friend sees only them, and does not count as a member;
   - **child** — a flag an admin ticks (the server knows no ages): publishes only once the admin allows it, never proposed domains, never sent a conversation Maurice opened. It does not change model access or content rules.
 - **Login safety:** a PIN is mandatory because the server is on the internet; failures are rate-limited and all answer the same "Invalid credentials". On the phone and the Mac, sessions are kept in the system **Keychain**. A session ended on the server — revoked, or the member removed — sends the device back to the member picker, which says so.
 - **Push notifications** reach the Maurice app and Carnet when someone writes to you, including as a guest in another household: through Apple's service for the Apple apps, and through Web Push for a device that registers a subscription — the Android app, in private testing, via UnifiedPush and a relay such as ntfy. The payload is encrypted to the device: the relay sees that a message passed, not what it says.- **Personal tokens** (`maur_…`) let a member connect other clients (see §18).
 
-*Gaps:* sessions do not expire (they end only when revoked); a household cannot be renamed in the app; an invitation cannot create a guest (guests are set up in the console); `maurice://` invitation links open only on iOS.
+*Gaps:* sessions do not expire (they end only when revoked); a household cannot be renamed in the app; an admin's open invitation still makes a standard member, and a guest's reach beyond the member who invited them is set in the console; `maurice://` invitation links open only on iOS.
 
 *Detail:* `households-rooms`, `server`.
 
@@ -299,13 +299,14 @@ Each member has folders and files (5 GB each), in **Settings**: text, images, PD
 - **An entry's page:** identity and cover, the source (read, resume, chapters, original), and **one sheet with two faces**; an article opens on its summary instead — the essence, then *See more…* for the long one — its sheet a tap away (*Fiche*, beside *Read*) — the member's side (dated notes and quotes, with a page) and the shared side (write, publish, unpublish; publishing takes about 15 s). Dictation beside every field, in the entry's language on the device; Whisper recognises the language spoken.
 - **Reading:** books from the household's library with chapters, summaries, highlights, the exact position synced per member and offline; *pause tracking* to look ahead without it counting; *Resume* takes another device's position when it is newer. Articles with their styles, a Text/Summary switch, cached on the device.
 - **Sharing an entry** with other members: a book, a film or the like is not copied — they read it and may add signed notes (a first cut). An **article is given**: the member gets their own copy, text and summaries included, marked *Shared by …*, and keeps it whatever you then do with yours; your notes and highlights stay yours.
+- **Giving an entry to someone in another household** (where you are their guest): from *Share*, pick them under their household, tick what goes — the source, the fiche's prose, each note, highlights, the card even as a draft, each conversation with Maurice as its summary or whole — and see all of it before *Send*. It lands as your entry in their household, shared live with them: you both read it and add notes there; nothing comes back to your fiche at home. A conversation arrives read-only; one someone else took part in cannot be sent; the card arrives as a draft.
 - **Maurice from an entry:** the button opens the Maurice app — a new conversation with the entry as context, or, from a short menu, one already held about it. The fiche lists every conversation about the entry (from its page, or linked to it in the app — a fiche loaded in the composer is offered in the conversation's Carnet drawer, *Link*, and loading it alone is not talking about it), each with a summary of what it came to, written into the fiche once the conversation has settled and rewritten when it goes on. Without the Maurice app on the device, a text-only thread in Carnet, with what is worth keeping under each reply. Maurice's replies, the conversations read in Carnet and their summaries select from end to end, as in the Maurice app (formulas show as TeX).
 - **Share extension** (*Save to Carnet*): saves the rendered page from Safari (past paywalls), or an address from other apps, with an optional first note; an offline queue keeps what could not be sent and sends it later as the member who shared it — kept, and listed in the member sheet, while that member has no session on the device.
 - **Open in the browser** opens the member's site signed in.
 - **The *Maurice* screen:** domains and their briefs (edit, rewrite, erase), reading companions, and older conversations Maurice opened (answered in the Maurice app). A book's page can create a reading companion.
 - No location tracking; a privacy manifest declares no tracking and nothing collected by the publisher. The way in and the member sheet speak seven languages; the rest is in English. Reading is iPhone/iPad only; on a Mac the notes are read in the browser.
 
-*Status:* in daily use at home; the build prepared for App Review is with Apple. *Gaps:* *Log* and *Dashboards* are experimental and not shipped; the hand-off to the Maurice app and the fiche's conversations were not yet tried on a phone, nor were the session, invitation and offline-queue fixes of 21 October (checked on a simulator); no flashcard review; notes cannot be edited or deleted from the phone; a shared article's copy was not yet watched arriving on a phone; the iPad and a real publish from a phone were never exercised; the new way in has run only in the simulator, and no TestFlight build opens invitation links yet.
+*Status:* in daily use at home; the build prepared for App Review is with Apple. *Gaps:* *Log* and *Dashboards* are experimental and not shipped; the hand-off to the Maurice app and the fiche's conversations were not yet tried on a phone, nor were the session, invitation and offline-queue fixes of 21 October (checked on a simulator); no flashcard review; notes cannot be edited or deleted from the phone; a shared article's copy was not yet watched arriving on a phone; giving an entry to another household ran between two test servers, not yet on phones; the iPad and a real publish from a phone were never exercised; the new way in has run only in the simulator, and no TestFlight build opens invitation links yet.
 
 *Detail:* `carnet`.
 
@@ -338,7 +339,8 @@ Each member has folders and files (5 GB each), in **Settings**: text, images, PD
 - **…add another device of mine?** On a device where you are signed in: Settings → *Add one of my devices*, then scan the QR code with the new one (or send it the link). It works once, for ten minutes; no admin needed, no PIN to choose again.
 - **…come into a hosted Maurice the first time?** On your account page (the link in the *Your Maurice is ready* mail), install the app it names for your device — Maurice or Carnet, through TestFlight on Apple, Obtainium or the APK on Android — then scan the invitation's QR code with the phone's camera. On a computer, *Another way in* gives the household address and the invite code to type.
 - **…change the administrator password?** Settings → *Administrator password*: the current one, then the new one twice. Your other devices signed in as administrator must sign in again.
-- **…invite someone who is not a member yet?** As an admin: Settings → Members → invitation (QR code, code or link, single use, 7 days). The person picks a first name and colour and becomes a standard member. A guest is set up in the admin console instead.
+- **…invite someone who is not a member yet?** As an admin: Settings → Members → invitation (QR code, code or link, single use, 7 days). The person picks a first name and colour and becomes a standard member. To have a friend in as **your guest**, who sees only you: Settings → *Invite a friend as a guest* (any member; also in Carnet's member sheet). Other guests are set up in the admin console.
+- **…give something from my Carnet to a friend who has their own Maurice?** Ask them to invite you into their household as a guest and join it on your phone. Then, on your entry, *Share* → their name under their household → tick what you give → *Voir ce qui part* → *Send*. You go on writing about it together in their household.
 - **…choose which model answers?** The model pill above the message field; the choice becomes your everyday model, or the model of the domain the conversation is bound to. Only models your household has a key for, and that the admin allowed you, are listed.
 - **…add a provider key or change the household's default model?** In the admin console, on the server's machine (the operator does it for a hosted household).
 - **…see what a reply cost?** Settings → *Show what each reply cost*. Your own budget, if the household has one, is the ring in the sidebar and Settings → *Budget*.

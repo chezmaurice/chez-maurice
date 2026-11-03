@@ -1,6 +1,6 @@
 ---
 title: Carnet — the pocket companion
-date: '2026-11-02'
+date: '2026-11-03'
 flags: []
 locale: en
 description: 'The iOS/iPadOS companion to Maurice: log what happened, read books and
@@ -60,6 +60,16 @@ A media entry can be shared with members of the household, the way a conversatio
 - **What stays each member's own.** Highlights and the reading position (per member, in SQLite), and the conversations themselves, which have their own participants. The owner's card — the public side — is not part of the share.
 - Server: `entry_shares` ([[maurice-data-model]]), `data-api/services/entryShares.ts`, `POST`/`DELETE …/entries/:c/:l/:s/participants`, and `?owner=<username>` on the entry's page and its notes.
 - **An article is given, not lent** (2 November 2026). Sharing an article copies it into the member's own notes — the captured text with its styles, the image, both summaries brought up to date first — as an unopened fiche of theirs, read by the ordinary routes, kept whatever the owner later does with theirs. The owner's dated notes and highlights are not copied; a member who already has the article (same address) gets no second copy, however often it is shared. The member's list shows their copy, not the owner's row; the row and the article's page say *Shared by …* (`shared_by`, from the copy's `meta.shared_by`) until the copy is opened. See [[maurice-knowledge]].
+
+## Giving an entry to someone in another household *(3 November 2026)*
+
+A friend who has their own Maurice invites the member into their household as a guest ([[maurice-households-rooms]]); the device is then signed into both. On the member's own entry, the *Share* sheet (`EntryShareSheet`) lists, under each **other** household on the device, the people the member can reach there. Choosing one opens the **sending sheet** (`Views/Entry/GiveEntrySheet.swift`): one tick per element — the source, the fiche's prose, each dated note, the highlights, the card (even a draft), each conversation with Maurice linked to the entry, as *its summary* or *the whole conversation*. All unticked but the source. A conversation another person took part in is shown greyed (*d'autres y ont participé*) and cannot leave; a line asks to read the conversations again, Maurice having perhaps quoted mail or domains in them. **Voir ce qui part** shows the entry as it will arrive — both faces, the notes, the quotes, every conversation in full — and its button is the only *Send*.
+
+- **Nothing joins the two servers.** The device is the courier: it reads the export from household A with its A session (`GET /api/v1/garden/entries/:c/:l/:s/export`, `GET /api/conversations/:id/export` — refused, `others_took_part`, when another human spoke) and posts what was ticked to household B with its B session (`POST /api/v1/garden/entries/import`, `data-api/services/entryGift.ts`, calls in `Services/CrossHouseholdAPI.swift`). A learns nothing; B learns what was sent and A's name.
+- **In B it is the member's own entry, shared live.** The fiche is written in the member's notes in B (`meta.given_from` = A's name, `shared_by`), then shared with the friend by the ordinary entry share — so, unlike an article shared inside a household, an article given this way is **not** copied to the friend: they find `@<member>/articles/…` on their shelf, read its text (`…/articles/:slug/text?owner=`), see the notes sent and add signed notes, and the member sees theirs. What is written in B never reaches the fiche in A.
+- **What arrives:** the article's text with its styles and its picture (as data, since B cannot reach A), or a book's catalogue record (never the file); the prose and the ticked notes as the member's own; highlights as quotes (B has no reading position to hang them on); notes another member signed in A never leave; the card always **as a draft**; a conversation sent as its summary becomes a dated note, one sent whole a **read-only conversation** with the member and the friend in it (`conversations.read_only`, `imported_from`; writing in it answers 409), its summary on the fiche. The friend can open a new conversation from the entry, its fiche as context ([[maurice-chat]]).
+- **Refused:** someone the member cannot reach in B (`not_reachable`); the same entry a second time (409 with where it is: same address for an article, same ISBN or title for a book, same title otherwise); an article text over two million characters, before anything is written.
+- Exercised end to end between two throwaway servers over HTTP (invitation, export, import, reading, notes both ways, read-only conversation, refusals); not yet on phones.
 
 ## Maurice, from an entry *(9 October 2026; in the Maurice app since 19 October)*
 
