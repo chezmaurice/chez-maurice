@@ -21,6 +21,11 @@ import {
   dropShares, EntryShareError, isSharedWith, memberBrief, memberBriefByUsername, shareEntry, unshareEntry,
 } from "../services/entryShares";
 
+import { EntryGiftError, exportEntry, importEntry } from "../services/entryGift";
+
+/** An entry given whole: text, pictures as data, conversations. */
+const MAX_GIFT_BYTES = 40 * 1024 * 1024;
+
 const app = new Hono();
 
 // A member an entry is shared with reads it and adds notes to it: the two
@@ -99,6 +104,46 @@ app.get("/entries/:collection/:locale/:slug", async (c) => {
   const entry = await getShelfEntry(at.memberId, at.garden, collection, locale, slug, undefined, at.ownerId);
   if (!entry) return c.json({ error: "No such entry" }, 404);
   return c.json(entry);
+});
+
+// ── Giving an entry to another household (services/entryGift.ts) ──
+
+/**
+ * Everything of the member's on one of their entries, element by element, for
+ * the device to show before anything is sent: { entry, source, fiche: { prose,
+ * notes }, highlights, card, conversations }. The member's own entries only —
+ * `?owner=` is refused. Nothing is written.
+ */
+app.get("/entries/:collection/:locale/:slug/export", async (c) => {
+  const memberId = c.get("userId") as string;
+  const named = (c.req.query("owner") ?? "").trim().replace(/^@/, "");
+  if (named && named !== memberBrief(memberId)?.username) {
+    return c.json({ error: "Only the owner gives an entry" }, 403);
+  }
+  const { collection, locale, slug } = c.req.param();
+  const out = await exportEntry(memberId, { collection, locale, slug });
+  if (!out) return c.json({ error: "No such entry" }, 404);
+  return c.json(out);
+});
+
+/**
+ * An entry given from another household, written in the caller's notes here:
+ * 201 { collection, locale, slug }, or 409 { error: "exists", collection,
+ * locale, slug } when it is already there (same address, ISBN or title).
+ */
+app.post("/entries/import", async (c) => {
+  const memberId = c.get("userId") as string;
+  if (Number(c.req.header("content-length") ?? 0) > MAX_GIFT_BYTES) return c.json({ error: "Too large" }, 413);
+  const body = await jsonBody(c);
+  if (!body) return c.json({ error: "Body must be JSON" }, 400);
+  try {
+    return c.json(await importEntry(memberId, body), 201);
+  } catch (e) {
+    if (e instanceof EntryGiftError) return c.json({ error: e.message, ...e.extra }, e.status);
+    if (e instanceof EntryShareError) return c.json({ error: e.message }, e.status);
+    console.error("[garden-entries] import failed:", e);
+    return c.json({ error: "Failed to import" }, 500);
+  }
 });
 
 // ── Conversations about the entry (services/entryConversations.ts) ──

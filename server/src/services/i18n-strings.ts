@@ -382,6 +382,9 @@ export const STRINGS: Record<string, Record<string, string>> = {
     "members.may_publish_label": "This child may publish",
     "members.may_publish_hint": "Only for a child: every other member always publishes. If you take this back, what the child published is kept but no longer served.",
     "members.child_tag": "child",
+    "members.may_invite_guests_label": "This child may invite a guest",
+    "members.may_invite_guests_hint": "Only for a child: every other member may invite a friend as their guest from the app. Their guest sees only them in the household.",
+    "members.invited_by": "invited by @%s",
     "flash.corpus_reconcile_running": "A reconciliation is already running"
   },
   "fr": {
@@ -738,6 +741,9 @@ export const STRINGS: Record<string, Record<string, string>> = {
     "members.may_publish_label": "Cet enfant peut publier",
     "members.may_publish_hint": "Pour un enfant seulement : tout autre membre publie toujours. Si vous retirez l'autorisation, ce qu'il a publié est conservé mais n'est plus servi.",
     "members.child_tag": "enfant",
+    "members.may_invite_guests_label": "Cet enfant peut inviter un invité",
+    "members.may_invite_guests_hint": "Pour un enfant seulement : tout autre membre peut inviter un ami comme invité depuis l'app. Son invité ne voit que lui dans le foyer.",
+    "members.invited_by": "invité par @%s",
     "flash.corpus_reconcile_running": "Un rattrapage est déjà en cours"
   },
   "it": {

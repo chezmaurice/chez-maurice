@@ -347,6 +347,29 @@ async function writeSummary(
   return describe(written, hash);
 }
 
+/**
+ * File a conversation given from another household on its fiche, with the
+ * summary it came with (or the link alone): the fragment every conversation
+ * about an entry has, keyed on the transcript as it now stands, so it reads
+ * as current and nothing writes it again. Returns the fragment's file.
+ */
+export function keepGivenConversation(
+  memberId: string, ref: EntryRef, conversationId: string, title: string, summary: string | null,
+): string | null {
+  const garden = gardenFor(memberId);
+  const fiche = garden ? ficheFile(garden, ref) : null;
+  if (!garden || !fiche) return null;
+  const target = nextFragmentFile(fiche, ref.collection);
+  const text = (summary ?? "").trim();
+  writeFiche(target, {
+    summary: `Conversation avec Maurice — ${title}`,
+    conversation: conversationId,
+    ...(text ? { transcript_hash: currentHash(conversationId) } : {}),
+    written_at: new Date().toISOString().slice(0, 10),
+  }, text ? `${text}\n\n${linkLine(title, conversationId)}` : linkLine(title, conversationId));
+  return target;
+}
+
 /** An article's first fragment is its text — kept free even on a bookmark,
  *  which has none yet: a summary filed as 001 would be read as the article. */
 function linkLine(title: string, conversationId: string): string {
@@ -471,6 +494,9 @@ export async function summariseSettledConversations(now = Date.now()): Promise<n
          UNION
          SELECT e.conversation_id, e.member_id, e.entry_ref FROM conversation_entries e
        ) p JOIN messages m ON m.conversation_id = p.id
+       -- A conversation given from another household came with what it came
+       -- to, or without; it is not summarised here again on the household's budget.
+       WHERE NOT EXISTS (SELECT 1 FROM conversations r WHERE r.id = p.id AND r.read_only = 1)
        GROUP BY p.id, p.entry_ref
        ORDER BY last_at DESC`,
     )

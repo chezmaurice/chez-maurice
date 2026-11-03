@@ -117,26 +117,61 @@ function hydrate(row: any): EntrySuggestion {
 /** The caller's own entry under this ref, as `<collection>/<locale>/<slug>` —
  *  or null: malformed, not a kind that is kept here, or not in their garden. */
 export function ownEntryRef(memberId: string, ref: string): string | null {
+  // `@<owner>/<collection>/<locale>/<slug>`: an entry another member shared
+  // with this one — the id Carnet's list gives it. Held as such, and read in
+  // the owner's garden (composer/fiches.ts reaches the fiche the same way).
+  const shared = ref.match(/^@([A-Za-z0-9][A-Za-z0-9._-]*)\/(.+)$/);
+  if (shared) {
+    const owner = db.query(`SELECT id FROM users WHERE username = ?`).get(shared[1]!) as { id: string } | null;
+    if (!owner || owner.id === memberId) return owner ? ownEntryRef(memberId, shared[2]!) : null;
+    const found = entryIn(owner.id, shared[2]!);
+    if (!found || !sharedWithMember(owner.id, found, memberId)) return null;
+    return `@${shared[1]}/${refOf(found)}`;
+  }
+  const entry = entryIn(memberId, ref);
+  return entry ? refOf(entry) : null;
+}
+
+/** The entry under `<collection>/<locale>/<slug>` in a member's garden. */
+function entryIn(memberId: string, ref: string): GardenEntry | null {
   const [collection, locale, slug, ...rest] = ref.split("/");
   if (rest.length || !collection || !locale || !slug) return null;
   const garden = gardenFor(memberId);
   if (!garden) return null;
-  const entry = listGardenEntries(garden).find((e) => e.collection === collection && e.locale === locale && e.slug === slug);
-  return entry ? `${entry.collection}/${entry.locale}/${entry.slug}` : null;
+  return listGardenEntries(garden).find((e) => e.collection === collection && e.locale === locale && e.slug === slug) ?? null;
+}
+
+function sharedWithMember(ownerId: string, e: GardenEntry, memberId: string): boolean {
+  return !!db
+    .query(`SELECT 1 FROM entry_shares WHERE owner_id = ? AND collection = ? AND locale = ? AND slug = ? AND member_id = ?`)
+    .get(ownerId, e.collection, e.locale, e.slug, memberId);
 }
 
 /** What the Maurice app shows of the entry a conversation is held from: the
- *  first row of its Carnet drawer, which opens the entry in Carnet. */
-export function heldEntry(memberId: string, conversationId: string): {
+ *  first row of its Carnet drawer, which opens the entry in Carnet. Shown to
+ *  whoever reaches the entry: its owner (`ref` is then theirs), or a member it
+ *  is shared with (`ref` is `@<owner>/…`, Carnet's id for it) — the friend in
+ *  a conversation given from another household, say. Null for anyone else. */
+export function heldEntry(viewerId: string, conversationId: string): {
   ref: string; collection: string; title: string; image: string | null; web_path: string | null;
 } | null {
-  const entry = boundEntry(memberId, conversationId);
-  const garden = entry ? gardenFor(memberId) : null;
+  const convo = getConversation(conversationId, viewerId);
+  const held = convo?.entry_ref;
+  if (!convo || !held) return null;
+  const at = held.match(/^@([A-Za-z0-9][A-Za-z0-9._-]*)\/(.+)$/);
+  const ownerRow = at
+    ? (db.query(`SELECT id, username FROM users WHERE username = ?`).get(at[1]!) as { id: string; username: string } | null)
+    : (db.query(`SELECT id, username FROM users WHERE id = ?`).get(convo.user_id) as { id: string; username: string } | null);
+  if (!ownerRow) return null;
+  const entry = entryIn(ownerRow.id, at ? at[2]! : held);
+  const garden = entry ? gardenFor(ownerRow.id) : null;
   if (!entry || !garden) return null;
+  const mine = ownerRow.id === viewerId;
+  if (!mine && !sharedWithMember(ownerRow.id, entry, viewerId)) return null;
   return {
-    ref: refOf(entry), collection: entry.collection, title: entry.title,
+    ref: mine ? refOf(entry) : `@${ownerRow.username}/${refOf(entry)}`, collection: entry.collection, title: entry.title,
     image: openImage(garden, entry.image),
-    web_path: entry.card?.web_path ?? entry.fiche?.web_path ?? null,
+    web_path: mine ? entry.card?.web_path ?? entry.fiche?.web_path ?? null : null,
   };
 }
 

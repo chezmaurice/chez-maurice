@@ -17,6 +17,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import db from "../../db";
 import { getUser } from "../users";
 import { gardensRoot } from "../gardensRoot";
 import { estimateTokens } from "./notes";
@@ -154,6 +155,21 @@ const _cache = new Map<string, CacheEntry>();
 const TTL_MS = 15_000;
 
 export function getFiche(memberId: string, id: string): FicheMeta | null {
+  // `@<owner>/<collection>/<locale>/<slug>-fiche`: an entry another member
+  // shared with this one (entry_shares) — a conversation held from it reads
+  // the owner's fiche, as the member reads it in Carnet.
+  const shared = String(id).match(/^@([A-Za-z0-9][A-Za-z0-9._-]*)\/(.+)$/);
+  if (shared) {
+    const owner = db.query(`SELECT id FROM users WHERE username = ?`).get(shared[1]!) as { id: string } | null;
+    const rest = shared[2]!;
+    const [collection, locale, stem] = rest.split("/");
+    if (!owner || !collection || !locale || !stem) return null;
+    const slug = stem.replace(/-fiche$/, "");
+    const reached = db
+      .query(`SELECT 1 FROM entry_shares WHERE owner_id = ? AND collection = ? AND locale = ? AND slug = ? AND member_id = ?`)
+      .get(owner.id, collection, locale, slug, memberId);
+    return reached ? scanFiches(owner.id).get(rest) ?? null : null;
+  }
   return scanFiches(memberId).get(id) ?? null;
 }
 

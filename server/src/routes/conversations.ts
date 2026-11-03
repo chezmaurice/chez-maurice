@@ -38,6 +38,7 @@ import { takeReview } from "../services/reviewFooter";
 import { heldEntry, offerSharedArticle, ownEntryRef, suggestInBackground } from "../services/entrySuggestions";
 import { linkOnFicheInBackground } from "../../data-api/services/entryConversations";
 import { saveSpec } from "../services/composer/specs";
+import { ConversationGiftError, exportConversation } from "../services/conversationGift";
 import { memberLocale } from "../services/domainBriefs";
 import { t } from "../services/i18n";
 import { aiAllowed } from "../services/aiConsent";
@@ -122,7 +123,7 @@ conversations.post("/", async (c) => {
   // A Maurice is private to its creator — can't bind a thread to someone else's.
   if (!canUseMaurice(maurice_id ?? null, uid)) return c.json({ error: "Not found" }, 404);
   // Held from a garden entry (Carnet, on an entry's page): the entry must be
-  // the caller's own, and its fiche is the conversation's context from the
+  // the caller's own, or one shared with them (`@<owner>/…`), and its fiche is the conversation's context from the
   // first turn — loaded through the composer, like one the member picked.
   let entryRef: string | null = null;
   if (entry != null) {
@@ -173,8 +174,25 @@ conversations.get("/:id", (c) => {
   // Held from a garden entry: what it is — the first row of the app's Carnet
   // drawer, which leads back to it. The entry is in its owner's garden, so
   // only the owner sees it.
-  const entry = convo.entry_ref && convo.user_id === c.get("userId") ? heldEntry(convo.user_id, convo.id) : null;
+  // A member it is shared with sees it too (`@<owner>/…`), the owner's alone otherwise.
+  const entry = convo.entry_ref ? heldEntry(c.get("userId"), convo.id) : null;
   return c.json({ ...convo, messages, participants, entry });
+});
+
+// ── GET /api/conversations/:id/export ───────────────────────────
+// The whole conversation, to be given to someone in another household
+// (specs/cross-household-share.md, B): { title, date, messages: [{ role,
+// author?, text, data?, at }] }. Only for its one human: 403
+// { error: "others_took_part" } when anyone else spoke or is in it. Nothing
+// is written; nothing records that it was read.
+
+conversations.get("/:id/export", (c) => {
+  try {
+    return c.json(exportConversation(c.req.param("id"), c.get("userId")));
+  } catch (e) {
+    if (e instanceof ConversationGiftError) return c.json({ error: e.message }, e.status);
+    throw e;
+  }
 });
 
 // ── POST /api/conversations/:id/read — mark read (drives unread roll-up) ──
@@ -385,6 +403,9 @@ conversations.post("/:id/messages", async (c) => {
 
   const convo = getConversation(convoId, userId);
   if (!convo) return c.json({ error: "Not found" }, 404);
+  // Given from another household: read here, never continued — a new
+  // conversation from the entry is how one goes on talking about it.
+  if (convo.read_only) return c.json({ error: "read_only" }, 409);
 
   const reqBody = await c.req.json().catch(() => ({}) as any);
   const { content, image, regenerate } = reqBody;

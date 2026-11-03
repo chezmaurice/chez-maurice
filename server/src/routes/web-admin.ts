@@ -11,7 +11,8 @@ import {
   getUserByUsername,
   setUserRole,
   getGuestContacts,
-  setGuestContacts, setUserChild, setUserMayPublish } from "../services/users";
+  setGuestContacts, setUserChild, setUserMayPublish, setUserMayInviteGuests } from "../services/users";
+import { invitedBy } from "../services/invites";
 import { listMaurices, setAccess } from "../services/maurices";
 import { setExperimentalAccess, canUseExperimental } from "../services/toolFamilies";
 import {
@@ -602,7 +603,7 @@ web.get("/dashboard", async (c) => {
     <div class="member">
       ${avatarHtml(u)}
       <div class="who"><div class="nm">${escape(u.display_name)}</div><div class="hd">@${escape(u.username)}${spentTag(u.id)}</div></div>
-      <span class="tag ${u.role}">${escape(t(lang, "members.role_" + u.role))}</span>${u.is_child ? ` <span class="tag" title="${escape(t(lang, "members.is_child_hint"))}">${escape(t(lang, "members.child_tag"))}</span>` : ""}
+      <span class="tag ${u.role}">${escape(t(lang, "members.role_" + u.role))}</span>${u.is_child ? ` <span class="tag" title="${escape(t(lang, "members.is_child_hint"))}">${escape(t(lang, "members.child_tag"))}</span>` : ""}${u.role === "guest" ? ((by) => by ? ` <span class="hint">${escape(t(lang, "members.invited_by", by.username))}</span>` : "")(invitedBy(u.id)) : ""}
       <span class="pin">${u.has_pin ? "🔒 " + escape(t(lang, "members.pin_set")) : escape(t(lang, "members.no_pin"))}</span>
       <div class="member-actions">
         <a href="/admin/users/${u.id}/edit" class="btn ghost sm">${escape(t(lang, "common.edit"))}</a>
@@ -1519,6 +1520,9 @@ web.get("/users/:id/edit", (c) => {
             <div class="chips"><label class="chip"><input type="checkbox" name="is_child" ${user.is_child ? "checked" : ""} /><span class="cdot"><span class="chk">✓</span></span><span class="clab">${escape(t(lang, "members.is_child_label"))}</span></label></div>
             <div class="chips" style="margin-top:8px"><label class="chip"><input type="checkbox" name="may_publish" ${user.may_publish ? "checked" : ""} /><span class="cdot"><span class="chk">✓</span></span><span class="clab">${escape(t(lang, "members.may_publish_label"))}</span></label></div>
             <div class="hint" style="margin-top:6px">${escape(t(lang, "members.may_publish_hint"))}</div>
+            <div class="chips" style="margin-top:8px"><label class="chip"><input type="checkbox" name="may_invite_guests" ${user.may_invite_guests ? "checked" : ""} /><span class="cdot"><span class="chk">✓</span></span><span class="clab">${escape(t(lang, "members.may_invite_guests_label"))}</span></label></div>
+            <div class="hint" style="margin-top:6px">${escape(t(lang, "members.may_invite_guests_hint"))}</div>${isGuestUser ? ((by) => by ? `
+            <div class="hint" style="margin-top:6px">${escape(t(lang, "members.invited_by", by.username))}</div>` : "")(invitedBy(user.id)) : ""}
           </div>
           <div class="field"><label class="label">${escape(t(lang, "members.role_label"))}</label>
             <select name="role" onchange="document.getElementById('guestblock').style.display=this.value==='guest'?'block':'none'">
@@ -1631,6 +1635,7 @@ web.post("/users/:id/edit", async (c) => {
     setExperimentalAccess(id, fd.get("experimental_tools") != null);
     setUserChild(id, fd.get("is_child") != null);
     setUserMayPublish(id, fd.get("may_publish") != null);
+    setUserMayInviteGuests(id, fd.get("may_invite_guests") != null);
     const newRole = String(fd.get("role") || "standard") === "guest" ? "guest" : "standard";
     setUserRole(id, newRole);
     if (newRole === "guest") {

@@ -20,7 +20,7 @@ import {
   householdInfo,
 } from "../services/users";
 import { PASSWORD_MIN, passwordProblem, pinProblem } from "../services/credentials";
-import { isOpenInvite, redeemOpenInvite } from "../services/invites";
+import { isOpenInvite, openInviteKind, redeemOpenInvite } from "../services/invites";
 import { requireAuth } from "../middleware/auth";
 import { accountInUse, recordAccountEvent } from "../services/accountEvents";
 import db from "../db";
@@ -194,7 +194,16 @@ auth.post("/enroll", async (c) => {
 
   if (isOpenInvite(String(code))) {
     const name = String(display_name ?? "").trim().slice(0, 40);
-    if (!name) return c.json({ needs_profile: true, household: householdInfo().name });
+    if (!name) {
+      // A guest a member invited is told whose guest they will be.
+      const kind = openInviteKind(String(code));
+      return c.json({
+        needs_profile: true,
+        household: householdInfo().name,
+        role: kind?.role ?? "standard",
+        ...(kind?.role === "guest" ? { invited_by: kind.invited_by } : {}),
+      });
+    }
     const color = /^#[0-9a-fA-F]{6}$/.test(String(avatar_color ?? "")) ? String(avatar_color) : undefined;
     const joined = await redeemOpenInvite(String(code), { display_name: name, avatar_color: color });
     if (!joined) {
@@ -203,7 +212,8 @@ auth.post("/enroll", async (c) => {
       return c.json({ error: "Invalid or expired code" }, 401);
     }
     const { token } = createSession(joined.userId, device_id);
-    return c.json({ user_id: joined.userId, token, role: "standard", needs_pin: true });
+    // A guest enrolls without a PIN, as the console's guests do.
+    return c.json({ user_id: joined.userId, token, role: joined.role, needs_pin: joined.role !== "guest" });
   }
 
   // A code the member made on a device of theirs (POST /api/me/device-code):

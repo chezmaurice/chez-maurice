@@ -21,6 +21,12 @@ export interface Conversation {
   /** the garden entry this conversation is held from, `<collection>/<locale>/
    *  <slug>` — Carnet opens one from an entry's page; null otherwise */
   entry_ref?: string | null;
+  /** given from another household: that household's display name; null
+   *  otherwise (specs/cross-household-share.md, section E) */
+  imported_from?: string | null;
+  /** a conversation given from another household is read, not continued:
+   *  POST …/messages refuses it */
+  read_only?: boolean;
   created_at: string;
   updated_at: string;
   message_count?: number;
@@ -119,7 +125,7 @@ export function listConversations(userId: string, opts: ListConversationsOptions
   }
   const rows = db
     .query(
-      `SELECT c.id, c.user_id, c.title, c.maurice_id, c.maurice_bound_by, c.origin, c.opened_by, c.entry_ref, c.created_at, c.updated_at,
+      `SELECT c.id, c.user_id, c.title, c.maurice_id, c.maurice_bound_by, c.origin, c.opened_by, c.entry_ref, c.imported_from, c.read_only, c.created_at, c.updated_at,
               COUNT(m.id) as message_count,
               MAX(m.created_at) as last_message_at,
               CASE WHEN c.opened_by = 'maurice' AND p.last_read_at IS NULL THEN 1 ELSE 0 END AS unread,
@@ -141,6 +147,7 @@ export function listConversations(userId: string, opts: ListConversationsOptions
   // sidebar can render one avatar cluster (humans + hatted Maurices).
   for (const c of rows) {
     c.unread = !!(c.unread as unknown as number);
+    c.read_only = !!(c.read_only as unknown as number);
     c.participants = getParticipants(c.id);
     const m = mauriceParticipation(c.id);
     c.maurice_ids = m.ids;
@@ -168,15 +175,17 @@ export function getConversation(
   id: string,
   viewerId: string
 ): Conversation | null {
-  return db
+  const row = db
     .query(
-      `SELECT c.id, c.user_id, c.title, c.maurice_id, c.maurice_bound_by, c.origin, c.opened_by, c.entry_ref, c.created_at, c.updated_at
+      `SELECT c.id, c.user_id, c.title, c.maurice_id, c.maurice_bound_by, c.origin, c.opened_by, c.entry_ref, c.imported_from, c.read_only, c.created_at, c.updated_at
        FROM conversations c
        JOIN conversation_participants p
          ON p.conversation_id = c.id AND p.member_id = ?
        WHERE c.id = ?`
     )
     .get(viewerId, id) as Conversation | null;
+  if (row) row.read_only = !!(row.read_only as unknown as number);
+  return row;
 }
 
 /** The member's own conversation held from this entry with nothing said in it

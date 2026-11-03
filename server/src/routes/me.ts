@@ -18,6 +18,9 @@ import { uploadsDir } from "../services/chatImport";
 import { importMember, memberExportResponse } from "../services/memberArchive";
 import { EraseError, eraseMember, type EraseScope } from "../services/memberErase";
 import { getUserById, getUser } from "../services/users";
+import {
+  createGuestInvite, guestInviteState, guestsInvitedBy, listGuestInvites, mayInviteGuests, revokeGuestInvite,
+} from "../services/invites";
 import { ancillaryTable } from "../services/ancillary";
 import {
   embeddingProvider, getConsent, isLocalProvider, providerInfo, setConsent, uncovered,
@@ -69,6 +72,50 @@ me.post("/device-code", (c) => {
   if (!user || user.role === "guest") return c.json({ error: "not for a guest" }, 403);
   const { code, expiresAt } = createDeviceLinkCode(user.id);
   return c.json({ code, expires_at: expiresAt }, 201);
+});
+
+// ── A friend from another household, as a guest ─────────────────
+// specs/cross-household-share.md, section A. A member invites someone to be
+// their guest here: the guest reaches the inviter alone, and the inviter alone
+// can share with them. Who may: a member who is not a guest, a child only once
+// the admin allowed it (users.may_invite_guests) — and not a connected tool.
+
+const joinLink = (c: Context, code: string) => `${requestOrigin(c.req)}/join?code=${encodeURIComponent(code)}`;
+
+// POST /api/me/guest-invite — { code, link, expires_at, created_at }, 201.
+// Single use, seven days; redeemed by /api/auth/enroll like any invitation.
+me.post("/guest-invite", (c) => {
+  if (viaApiToken(c)) return c.json({ error: "not with an API token" }, 403);
+  if (!mayInviteGuests(c.get("userId"))) return c.json({ error: "not_allowed" }, 403);
+  const invite = createGuestInvite(c.get("userId"));
+  return c.json({ ...invite, link: joinLink(c, invite.code) }, 201);
+});
+
+// GET /api/me/guest-invites — { allowed, invites: [{ code, link, expires_at,
+// created_at }], guests: [{ id, username, display_name, avatar_color,
+// avatar_url, joined_at }] }: the member's invitations still waiting, and the
+// guests who came in by one. `allowed` says whether the app offers the button.
+me.get("/guest-invites", (c) => {
+  const uid = c.get("userId");
+  return c.json({
+    allowed: mayInviteGuests(uid),
+    invites: listGuestInvites(uid).map((i) => ({ ...i, link: joinLink(c, i.code) })),
+    guests: guestsInvitedBy(uid),
+  });
+});
+
+// GET /api/me/guest-invites/:code — { state: pending | used | expired }, polled
+// by the sheet showing the code. 404 for a code that is not the member's.
+me.get("/guest-invites/:code", (c) => {
+  const state = guestInviteState(c.get("userId"), c.req.param("code"));
+  if (!state) return c.json({ error: "Invitation not found" }, 404);
+  return c.json({ state });
+});
+
+// DELETE /api/me/guest-invites/:code — withdraw one nobody has used yet.
+me.delete("/guest-invites/:code", (c) => {
+  if (!revokeGuestInvite(c.get("userId"), c.req.param("code"))) return c.json({ error: "Invitation not found" }, 404);
+  return c.json({ ok: true });
 });
 
 // GET /api/me/device-code/:code — { state: pending | used | expired }, polled

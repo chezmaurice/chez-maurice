@@ -471,6 +471,13 @@ db.run(`
     used_at    TEXT
   )
 `);
+// A guest invited by a member (3 November 2026, specs/cross-household-share.md
+// section A): `role = 'guest'` and `contact_of` the member who made it — the
+// one person the guest will reach. The admin's invitations stay `standard`
+// with no `contact_of`. A member who leaves takes their pending invitations
+// with them.
+try { db.run(`ALTER TABLE household_invites ADD COLUMN role TEXT NOT NULL DEFAULT 'standard'`); } catch {}
+try { db.run(`ALTER TABLE household_invites ADD COLUMN contact_of TEXT REFERENCES users(id) ON DELETE CASCADE`); } catch {}
 
 // APNs device tokens for push. A token belongs to whoever is the active user on
 // that device (re-registered on user switch); pruned when Apple reports it dead.
@@ -1199,6 +1206,12 @@ try { db.run(`ALTER TABLE conversations ADD COLUMN opened_by TEXT NOT NULL DEFAU
 // keeps of it lands back on that entry — and links the other things kept to
 // it (services/entrySuggestions.ts). `<collection>/<locale>/<slug>`, or null.
 try { db.run(`ALTER TABLE conversations ADD COLUMN entry_ref TEXT`); } catch {}
+// A conversation given from another household (3 November 2026,
+// specs/cross-household-share.md section E): `imported_from` is that
+// household's display name, and `read_only` refuses any new message — it is a
+// record of what was said there, not a thread to go on with here.
+try { db.run(`ALTER TABLE conversations ADD COLUMN imported_from TEXT`); } catch {}
+try { db.run(`ALTER TABLE conversations ADD COLUMN read_only INTEGER NOT NULL DEFAULT 0`); } catch {}
 // The other entries a conversation is about, by the member's word (19 October
 // 2026): an entry whose fiche they loaded in the composer, or an article shared
 // in the conversation, is offered behind the Carnet mark — "Link" — and once
@@ -1227,6 +1240,10 @@ try { db.run(`ALTER TABLE users ADD COLUMN is_child INTEGER NOT NULL DEFAULT 0`)
 // Whether a child may publish (26 October 2026): every other member always may;
 // a child only once the admin allows it on their page in the console.
 try { db.run(`ALTER TABLE users ADD COLUMN may_publish INTEGER NOT NULL DEFAULT 0`); } catch {}
+// Whether a child may invite a guest from the app (3 November 2026): the same
+// model as `may_publish` — every other member who is not a guest always may;
+// a child only once the admin allows it on their page in the console.
+try { db.run(`ALTER TABLE users ADD COLUMN may_invite_guests INTEGER NOT NULL DEFAULT 0`); } catch {}
 // What the admin did that reached into a member's account (27 October 2026):
 // a device that came into it by a code the admin made, the whole household
 // exported. The admin keeps both powers; the member is told, here, before
