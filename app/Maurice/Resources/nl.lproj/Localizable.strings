@@ -1095,3 +1095,17 @@
 "chat.received.band" = "Gesprek ontvangen van huishouden %@ — alleen lezen";
 "chat.received.band_unnamed" = "Gesprek ontvangen van een ander huishouden — alleen lezen";
 "chat.received.continue" = "Nieuw gesprek op basis van dit gesprek";
+
+"suggest.search_again" = "Opnieuw zoeken";
+"suggest.search_refine" = "Verfijnen";
+"suggest.search_placeholder" = "De titel, en wie het maakte";
+"suggest.search_go" = "Zoeken";
+"suggest.search_nothing_new" = "Niets nieuws.";
+"suggest.search_nothing" = "Niets gevonden voor “%@”.";
+"suggest.episodes" = "Afleveringen";
+"suggest.episodes_more" = "Meer afleveringen";
+"suggest.episodes_loading" = "Afleveringen lezen…";
+"suggest.episode_suggested" = "Gespot door Maurice";
+"suggest.keep_episode" = "De aflevering bewaren";
+"suggest.keep_episodes" = "De %d afleveringen bewaren";
+"suggest.episodes_hint" = "Zonder aangevinkte aflevering wordt de show bewaard.";

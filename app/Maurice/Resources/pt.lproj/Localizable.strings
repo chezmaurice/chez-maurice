@@ -1095,3 +1095,17 @@
 "chat.received.band" = "Conversa recebida da casa %@ — só de leitura";
 "chat.received.band_unnamed" = "Conversa recebida de outra casa — só de leitura";
 "chat.received.continue" = "Nova conversa a partir desta";
+
+"suggest.search_again" = "Pesquisar de novo";
+"suggest.search_refine" = "Refinar";
+"suggest.search_placeholder" = "O título, e quem o fez";
+"suggest.search_go" = "Pesquisar";
+"suggest.search_nothing_new" = "Nada de novo.";
+"suggest.search_nothing" = "Nada encontrado para “%@”.";
+"suggest.episodes" = "Episódios";
+"suggest.episodes_more" = "Mais episódios";
+"suggest.episodes_loading" = "A ler os episódios…";
+"suggest.episode_suggested" = "Detetado pelo Maurice";
+"suggest.keep_episode" = "Guardar o episódio";
+"suggest.keep_episodes" = "Guardar os %d episódios";
+"suggest.episodes_hint" = "Sem episódio assinalado, guarda-se o programa.";
