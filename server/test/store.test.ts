@@ -51,6 +51,17 @@ test("one line alone is no store", async () => {
   expect((await store(MEMBER.id)).status).toBe(404);
 });
 
+test("lines written empty, as a tower without its Apple key writes them, are no store", async () => {
+  process.env.MAURICE_STORE_ACCOUNT = "";
+  process.env.MAURICE_STORE_URL = "";
+  expect((await store(MEMBER.id)).status).toBe(404);
+  process.env.MAURICE_STORE_URL = "https://account.example.org";
+  expect((await store(MEMBER.id)).status).toBe(404);
+  process.env.MAURICE_STORE_ACCOUNT = "  ";
+  expect((await store(MEMBER.id)).status).toBe(404);
+  expect(householdBudget(true).can_top_up).toBe(false);
+});
+
 test("the admin is given the account and the service's URL", async () => {
   process.env.MAURICE_STORE_ACCOUNT = ` ${ACCOUNT} `;
   process.env.MAURICE_STORE_URL = "https://account.example.org/";

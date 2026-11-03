@@ -46,7 +46,7 @@ struct BudgetRing: View {
 }
 
 /// The toast raised when the household's budget falls to 20, 10 or 5 %. A tap opens
-/// Settings → Budget; it goes away on its own.
+/// Settings → Budget — Abonnement for the admin who can top up; it goes away on its own.
 struct BudgetToast: View {
     @Environment(SessionStore.self) private var session
     @Environment(BudgetStore.self) private var budget
@@ -54,7 +54,7 @@ struct BudgetToast: View {
     let percent: Int
 
     var body: some View {
-        Button { budget.openSettings() } label: {
+        Button { budget.openSettings(subscription: true) } label: {
             HStack(spacing: 10) {
                 BudgetRing(left: Double(percent) / 100, accent: session.activeDeviceUser?.color ?? .blue, size: 20)
                 Text(session.localized("budget.toast.title", percent))

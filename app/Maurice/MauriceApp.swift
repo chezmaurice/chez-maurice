@@ -22,6 +22,8 @@ struct MauriceApp: App {
     @State private var gardens: GardensStore?
     @State private var domains = DomainsState()
     @State private var budget = BudgetStore()
+    /// Started at launch: StoreKit's transaction listener lives in it.
+    @State private var store = StoreStore()
     @State private var aiConsent = AIConsentStore()
 
     var body: some Scene {
@@ -43,6 +45,7 @@ struct MauriceApp: App {
                 .environment(resolvedGardens)
                 .environment(domains)
                 .environment(budget)
+                .environment(store)
                 .environment(aiConsent)
                 .environment(\.locale, session.resolvedLocale)
                 // maurice://join?server=…&code=… — from an invitation page's

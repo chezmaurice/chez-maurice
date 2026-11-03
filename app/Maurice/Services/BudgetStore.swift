@@ -18,6 +18,9 @@ struct HouseholdBudget: Decodable, Equatable {
     let period: String?
     /// What is left in euros: the admin's only; nil for a member.
     let left_eur: Double?
+    /// The admin of a household with a store can top up, in Settings →
+    /// Abonnement. False for a member; nil from older servers.
+    let can_top_up: Bool?
 
     var resetsAt: Date? {
         guard let resets_at else { return nil }
@@ -30,8 +33,9 @@ struct HouseholdBudget: Decodable, Equatable {
 /// The budget ring's state, and the alerts it raises: a toast once the
 /// household's budget falls to 20 %, again at 10 % and at 5 % — each once per
 /// member and period (a month, or until the next top-up), remembered on the
-/// device. The ring and the toast both lead to Settings →
-/// Budget, which ContentView presents when `showSettings` turns true.
+/// device. The ring and the toast both lead to Settings → Budget (Abonnement
+/// for the admin who can top up), which ContentView presents when
+/// `showSettings` turns true.
 @Observable @MainActor
 final class BudgetStore {
     /// The fractions left at which the member is told, largest first.
@@ -42,6 +46,8 @@ final class BudgetStore {
     var alert: Int?
     /// Asks ContentView for Settings, opened on the Budget pane.
     var showSettings = false
+    /// …or on Abonnement, for the admin who can top up.
+    private(set) var opensSubscription = false
 
     /// What the ring draws: the fraction left, or nil for "no budget" (full, ∞).
     var left: Double? { budget?.limited == true ? budget?.left : nil }
@@ -64,8 +70,11 @@ final class BudgetStore {
         raiseAlertIfDue(b, member: "\(server)|\(userId)")
     }
 
-    func openSettings() {
+    /// `subscription` (the toast) opens on Abonnement when the reader can top
+    /// up; the ring always opens on Budget, which leads there.
+    func openSettings(subscription: Bool = false) {
         alert = nil
+        opensSubscription = subscription && budget?.can_top_up == true
         showSettings = true
     }
 

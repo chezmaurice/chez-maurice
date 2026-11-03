@@ -13,9 +13,10 @@ struct SettingsView: View {
     @Environment(\.mauriceTheme) private var theme
     @Environment(\.dismiss) private var dismiss
 
-    enum Pane: Hashable { case appearance, language, household, members, adminPassword, garden, token, files, importChats, mail, contacts, myData, budget }
+    enum Pane: Hashable { case appearance, language, household, members, adminPassword, garden, token, files, importChats, mail, contacts, myData, budget, subscription }
     @State private var pane: Pane? = nil
     @Environment(BudgetStore.self) private var budget
+    @Environment(StoreStore.self) private var store
 
     /// `initialPane` opens straight on a pane — the budget ring and its toast
     /// open Settings on Budget; back still leads to the index.
@@ -99,6 +100,7 @@ struct SettingsView: View {
         .task { if !session.activeIsGuest { importSummary = await ImportSummary.load(session: session) } }
         .task { if !session.activeIsGuest { await loadMailAccounts() } }
         .task { if !session.activeIsGuest { await loadContactAccounts() } }
+        .task { await store.refresh(session) }
         .onChange(of: avatarItem) { _, item in prepareCrop(item) }
         .confirmationDialog(session.localized("settings.avatar.hint"), isPresented: $showSourceDialog, titleVisibility: .hidden) {
             Button(session.localized("settings.avatar.take_photo")) { showCamera = true }
@@ -278,6 +280,17 @@ struct SettingsView: View {
                         }
                     }
 
+                    // The admin of a hosted household subscribes and tops up
+                    // here; StoreStore has no account for anyone else.
+                    if store.hasStore {
+                        SetGroup(session.localized("store.group")) {
+                            SetCard {
+                                IndexRow(icon: "creditcard", label: session.localized("store.title"),
+                                         value: subscriptionValue, accent: accent) { pane = .subscription }
+                            }
+                        }
+                    }
+
                     SetGroup("USAGE") {
                         SetCard {
                             SetCheckRow(label: "Show what each reply cost",
@@ -430,13 +443,21 @@ struct SettingsView: View {
                     case .contacts:   ContactsPane(accent: accent, accounts: $contactAccounts)
                     case .myData:     MyDataView(accent: accent, close: { dismiss() })
 
-                    case .budget:     BudgetPane(accent: accent)
+                    case .budget:     BudgetPane(accent: accent, openSubscription: { pane = .subscription })
+                    case .subscription: SubscriptionPane(accent: accent)
                     }
                 }
                 .padding(.horizontal, 18).padding(.top, 14).padding(.bottom, 18)
             }
             footer
         }
+    }
+
+    private var subscriptionValue: String? {
+        guard let s = store.state else { return nil }
+        if s.isSubscribed { return session.localized(s.plan == "yearly" ? "store.value.yearly" : "store.value.monthly") }
+        if s.isInTrial { return session.localized("store.value.trial") }
+        return session.localized("store.value.none")
     }
 
     private var budgetValue: String {
@@ -486,6 +507,7 @@ struct SettingsView: View {
         case .myData:     return session.localized("mydata.title")
 
         case .budget:     return session.localized("budget.title")
+        case .subscription: return session.localized("store.title")
         }
     }
 
@@ -1278,8 +1300,8 @@ enum MailProvider: Equatable {
 /// The household's budget: the ring, large, what is left in words, when a
 /// monthly budget starts afresh or that a prepaid one is filled by whoever runs
 /// the household. The same for every member and never an amount — except to
-/// the admin, who pays and reads what is left in euros. No way to pay here:
-/// topping up is on the web, never in the app.
+/// the admin, who pays and reads what is left in euros — and, in a hosted
+/// household, is led on to Abonnement to top it up.
 /// The administrator changes their own password (POST /api/auth/password):
 /// the current one, then the new one twice. The server holds the rules
 /// (services/credentials.ts); the length and the username are checked here
@@ -1355,6 +1377,8 @@ private struct BudgetPane: View {
     @Environment(BudgetStore.self) private var budget
     @Environment(\.mauriceTheme) private var theme
     let accent: Color
+    /// The admin who can top up goes on to Abonnement; a member sees nothing of it.
+    var openSubscription: () -> Void = {}
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
@@ -1379,6 +1403,13 @@ private struct BudgetPane: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 16).padding(.vertical, 14)
+            }
+
+            if budget.budget?.can_top_up == true {
+                SetCard {
+                    IndexRow(icon: "plus.circle", label: session.localized("store.topup.open"),
+                             accent: accent, action: openSubscription)
+                }
             }
 
             SetCaption(session.localized("budget.caption"))
@@ -2688,12 +2719,13 @@ private struct CloseButton: View {
     }
 }
 
-private struct SetDivider: View {
+// The pieces every pane is built from — shared with SubscriptionViews.swift.
+struct SetDivider: View {
     @Environment(\.mauriceTheme) private var theme
     var body: some View { Rectangle().fill(theme.rule).frame(height: 0.5) }
 }
 
-private struct SetCard<Content: View>: View {
+struct SetCard<Content: View>: View {
     @Environment(\.mauriceTheme) private var theme
     @ViewBuilder let content: Content
     var body: some View {
@@ -2704,7 +2736,7 @@ private struct SetCard<Content: View>: View {
     }
 }
 
-private struct SetGroup<Content: View>: View {
+struct SetGroup<Content: View>: View {
     let title: String
     @ViewBuilder let content: Content
     init(_ title: String, @ViewBuilder content: () -> Content) { self.title = title; self.content = content() }
@@ -2713,7 +2745,7 @@ private struct SetGroup<Content: View>: View {
     }
 }
 
-private struct SetKicker: View {
+struct SetKicker: View {
     @Environment(\.mauriceTheme) private var theme
     let text: String
     init(_ text: String) { self.text = text }
@@ -2723,7 +2755,7 @@ private struct SetKicker: View {
     }
 }
 
-private struct SetCaption: View {
+struct SetCaption: View {
     @Environment(\.mauriceTheme) private var theme
     let text: String
     init(_ text: String) { self.text = text }
@@ -2732,7 +2764,7 @@ private struct SetCaption: View {
     }
 }
 
-private struct IndexRow: View {
+struct IndexRow: View {
     @Environment(\.mauriceTheme) private var theme
     let icon: String
     let label: String

@@ -20,6 +20,7 @@ struct ContentView: View {
     @Environment(DomainsState.self) private var domains
     @Environment(GardensStore.self) private var gardens
     @Environment(BudgetStore.self) private var budget
+    @Environment(StoreStore.self) private var store
     @Environment(AIConsentStore.self) private var aiConsent
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.scenePhase) private var scenePhase
@@ -192,6 +193,7 @@ struct ContentView: View {
             if session.hasActiveSession {
                 await budget.refresh(session)
                 await aiConsent.refresh(session)
+                await store.refresh(session)
             }
         }
         .onChange(of: chat.isStreaming) { was, now in
@@ -207,9 +209,10 @@ struct ContentView: View {
         .animation(.spring(duration: 0.4, bounce: 0.2), value: budget.alert)
         // The ring and the toast both lead here: Settings, opened on Budget.
         .sheet(isPresented: budgetSettingsBinding) {
-            SettingsView(initialPane: .budget)
+            SettingsView(initialPane: budget.opensSubscription ? .subscription : .budget)
                 .environment(session)
                 .environment(budget)
+                .environment(store)
                 .environment(\.mauriceTheme, theme)
         }
     }

@@ -18,6 +18,9 @@ struct PairingView: View {
     @State private var showEntry = false
     /// Handed to the entry sheet: a pasted text that was not an invitation.
     @State private var entryPrefill = ""
+    /// « Créer mon Maurice »: the sign-up, or the wait for one under way.
+    @State private var showSignup = false
+    @State private var signupPending = SignupPoll.saved != nil
 
     var body: some View {
         ZStack {
@@ -64,6 +67,15 @@ struct PairingView: View {
                             }
                         }
 
+                        // No Maurice yet: make one. A sign-up under way is
+                        // picked up again here, even after quitting the app.
+                        Button { error = nil; showSignup = true } label: {
+                            Text(session.localized(signupPending ? "signup.resume" : "signup.open"))
+                                .font(.callout.weight(.medium))
+                        }
+                        .buttonStyle(.borderless)
+                        .padding(.top, 4)
+
                         if let error {
                             Text(error)
                                 .font(.footnote)
@@ -79,6 +91,17 @@ struct PairingView: View {
             }
             .scrollBounceBehavior(.basedOnSize)
             }
+        }
+        .sheet(isPresented: $showSignup, onDismiss: { signupPending = SignupPoll.saved != nil }) {
+            SignupSheet(onJoined: { showSignup = false; onPaired?() })
+                .environment(session)
+        }
+        // Back after quitting mid-sign-up: straight to the wait.
+        // (A beat later: a sheet asked for while the root is still settling is dropped.)
+        .task {
+            guard onPaired == nil, signupPending else { return }
+            try? await Task.sleep(for: .milliseconds(500))
+            showSignup = true
         }
         .sheet(isPresented: $showEntry) {
             EntrySheet(prefill: entryPrefill, onDone: { showEntry = false; onPaired?() })

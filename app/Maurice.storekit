@@ -1,0 +1,158 @@
+{
+  "identifier" : "7C1E4A2B-5D3F-4E8A-9B6C-1A2B3C4D5E6F",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "5.99",
+      "familyShareable" : false,
+      "internalID" : "6822024501",
+      "localizations" : [
+        {
+          "description" : "Adds to the household's budget.",
+          "displayName" : "Top-up",
+          "locale" : "en_US"
+        },
+        {
+          "description" : "S'ajoute au budget du foyer.",
+          "displayName" : "Recharge",
+          "locale" : "fr"
+        }
+      ],
+      "productID" : "eu.chezmaurice.maurice.topup.5",
+      "referenceName" : "Top-up 5",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "11.99",
+      "familyShareable" : false,
+      "internalID" : "6822024502",
+      "localizations" : [
+        {
+          "description" : "Adds to the household's budget.",
+          "displayName" : "Top-up",
+          "locale" : "en_US"
+        },
+        {
+          "description" : "S'ajoute au budget du foyer.",
+          "displayName" : "Recharge",
+          "locale" : "fr"
+        }
+      ],
+      "productID" : "eu.chezmaurice.maurice.topup.10",
+      "referenceName" : "Top-up 10",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "22.99",
+      "familyShareable" : false,
+      "internalID" : "6822024503",
+      "localizations" : [
+        {
+          "description" : "Adds to the household's budget.",
+          "displayName" : "Top-up",
+          "locale" : "en_US"
+        },
+        {
+          "description" : "S'ajoute au budget du foyer.",
+          "displayName" : "Recharge",
+          "locale" : "fr"
+        }
+      ],
+      "productID" : "eu.chezmaurice.maurice.topup.20",
+      "referenceName" : "Top-up 20",
+      "type" : "Consumable"
+    }
+  ],
+  "settings" : {
+    "_developerTeamID" : "F5B4ZC8LEU",
+    "_failTransactionsEnabled" : false,
+    "_locale" : "fr",
+    "_storefront" : "FRA",
+    "_storeKitErrors" : [
+
+    ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21822024",
+      "localizations" : [
+
+      ],
+      "name" : "Chez Maurice",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "14.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6822024511",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Your Maurice, month by month.",
+              "displayName" : "Monthly",
+              "locale" : "en_US"
+            },
+            {
+              "description" : "Ton Maurice, au mois.",
+              "displayName" : "Mensuel",
+              "locale" : "fr"
+            }
+          ],
+          "productID" : "eu.chezmaurice.maurice.sub.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Monthly",
+          "subscriptionGroupID" : "21822024",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "149.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6822024512",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Your Maurice, for a year.",
+              "displayName" : "Yearly",
+              "locale" : "en_US"
+            },
+            {
+              "description" : "Ton Maurice, à l'année.",
+              "displayName" : "Annuel",
+              "locale" : "fr"
+            }
+          ],
+          "productID" : "eu.chezmaurice.maurice.sub.yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Yearly",
+          "subscriptionGroupID" : "21822024",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

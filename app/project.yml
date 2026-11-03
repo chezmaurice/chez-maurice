@@ -64,6 +64,10 @@ targetTemplates:
         CURRENT_PROJECT_VERSION: "1"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         SUPPORTS_MACCATALYST: NO
+        # The hosting service: sign-up from the app, and the account App Store
+        # purchases are counted to (StoreStore.swift, `Tower`). Read from the
+        # Info.plist key MauriceTowerURL.
+        MAURICE_TOWER_URL: https://account.chezmaurice.eu
       configs:
         debug:
           SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
@@ -81,8 +85,13 @@ targets:
       - path: Shared
       # The purpose strings in the app's seven languages (iOS wording).
       - path: InfoPlist/iOS
+      # The App Store products for local testing (Run in Xcode, the simulator).
+      - path: Maurice.storekit
+        buildPhase: none
     dependencies:
       - target: MauriceShareExtension
+    scheme:
+      storeKitConfiguration: Maurice.storekit
     settings:
       base:
         PRODUCT_NAME: Maurice
@@ -100,8 +109,15 @@ targets:
       # The purpose strings in seven languages — the Mac's own camera line:
       # there is no invitation scanner on the Mac (PairingView is iOS-only).
       - path: InfoPlist/macOS
+      - path: Maurice-macOS-Info.plist
+        buildPhase: none
+    scheme:
+      storeKitConfiguration: Maurice.storekit
     settings:
       base:
+        # Merged with the generated keys, as on iOS: the keys no
+        # INFOPLIST_KEY_ setting can carry (MauriceTowerURL).
+        INFOPLIST_FILE: Maurice-macOS-Info.plist
         INFOPLIST_KEY_NSCameraUsageDescription: "Maurice uses the camera to take your profile photo."
         # The bundle is "Chez Maurice.app"; the Swift module stays Maurice, so
         # the source compiles unchanged on both platforms.
