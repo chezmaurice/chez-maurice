@@ -101,7 +101,7 @@
               "locale" : "en_US"
             },
             {
-              "description" : "Ton Maurice, au mois.",
+              "description" : "Votre Maurice, au mois.",
               "displayName" : "Mensuel",
               "locale" : "fr"
             }
@@ -134,7 +134,7 @@
               "locale" : "en_US"
             },
             {
-              "description" : "Ton Maurice, à l'année.",
+              "description" : "Votre Maurice, à l'année.",
               "displayName" : "Annuel",
               "locale" : "fr"
             }
