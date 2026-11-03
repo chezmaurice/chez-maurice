@@ -27,7 +27,9 @@ import {
   saveArticleFiche,
   type SaveArticleInput,
 } from "../services/gardenArticles";
-import { gardenFor } from "../services/gardenFiche";
+import fs from "node:fs";
+import { gardenFor, parseFiche } from "../services/gardenFiche";
+import { isSharedWith, memberBriefByUsername } from "../services/entryShares";
 import {
   findArticleBySlug,
   readFullText,
@@ -192,7 +194,24 @@ app.get("/:slug/text", (c) => {
   const memberId = c.get("userId") as string;
 
   try {
-    const ref = findArticleBySlug(memberId, c.req.param("slug"), c.req.query("locale"));
+    // `?owner=<username>`: an article given from another household and shared
+    // with the caller is read where it lives, in the owner's notes
+    // (specs/cross-household-share.md). An ordinary shared article is a copy
+    // of the caller's own, read without it.
+    const named = (c.req.query("owner") ?? "").trim().replace(/^@/, "");
+    let readerOf = memberId;
+    if (named) {
+      const owner = memberBriefByUsername(named);
+      if (!owner) return c.json({ error: "No such article" }, 404);
+      if (owner.id !== memberId) {
+        const theirs = findArticleBySlug(owner.id, c.req.param("slug"), c.req.query("locale"));
+        const meta = (parseFiche(fs.readFileSync(theirs.file, "utf-8"))?.frontmatter.meta ?? {}) as Record<string, any>;
+        const shared = isSharedWith(memberId, { owner_id: owner.id, collection: "articles", locale: theirs.locale, slug: theirs.slug });
+        if (!shared || !meta.given_from) return c.json({ error: "No such article" }, 404);
+        readerOf = owner.id;
+      }
+    }
+    const ref = findArticleBySlug(readerOf, c.req.param("slug"), c.req.query("locale"));
     const text = readFullText(ref.file);
     if (!text) return c.json({ error: "No captured text for this article" }, 404);
     // `styles` are ranges in `text`: headings, and what the page set in bold

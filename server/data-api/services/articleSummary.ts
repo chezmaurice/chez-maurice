@@ -370,9 +370,12 @@ export function findArticleBySlug(
 ): ArticleFicheRef {
   const garden = gardenFor(memberId);
   if (!garden) throw new ArticleSaveError("No notes for this member", 404);
-  const ref = scanArticleFiches(garden).find(
+  // The fiche before the card of the same slug: the text, the summaries and
+  // the reading are the fiche's; a card beside it holds none of them.
+  const matches = scanArticleFiches(garden).filter(
     (f) => f.slug === slug && (!locale || f.locale === locale),
   );
+  const ref = matches.find((f) => f.kind === "fiche") ?? matches[0];
   if (!ref) throw new ArticleSaveError(`Article not found: ${slug}`, 404);
   return ref;
 }

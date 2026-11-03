@@ -55,6 +55,13 @@ data.use("*", async (c, next) => {
   await next();
 });
 data.route("/", entries);
+const { default: articleRoutes } = await import("../data-api/routes/garden-articles");
+const articles = new Hono();
+articles.use("*", async (c, next) => {
+  (c as any).set("userId", c.req.header("x-user"));
+  await next();
+});
+articles.route("/", articleRoutes);
 const garden = (who: string, method: string, url: string, body?: unknown) =>
   data.request(url, {
     method, headers: { "x-user": who, "content-type": "application/json" },
@@ -260,8 +267,37 @@ describe("the import, in the other household", () => {
     expect(detail.shared.state).toBe("draft");
     expect(detail.shared.body).toContain("Un article qui ralentit.");
     expect(detail.participants.map((p: any) => p.id)).toEqual([PAUL.id]);
-    // An article shared is given: Paul has his own copy, as in any household.
-    expect(findArticleFiche(gardenFor(PAUL.id)!, "https://revue.example/forets-temps-long")).toBeTruthy();
+    // Shared live, not given as a copy: Paul has none of his own.
+    expect(findArticleFiche(gardenFor(PAUL.id)!, "https://revue.example/forets-temps-long")).toBeNull();
+  });
+
+  test("the friend finds the article on his shelf, reads it, sees her notes and writes his own", async () => {
+    const owner = gardenFor(guestId)!.username;
+    const id = `@${owner}/${ref.collection}/${ref.locale}/${ref.slug}`;
+    const shelf = (await (await garden(PAUL.id, "GET", "/entries?view=shelf")).json()) as any;
+    const row = shelf.entries.find((e: any) => e.id === id);
+    expect(row).toBeTruthy();
+    expect(row.source.captured).toBe(true);
+
+    const text = await articles.request(`/${ref.slug}/text?locale=${ref.locale}&owner=${owner}`, { headers: { "x-user": PAUL.id } });
+    expect(text.status).toBe(200);
+    expect(((await text.json()) as any).text).toContain("Les forêts poussent lentement");
+    // Not someone it is not shared with.
+    expect((await articles.request(`/${ref.slug}/text?locale=${ref.locale}&owner=${owner}`, { headers: { "x-user": OTHER.id } })).status).toBe(404);
+
+    const at = `/entries/${ref.collection}/${ref.locale}/${ref.slug}?owner=${owner}`;
+    const seen = (await (await garden(PAUL.id, "GET", at)).json()) as any;
+    expect(seen.source.captured).toBe(true);
+    expect(seen.mine.items.map((i: any) => i.text)).toContain("Le passage sur les chênes.");
+
+    const wrote = await garden(PAUL.id, "POST", `/entries/${ref.collection}/${ref.locale}/${ref.slug}/notes?owner=${owner}`, { text: "Et les hêtres, alors ?" });
+    expect(wrote.status).toBe(201);
+    const after = (await wrote.json()) as any;
+    const mine = after.mine.items.find((i: any) => i.text === "Et les hêtres, alors ?");
+    expect(mine.author.id).toBe(PAUL.id);
+    // Written on her fiche, signed.
+    const fiche = findArticleFiche(gardenFor(guestId)!, "https://revue.example/forets-temps-long")!;
+    expect(fs.readFileSync(fiche.file, "utf-8")).toContain(`@${PAUL.username} — Et les hêtres, alors ?`);
   });
 
   test("the conversation sent whole is read-only, with both of them in it, on the fiche", async () => {

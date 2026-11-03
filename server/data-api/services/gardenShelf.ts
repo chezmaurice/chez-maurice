@@ -578,13 +578,26 @@ function foldTranslations(rows: { row: ShelfEntry; subject: string }[], preferre
  * An article's captured text is read through the owner's own reading routes,
  * which a share does not open: here it is its link.
  */
-function foreignRow(row: ShelfEntry, owner: MemberBrief, ownerId: string): ShelfEntry {
+/**
+ * An entry given from another household (`meta.given_from`, entryGift.ts) is
+ * shared live, whatever its kind: the friend reads it where it lives and they
+ * go on talking about it there (specs/cross-household-share.md, property 3).
+ * Only an ordinary article shared in the household is given as a copy instead.
+ */
+function isGivenFromElsewhere(garden: GardenRef, e: GardenEntry): boolean {
+  const meta = readFace(garden, e.fiche?.file)?.meta;
+  return typeof meta?.given_from === "string" && meta.given_from.length > 0;
+}
+
+function foreignRow(row: ShelfEntry, owner: MemberBrief, ownerId: string, readable = false): ShelfEntry {
   return {
     ...row,
     id: `@${owner.username}/${row.id}`,
     owner,
     participants: participantsOf(ownerId, { collection: row.collection!, locale: row.locale!, slug: row.slug! }),
-    source: row.source?.type === "article" ? { ...row.source, captured: false } : row.source,
+    // An article's text is read in the owner's notes only when it was given
+    // from another household (GET /garden/articles/:slug/text?owner=).
+    source: row.source?.type === "article" && !readable ? { ...row.source, captured: false } : row.source,
     shared: null,
     translations: [],
   };
@@ -658,10 +671,12 @@ export async function listShelf(
     );
     if (!from || !e || !KIND_OF[e.collection]) continue;
     // An article shared with this member was given to them: their copy is in
-    // their own list (gardenArticles.ts, copyArticleTo), not the owner's fiche.
-    if (e.collection === "articles") continue;
+    // their own list (gardenArticles.ts, copyArticleTo), not the owner's fiche
+    // — unless it came from another household, which is shared live.
+    const given = e.collection === "articles" && isGivenFromElsewhere(from.garden, e);
+    if (e.collection === "articles" && !given) continue;
     const { row } = await describe(memberId, from.garden, e, lib, counts);
-    entries.push(foreignRow(row, from.owner, share.owner_id));
+    entries.push(foreignRow(row, from.owner, share.owner_id, given));
   }
 
   // The books nothing is written on yet: readable all the same.
@@ -901,7 +916,8 @@ export async function getShelfEntry(
   const away = archivedIds(memberId);
   const archived = away.has(row.id) || row.translations.some((t) => away.has(t.id));
   if (foreign && owner) {
-    return { ...foreignRow(row, owner, ownerId), archived, mine: mine && { ...mine, web_path: null, file: "" }, shared };
+    const readable = collection === "articles" && isGivenFromElsewhere(garden, e);
+    return { ...foreignRow(row, owner, ownerId, readable), archived, mine: mine && { ...mine, web_path: null, file: "" }, shared };
   }
   return { ...row, archived, mine, shared, participants: participantsOf(ownerId, { collection, locale, slug }) };
 }

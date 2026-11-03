@@ -300,12 +300,16 @@ Differences:
   the same ISBN, else the same title; any other work with the same title.
 - `meta.opened: false` only when nothing of the caller's came with it: an
   unopened fiche shows nothing written in it.
-- **Articles shared with `share_with` are given, as in any household**
-  (`copyArticleTo`, the participants route's rule): the friend gets their own
-  copy — the text, not the giver's notes — and the shelf lists that copy, not
-  the giver's fiche. So for an article the friend does *not* see the notes that
-  came with it. Open question for Candide: keep the household rule, or let a
-  given article stay a live share.
+- **With `share_with`, the entry is shared live, whatever its kind — an
+  article too** (property 3 wins, Candide, 3 November 2026): no copy is given
+  to the friend. The household's own rule — an article shared is given as a
+  copy, `copyArticleTo` — stays for ordinary in-household shares only. The
+  shelf tells the two apart by the fiche's `meta.given_from`: a shared article
+  carrying it is listed to the friend as the owner's (`@<owner>/articles/…`,
+  `source.captured` true), and its page shows the notes; the friend adds signed
+  notes to it as to any shared entry (`POST …/notes?owner=`), and reads its text
+  with `GET /api/v1/garden/articles/:slug/text?locale=…&owner=<username>`
+  (only for an article given from another household and shared with them).
 
 **E. Read-only conversations**
 

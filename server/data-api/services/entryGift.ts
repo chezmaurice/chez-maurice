@@ -18,7 +18,8 @@
  * hang on there; the card is written as a draft whatever it was in A; each
  * conversation sent whole becomes a read-only conversation, one sent as its
  * summary a dated note. Then, with `share_with`, the entry is shared with that
- * member by the household's own live share (entryShares.ts).
+ * member by the household's own live share (entryShares.ts) — an article too,
+ * never given as a copy.
  */
 
 import fs from "node:fs";
@@ -33,7 +34,7 @@ import { canonicalizeUrl, slugify, type StyledBlock } from "./articleExtract";
 import { readTextStyles, writeTextStyles, type TextStyle } from "./articleCleanup";
 import { readFullText } from "./articleSummary";
 import { getBookMetadata, getCoverFile } from "./calibre";
-import { copyArticleTo, findArticleFiche, scanArticleFiches } from "./gardenArticles";
+import { findArticleFiche } from "./gardenArticles";
 import { conversationsAbout, keepGivenConversation } from "./entryConversations";
 import { memberBrief, memberBriefByUsername, shareEntry } from "./entryShares";
 import {
@@ -487,14 +488,10 @@ export async function importEntry(memberId: string, body: ImportInput): Promise<
     indexGardenPaths(memberId, fragments);
   }
 
-  // Shared as any entry is in this household — an article, given (a copy of
-  // it in the friend's notes), as the participants route does.
-  if (target) {
-    shareEntry({ owner_id: memberId, ...ref }, target.id);
-    if (collection === "articles") {
-      const own = scanArticleFiches(garden).find((r) => r.slug === slug && r.locale === locale);
-      if (own) copyArticleTo(me, own, target.id);
-    }
-  }
+  // Shared live, whatever its kind — an article too: the two go on talking
+  // about it there, on this one fiche (the spec's property 3, Candide,
+  // 3 November 2026). The household's own rule, an article given as a copy,
+  // is for an ordinary share; the shelf lists this one because of `given_from`.
+  if (target) shareEntry({ owner_id: memberId, ...ref }, target.id);
   return ref;
 }
