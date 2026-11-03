@@ -347,6 +347,9 @@ export async function importEntry(memberId: string, body: ImportInput): Promise<
   if (collection === "articles" && !/^https?:\/\//.test(url)) throw new EntryGiftError("an article needs its url", 400);
   const isbn = isbnOf(book?.isbn ?? entry.meta?.isbn);
 
+  // Checked before anything is written: a refusal must leave nothing behind.
+  const text = article ? str(article.text, MAX_TEXT + 1).trim() : "";
+  if (text.length > MAX_TEXT) throw new EntryGiftError("the article's text is too long", 413);
   const already = existing(garden, collection, title, url, isbn);
   if (already) throw new EntryGiftError("exists", 409, { ...already });
 
@@ -457,8 +460,6 @@ export async function importEntry(memberId: string, body: ImportInput): Promise<
   written.push(file);
 
   // An article's captured text, its first fragment, with its styles beside it.
-  const text = article ? str(article.text, MAX_TEXT + 1).trim() : "";
-  if (text.length > MAX_TEXT) throw new EntryGiftError("the article's text is too long", 413);
   if (text) {
     const publication = String(meta.publication ?? new URL(url).hostname.replace(/^www\./, ""));
     written.push(writeFragment(file, `Texte intégral — ${publication}`, text));

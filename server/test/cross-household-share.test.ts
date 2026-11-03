@@ -354,6 +354,15 @@ describe("the import, in the other household", () => {
     expect(await res.json()).toEqual({ error: "exists", ...ref });
   });
 
+  test("an article's text too long is refused before anything is written", async () => {
+    const entry = { collection: "articles", locale: "fr", slug: "trop-long", title: "Trop long", meta: { url: "https://example.org/trop-long" } };
+    const source = { kind: "article", url: "https://example.org/trop-long", text: "x".repeat(2_000_001) };
+    const res = await garden(guestId, "POST", "/entries/import", { entry, source, from_household: "Foyer Dupont" });
+    expect(res.status).toBe(413);
+    const again = await garden(guestId, "POST", "/entries/import", { entry, source: { ...source, text: "Court." }, from_household: "Foyer Dupont" });
+    expect(again.status).toBe(201); // not "exists": the refusal left nothing behind
+  });
+
   test("not to someone the guest cannot reach; a summary-only gift of a work; bad input", async () => {
     const film = { collection: "movies", locale: "fr", slug: "le-chene", title: "Le Chêne" };
     const blocked = await garden(guestId, "POST", "/entries/import", { entry: film, share_with: OTHER.username, from_household: "Foyer Dupont" });
