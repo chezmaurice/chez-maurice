@@ -1085,3 +1085,13 @@
 
 /* An article another member shared: the copy says who gave it (2 November 2026). */
 "article.shared_by" = "Gedeeld door %@";
+
+/* A friend from another household, invited as a guest (specs/cross-household-share.md, A). */
+"guest_invite.title" = "Een vriend als gast uitnodigen";
+"guest_invite.sees_only_you" = "Je vriend ziet in dit huishouden alleen jou, en alleen jij kunt met hem delen.";
+"guest_invite.maurice" = "Hij kan in dit huishouden ook met Maurice praten, op het budget van het huishouden.";
+
+/* A conversation received read-only with an entry given from another household (E). */
+"chat.received.band" = "Gesprek ontvangen van huishouden %@ — alleen lezen";
+"chat.received.band_unnamed" = "Gesprek ontvangen van een ander huishouden — alleen lezen";
+"chat.received.continue" = "Nieuw gesprek op basis van dit gesprek";

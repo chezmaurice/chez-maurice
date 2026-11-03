@@ -788,6 +788,12 @@ struct ServerConversation: Decodable, Identifiable {
     /// the header on a cold start, before any socket event.
     let suggestions: Int?
     let suggestions_kept: Int?
+    /// Received from another household with an entry given here
+    /// (specs/cross-household-share.md, E): no composer, only a way to a new
+    /// one. Both absent from an older server.
+    let read_only: Bool?
+    /// That household's display name.
+    let imported_from: String?
 
     var openedByMaurice: Bool { opened_by == "maurice" }
 }
@@ -929,6 +935,9 @@ struct ServerConversationDetail: Decodable {
     let participants: [ServerParticipant]?
     /// The garden entry it is held from, when Carnet opened it from one.
     let entry: ConversationEntry?
+    /// Received from another household, read-only (see ServerConversation).
+    let read_only: Bool?
+    let imported_from: String?
 }
 
 /// A garden entry a conversation is about: `ref` is `<collection>/<locale>/<slug>`.

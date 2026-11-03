@@ -388,9 +388,23 @@ struct ChatView: View {
         }
     }
 
-    /// Context tray (when populated) + the message bar.
+    /// Context tray (when populated) + the message bar — or, for a
+    /// conversation received read-only from another household, its band.
     @ViewBuilder
     private var composerDock: some View {
+        if let household = chat.activeReceivedFrom {
+            ReceivedConversationBand(household: household, accent: accent) {
+                Task { await chat.startFromReceived() }
+            }
+            .padding(.horizontal, 12)
+            .padding(.bottom, 8)
+        } else {
+            editableComposerDock
+        }
+    }
+
+    @ViewBuilder
+    private var editableComposerDock: some View {
         #if os(iOS)
         // Phone: the tray is hidden during chat — summoned by + or the ctx pill,
         // dismissed by Done. The + opens both the panel and the search sheet.
@@ -4036,5 +4050,40 @@ private struct HeldEntryTile: View {
         .frame(width: 128, height: 60, alignment: .topLeading)
         .background(RoundedRectangle(cornerRadius: 6).fill(theme.codeBg))
         .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(theme.rule, lineWidth: 0.5))
+    }
+}
+
+/// Where the composer would be, in a conversation received read-only from
+/// another household with an entry given here (specs/cross-household-share.md,
+/// E): where it came from, and the way to go on talking — a new conversation
+/// held from the same entry.
+private struct ReceivedConversationBand: View {
+    @Environment(\.mauriceTheme) private var theme
+    let household: String
+    let accent: Color
+    let onContinue: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label {
+                Text(household.isEmpty ? L("chat.received.band_unnamed")
+                                       : L("chat.received.band", household))
+                    .fixedSize(horizontal: false, vertical: true)
+            } icon: {
+                Image(systemName: "tray.and.arrow.down")
+            }
+            .font(.system(size: 13))
+            .foregroundStyle(theme.ink)
+            Button(action: onContinue) {
+                Label(L("chat.received.continue"), systemImage: "bubble.left.and.text.bubble.right")
+                    .font(.system(size: 13, weight: .semibold))
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(accent.legible(onDark: theme.isDark))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(theme.surface))
+        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(theme.rule, lineWidth: 0.5))
     }
 }

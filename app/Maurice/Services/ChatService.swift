@@ -248,6 +248,47 @@ final class ChatService {
         conversations.first { $0.id == activeConversationId }
     }
 
+    // ── Received from another household (specs/cross-household-share.md, E)
+
+    /// Conversations read as read-only by their detail, with the household
+    /// they came from ("" when the server did not name it).
+    private var receivedFrom: [String: String] = [:]
+
+    /// The open conversation, when it came from another household with an
+    /// entry given here: nothing can be written in it. Its household's name,
+    /// "" when unnamed; nil for an ordinary conversation.
+    var activeReceivedFrom: String? {
+        guard let id = activeConversationId else { return nil }
+        if let known = receivedFrom[id] { return known }
+        guard let row = activeConversation, row.read_only == true else { return nil }
+        return row.imported_from ?? ""
+    }
+
+    /// « Nouvelle conversation à partir de celle-ci »: a new conversation held
+    /// from the same entry, its fiche in context — what Carnet's Maurice
+    /// button opens (POST /api/conversations `{entry}`). Without an entry the
+    /// server lets this member hold it from, a plain new conversation.
+    func startFromReceived() async {
+        let entryRef = activeEntry?.ref ?? activeConversation?.entry_ref
+        guard let api, let token, let entryRef else {
+            await startNewConversation()
+            await createConversation(force: true)
+            return
+        }
+        struct FromEntry: Encodable { let entry: String }
+        do {
+            let convo: ServerConversation = try await api.post(
+                "/api/conversations", body: FromEntry(entry: entryRef), token: token)
+            await startNewConversation()
+            if !conversations.contains(where: { $0.id == convo.id }) {
+                conversations.insert(convo, at: 0)
+            }
+            await selectConversation(convo.id)
+        } catch {
+            report(error)
+        }
+    }
+
     // ── Domain proposals (the list's section "Proposals") ─────────
     /// The member's open proposals and the settled ones, read from the server
     /// when the conversations load and when the list of domains opens. They
@@ -794,6 +835,11 @@ final class ChatService {
             notice = nil
             participants = detail.participants ?? []
             activeEntry = detail.entry
+            if detail.read_only == true {
+                receivedFrom[conversationId] = detail.imported_from ?? ""
+            } else {
+                receivedFrom[conversationId] = nil
+            }
             knownIds = Set(messages.map { $0.id })
             messagesLoadedFor = conversationId
             pendingSummon = false

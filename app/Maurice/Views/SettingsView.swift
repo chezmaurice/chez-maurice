@@ -42,6 +42,9 @@ struct SettingsView: View {
     /// The code this member made for another device of theirs, shown as a QR.
     @State private var ownDeviceCode: MemberInviteCode?
     @State private var ownDeviceError: String?
+    /// A friend from another household, invited as a guest (GuestInvite).
+    @State private var guestInviteCode: GuestInvite.Code?
+    @State private var guestInviteRefused = false
     /// Per-message cost meter in the chat — see TurnUsageFooter.
     @AppStorage(TurnCostPref.key) private var showTurnCost = false
     /// Dictation may use Apple's servers for languages with no local model.
@@ -126,6 +129,14 @@ struct SettingsView: View {
                           watch: { await ownDeviceCodeState(code.code) })
                 .environment(session)
         }
+        .sheet(item: $guestInviteCode) { code in
+            InviteQRSheet(invitation: code.invitation(server: session.serverURL ?? ""),
+                          title: session.localized("guest_invite.title"),
+                          expiresAt: code.expires_at, onRevoke: nil,
+                          lines: [session.localized("guest_invite.sees_only_you"),
+                                  session.localized("guest_invite.maurice")])
+                .environment(session)
+        }
         .sheet(isPresented: $showAddHousehold) {
             PairingView(onPaired: { showAddHousehold = false })
                 .environment(session)
@@ -157,6 +168,16 @@ struct SettingsView: View {
                                     IndexRow(icon: "plus.rectangle.on.rectangle",
                                              label: session.localized("devices.add"),
                                              accent: accent) { Task { await addOwnDevice() } }
+                                    // A friend from another household, as a guest
+                                    // who sees only this member. Gone once the
+                                    // server says no (a child not allowed).
+                                    if !guestInviteRefused,
+                                       !GuestInvite.isRefused(server: session.serverURL, member: session.activeUserId) {
+                                        SetDivider()
+                                        IndexRow(icon: "person.badge.plus",
+                                                 label: session.localized("guest_invite.title"),
+                                                 accent: accent) { Task { await inviteGuest() } }
+                                    }
                                 }
                                 // Who is in this foyer, and letting someone in —
                                 // the admin's, from the app rather than the web.
@@ -754,6 +775,18 @@ struct SettingsView: View {
         }
     }
 
+    /// A guest invitation for a friend from another household (GuestInvite).
+    private func inviteGuest() async {
+        guard let serverURL = session.serverURL, let member = session.activeUserId,
+              let token = session.tokenForActiveUser else { return }
+        ownDeviceError = nil
+        switch await GuestInvite.create(server: serverURL, member: member, token: token) {
+        case .code(let code): guestInviteCode = code
+        case .notAllowed: guestInviteRefused = true
+        case .failed(let message): ownDeviceError = message
+        }
+    }
+
     /// pending | used | expired, nil when the server cannot be reached.
     private func ownDeviceCodeState(_ code: String) async -> String? {
         guard let serverURL = session.serverURL, let token = session.tokenForActiveUser else { return nil }
@@ -987,6 +1020,8 @@ private struct InviteQRSheet: View {
     /// Asked every two seconds for the code's state (a member's own code):
     /// the sheet closes once the new device is in, and says so when it lapses.
     var watch: (() async -> String?)? = nil
+    /// Under the title: what the code gives (a friend's guest invitation).
+    var lines: [String] = []
     @State private var state = "pending"
 
     var body: some View {
@@ -994,6 +1029,12 @@ private struct InviteQRSheet: View {
             Text(title)
                 .font(.system(size: 20, design: .serif)).foregroundStyle(theme.ink)
                 .multilineTextAlignment(.center)
+            ForEach(lines, id: \.self) { line in
+                Text(line)
+                    .font(.system(size: 13)).foregroundStyle(theme.inkSoft)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             if state == "used" {
                 Label(session.localized("devices.add.done"), systemImage: "checkmark.circle.fill")
                     .font(.system(size: 17, weight: .medium)).foregroundStyle(theme.ink)

@@ -1098,3 +1098,13 @@
 
 /* An article another member shared: the copy says who gave it (2 November 2026). */
 "article.shared_by" = "Geteilt von %@";
+
+/* A friend from another household, invited as a guest (specs/cross-household-share.md, A). */
+"guest_invite.title" = "Einen Freund als Gast einladen";
+"guest_invite.sees_only_you" = "Dein Freund sieht in diesem Haushalt nur dich, und nur du kannst mit ihm teilen.";
+"guest_invite.maurice" = "Er kann in diesem Haushalt auch mit Maurice sprechen, über das Budget des Haushalts.";
+
+/* A conversation received read-only with an entry given from another household (E). */
+"chat.received.band" = "Gespräch aus dem Haushalt %@ — nur lesen";
+"chat.received.band_unnamed" = "Gespräch aus einem anderen Haushalt — nur lesen";
+"chat.received.continue" = "Neues Gespräch ausgehend von diesem";
