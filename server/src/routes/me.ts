@@ -12,6 +12,7 @@ import db from "../db";
 import { createDeviceLinkCode, deviceLinkCodeState, verifyPassword, verifyPin } from "../services/auth";
 import { householdBudget, shownMemberUsage, usageFor } from "../services/budget";
 import { gardensRoot } from "../services/gardensRoot";
+import { storeConfig } from "../services/store";
 import { isGardenDir } from "../services/gitHttp";
 import { exportsConversations, setExportsConversations } from "../services/gardenExport";
 import { uploadsDir } from "../services/chatImport";
@@ -251,6 +252,19 @@ me.put("/git/export", async (c) => {
 // {limited:false, left:null, …} when nothing limits the household.
 
 me.get("/budget", (c) => c.json(householdBudget(getUser(c.get("userId"))?.role === "admin")));
+
+// ── GET /api/me/store ───────────────────────────────────────────
+// Where the admin of a hosted household buys the subscription and top-ups in
+// the Apple apps: the account StoreKit credits (`appAccountToken`) and the
+// hosting service the apps ask for the rest (services/store.ts). 404 for a
+// household with no store, and for anyone but the admin — a member never sees
+// a price or a purchase.
+
+me.get("/store", (c) => {
+  const store = storeConfig();
+  if (!store || getUser(c.get("userId"))?.role !== "admin") return c.json({ error: "no_store" }, 404);
+  return c.json(store);
+});
 
 // ── /api/me/ai-consent ──────────────────────────────────────────
 // The providers outside the house that this member's data can reach — the

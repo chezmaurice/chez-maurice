@@ -53,6 +53,7 @@
 import db from "../db";
 import { priceFor, shownEur, type TurnUsage } from "./pricing";
 import { isUnmetered } from "./providerPlugins";
+import { storeConfig } from "./store";
 import { t, userLocale } from "./i18n";
 
 // ── Caps ────────────────────────────────────────────────────────────────────
@@ -236,7 +237,8 @@ export interface HouseholdBudget {
   period: string | null;
   /** What is left in euros, at Maurice's price — given to the admin only; null for a member. */
   left_eur: number | null;
-  /** Whether topping up is on offer (on the web). False until payment is wired. */
+  /** Whether the reader can top up: the admin of a household with a store
+   *  (services/store.ts), from the app. Always false for a member. */
   can_top_up: boolean;
 }
 
@@ -256,7 +258,8 @@ export function householdBudget(forAdmin = false): HouseholdBudget {
     const resets = monthResetsAt();
     views.push({ kind: "monthly", left: monthly > 0 ? Math.min(1, leftEur / monthly) : 0, leftEur, resets, period: resets });
   }
-  if (!views.length) return { limited: false, kind: null, left: null, resets_at: null, period: null, left_eur: null, can_top_up: false };
+  const canTopUp = forAdmin && storeConfig() != null;
+  if (!views.length) return { limited: false, kind: null, left: null, resets_at: null, period: null, left_eur: null, can_top_up: canTopUp };
   const v = views.reduce((a, b) => (b.left < a.left ? b : a));
   return {
     limited: true,
@@ -265,7 +268,7 @@ export function householdBudget(forAdmin = false): HouseholdBudget {
     resets_at: v.resets,
     period: v.period,
     left_eur: forAdmin ? Math.round(shownEur(v.leftEur) * 100) / 100 : null,
-    can_top_up: false,
+    can_top_up: canTopUp,
   };
 }
 

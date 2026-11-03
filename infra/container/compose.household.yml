@@ -74,6 +74,12 @@ services:
       # amount a person reads is multiplied by it. The tower writes 1.452 for
       # a hosted household; unset, 1.
       MAURICE_PRICE_FACTOR: ${MAURICE_PRICE_FACTOR:-}
+      # The household's store (services/store.ts, GET /api/me/store): the
+      # account its admin's in-app purchases are credited to, and the hosting
+      # service the apps ask for the rest. The tower writes both lines; without
+      # them the apps show no store at all.
+      MAURICE_STORE_ACCOUNT: ${MAURICE_STORE_ACCOUNT:-}
+      MAURICE_STORE_URL: ${MAURICE_STORE_URL:-}
       # Web search (services/webSearch.ts, Tavily): without it the web_search
       # tool is not offered and Maurice says he has no internet. Set it in
       # defaults.env for every household.
