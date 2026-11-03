@@ -227,3 +227,114 @@ Android/desktop (`maurice-android`) follow once iOS is settled.
 3. A child member may not invite a guest unless the admin allowed it (the
    *may publish* flag's model).
 4. iOS first (server, Maurice app, Carnet); Android and desktop after.
+
+---
+
+## As built — server (3 November 2026)
+
+Sections A, B, C and E on the server. Where it differs from the text above,
+this section is what the server does.
+
+### Routes
+
+The garden routes live under the real prefix `/api/v1/garden`, not `/api/garden`.
+
+**A. Guests invited by a member** (`src/routes/me.ts`, `src/services/invites.ts`)
+
+    POST   /api/me/guest-invite          → 201 { code, link, expires_at, created_at }
+                                         → 403 { error: "not_allowed" }  (guest, child not allowed)
+                                         → 403 { error: "not with an API token" }
+    GET    /api/me/guest-invites         → { allowed, invites: [{ code, link, expires_at, created_at }],
+                                             guests: [{ id, username, display_name, avatar_color, avatar_url, joined_at }] }
+    GET    /api/me/guest-invites/:code   → { state: "pending" | "used" | "expired" }  (404: not the caller's)
+    DELETE /api/me/guest-invites/:code   → { ok: true }                    (404: not the caller's, or used)
+
+`link` is `<household>/join?code=<code>`. Single use, seven days. Redeemed by
+`POST /api/auth/enroll` like any open invitation; its first answer (no name)
+now also says `role: "guest"` and `invited_by: "<inviter's display name>"`;
+the second answers `role: "guest", needs_pin: false`. The guest's
+`guest_contacts` is the inviter alone; the admin's `GET /api/users/invites`
+does not list member-made guest invitations.
+
+**B. Export**
+
+    GET /api/v1/garden/entries/:c/:l/:s/export
+      → 200 {
+          entry:  { collection, locale, slug, title, kind, author, cover?, date, tags, rating, meta },
+          source: { kind: "article", url, canonical_url, text, styles: [{ start, end, kind }], image? }
+                | { kind: "book", calibre: { title, authors, isbn?, cover? } } | null,
+          fiche:  { prose, notes: [{ id, date, author, text, quote?, page?, chapter? }] },
+          highlights: [{ id, date, text, chapter?, note? }],
+          card:   { body, status, url? } | null,
+          conversations: [{ id, title, date, message_count, summary?, shareable, reason? }]
+        }
+      → 403 with ?owner=<someone else>; 404 not the caller's entry
+
+    GET /api/conversations/:id/export
+      → 200 { title, date, messages: [{ role, author?, text, data?, at }] }
+      → 403 { error: "others_took_part" }; 404 not a participant
+
+Differences: an article's text is stored as plain text plus styles, so it
+travels as `text` + `styles` (the ranges `GET …/articles/:slug/text` already
+gives), not `html`. Pictures (`cover`, `image`, a book's `cover`) travel as
+`data:image/…;base64,` URIs — B cannot reach A's files — or as a web address
+when that is what A holds. `meta` drops what is A's reading or A's household
+(`opened`, `read_at`, `progress`, `shared_by`, `given_from`, `calibre_id`,
+`image`, …). Notes another member signed on a shared entry are left out
+entirely. Messages carry `at`; pictures attached to messages are stripped.
+
+**C. Import**
+
+    POST /api/v1/garden/entries/import
+      { entry, source?, prose?, notes?[], highlights?[], card?,
+        conversations?: [{ id?, mode: "whole" | "summary", title?, date?, summary?, messages? }],
+        share_with?: <username or member id>, from_household }
+      → 201 { collection, locale, slug }
+      → 409 { error: "exists", collection, locale, slug }
+      → 403 { error: "not_reachable" }   (share_with a member the caller cannot reach)
+      → 404 { error: "Unknown member" }; 400 bad input; 413 too large
+
+`entry`, `source`, notes and highlights are taken as the export gives them.
+Differences:
+- *Already there* means: an article with the same canonical URL; a book with
+  the same ISBN, else the same title; any other work with the same title.
+- `meta.opened: false` only when nothing of the caller's came with it: an
+  unopened fiche shows nothing written in it.
+- **Articles shared with `share_with` are given, as in any household**
+  (`copyArticleTo`, the participants route's rule): the friend gets their own
+  copy — the text, not the giver's notes — and the shelf lists that copy, not
+  the giver's fiche. So for an article the friend does *not* see the notes that
+  came with it. Open question for Candide: keep the household rule, or let a
+  given article stay a live share.
+
+**E. Read-only conversations**
+
+- `conversations.imported_from` and `conversations.read_only` (0/1). Both are
+  on `GET /api/conversations` rows and `GET /api/conversations/:id`
+  (`read_only` a boolean).
+- The import sets `entry_ref` (held from the new entry) as well as a
+  `conversation_entries` row. Its summary is written as the fiche's fragment
+  for that conversation, keyed on the transcript as it now stands — that is
+  what shows on the fiche; `conversation_summaries` is the composer's own
+  cache and is not written.
+- `POST /api/conversations/:id/messages` → 409 `{ error: "read_only" }`.
+- The settle sweep skips read-only conversations.
+- `GET /api/conversations/:id` gives `entry` to the friend too, with Carnet's
+  id for a shared entry (`ref: "@<owner>/<c>/<l>/<s>"`, `web_path: null`).
+  `POST /api/conversations { entry: "@<owner>/…" }` accepts an entry shared
+  with the caller; the composer reads that fiche in the owner's notes.
+
+### Schema
+
+- `household_invites.role TEXT NOT NULL DEFAULT 'standard'`,
+  `household_invites.contact_of TEXT REFERENCES users(id) ON DELETE CASCADE`.
+- `users.may_invite_guests INTEGER NOT NULL DEFAULT 0` — a separate flag
+  mirroring `may_publish` (console: member page, beside *may publish*). The
+  console also shows *invité par @x* on a guest made this way.
+- `conversations.imported_from TEXT`, `conversations.read_only INTEGER NOT NULL DEFAULT 0`.
+
+### Members cap
+
+Nothing in this repository enforces a member limit. The only count is the
+tower's (`chezmaurice-tower/stats.ts`, `SELECT count(*) FROM users`), which
+includes guests: to change there (`WHERE role != 'guest'`).
