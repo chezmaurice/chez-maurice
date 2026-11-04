@@ -1,6 +1,6 @@
 ---
 title: The MCP tool ecosystem
-date: '2026-10-20'
+date: '2026-11-04'
 flags: []
 locale: en
 description: 'The gateway that gives Maurice his capabilities: discovery, per-member
@@ -48,7 +48,15 @@ The [[maurice-server|chat engine]] holds a minimal MCP client (`server/src/servi
 
 Two gates sit on top of the families, both in `toolFamilies.ts`. Everything that isn't `web`, `signals`, `garden-notes` or `garden-journal` is **experimental**, and a member only sees it once an admin ticks *experimental tools* on their admin page (`users.experimental_tools`; admins always have it). The filter is applied twice — when listing families for the picker, and tool by tool just before the roster is handed to the model (`claude.ts`), so an ungated member can never be passed an experimental tool even through a stale conversation override.
 
-**The prompt says what it holds** (September 2026). The system prompt used to promise "tasks, calendar, contacts, notes, health, books, and more" in a hard-coded sentence, written before the families were resolved — so a member granted none of them was told they had all of them, and, asked what tools he had, Maurice recited the promise instead of his actual roster. The sentence is gone: `toolRosterNotice()` now names the families actually present in the turn's filtered roster (plus web search only when Tavily is configured), and says plainly that nothing else is reachable. The image-generation directives are likewise appended only when a fal key exists, instead of teaching the model a `[IMAGE: …]` protocol that nothing downstream would honour.
+**The prompt says what it holds** (September 2026). The system prompt used to promise "tasks, calendar, contacts, notes, health, books, and more" in a hard-coded sentence, written before the families were resolved — so a member granted none of them was told they had all of them, and, asked what tools he had, Maurice recited the promise instead of his actual roster. The sentence is gone: `toolRosterNotice()` now names the families actually present in the turn's filtered roster (plus web search only when Tavily is configured, and reading a web page whenever the `web` family is there), and says plainly that nothing else is reachable. The image-generation directives are likewise appended only when a fal key exists, instead of teaching the model a `[IMAGE: …]` protocol that nothing downstream would honour.
+
+## Reading a web page — `read_web_page`
+
+`web_search` (Tavily) returns snippets, never a page: asked to look at chezmaurice.eu, Maurice could only search for it, found nothing (the site was barely indexed), and asked the member to paste the text. Since 4 November 2026 he can open an address (`server/src/services/webPage.ts`). The server fetches the page itself, behind the article extractor's SSRF guard (`safeFetch` in `data-api/services/articleExtract.ts`): loopback, the LAN, the tailnet and cloud metadata are refused, every redirect hop is checked again, a `<meta refresh>` is followed twice at most, and the fetch gives up after 15 seconds. No third party sees the address; the site sees the household's server as it would a browser.
+
+What comes back is the title, the final address, the site and its description, then the text: Readability's article body when it holds most of the page, the whole page's text otherwise — a landing page's every section is its content, and Readability would keep one. Headings come back marked. Past 20 000 characters the text is cut, and the result says so. A page with almost no text (built by JavaScript, a login or consent wall) comes back flagged, and the model is told to say it could not read it rather than describe it from its title; a bot check, an error status or something that is not a page (a PDF) comes back as an error. The app draws the page as a one-source web card under the reply, and the activity line says *Reading a page* / *Page read*.
+
+The tool rides with the `web` family, but unlike the search it needs neither a Tavily key nor the member's yes to Tavily: only the site is contacted. *Gaps:* no paywall or login gets through (Carnet's share sheet, which captures the rendered page, remains the way for those); pages rendered in the browser read empty; PDFs are refused; no per-turn budget beyond the six tool rounds.
 
 ## The documentation tool — `maurice_docs`
 

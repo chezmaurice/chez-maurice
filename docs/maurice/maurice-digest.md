@@ -30,7 +30,7 @@ covers:
   maurice-personas-hats: '2026-09-19'
   maurice-server: '2026-11-04'
   maurice-shared-gardens: '2026-10-20'
-  maurice-tools: '2026-10-20'
+  maurice-tools: '2026-11-04'
   maurice-web-garden: '2026-10-20'
 ---
 
@@ -158,7 +158,7 @@ There is also a **browser clipper** that saves the page being read into the memb
 ## 9. What happens when you send a message
 
 - **What Maurice reads**, in order: household context and the member's profile; the conversation's domain (or reading companion) and its bound context; what the member loaded in the composer; in private conversations only, an **index of the member's domains** (one line each), the full brief being fetched when a question falls in one; the facts the member kept; and last, a **content-safety floor** no setting can remove — refusal of explicit sexual content and sadistic gore, with an absolute carve-out for minors.
-- **Tools:** only the tool families the conversation has (§18), plus web search and the documentation tool. Up to **six tool rounds**, then a final round with tools off so Maurice always answers. At most four web searches and three memory searches per turn; a reworded repeat gets the earlier result.
+- **Tools:** only the tool families the conversation has (§18), plus web search, reading a web page by its address, and the documentation tool. Up to **six tool rounds**, then a final round with tools off so Maurice always answers. At most four web searches and three memory searches per turn; a reworded repeat gets the earlier result.
 - **Streaming:** the reply arrives at a typing pace. **One activity line** per turn shows the sources found, a count of searches and tool calls, the current step and a timer; after the reply it stays as a record and opens a drawer of every search, query, source and tool call.
 - **Data cards:** what a tool returns is drawn from the tool's data beside the prose, so Maurice cannot quietly misreport it. **Source cards** show exactly what a search found.
 - **A reply belongs to the conversation, not to the phone.** Locking the phone or losing the network does not stop it: the turn runs to the end on the server and the app reattaches. **Stop** ends it and keeps what was written. One reply at a time per conversation.
@@ -271,7 +271,7 @@ Each member has folders and files (5 GB each), in **Settings**: text, images, PD
 ## 18. Tools
 
 - **The gateway** mounts whatever tools are installed and scopes every call to the member asking. Tool names look like `garden__create_note`, `corpus__search`.
-- **Families:** a conversation holds only some tools (a model given a hundred tools does worse). Always on in a private conversation: web search (when a search key is set), the note-writing tools, the reading side of the corpus, email (once a mailbox is added) and the documentation tool. Other families are chosen per conversation or per domain. Corpus, email and mail triage are withdrawn as soon as a second person joins. Maurice's instructions list only the tools actually present, so "what can you do?" gets a true answer.
+- **Families:** a conversation holds only some tools (a model given a hundred tools does worse). Always on in a private conversation: web search (when a search key is set), reading a web page by its address (the server fetches it itself, no third party; paywalls, logins and pages built in the browser stay unreadable), the note-writing tools, the reading side of the corpus, email (once a mailbox is added) and the documentation tool. Other families are chosen per conversation or per domain. Corpus, email and mail triage are withdrawn as soon as a second person joins. Maurice's instructions list only the tools actually present, so "what can you do?" gets a true answer.
 - **Experimental gate:** everything beyond those core families needs an admin to tick *experimental tools* for the member.
 - **External clients:** a member can add their Maurice as a **custom connector** in Claude Desktop or claude.ai (OAuth with a personal token) and use their notes and corpus there. Hosted gateways refuse anonymous callers.
 - **The documentation tool** (`maurice_docs`) answers questions about Maurice himself from this documentation, on a strong cloud model of the household's provider, charged to the member who asks; it can also return any documentation note in full.
