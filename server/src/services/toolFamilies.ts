@@ -174,7 +174,7 @@ export function experimentalAccessMatrix(): Record<string, boolean> {
 }
 
 const META: Record<string, { title: string; icon: string; blurb: string }> = {
-  web:      { title: "Web search", icon: "globe",                          blurb: "Search the web for current information." },
+  web:      { title: "Web search", icon: "globe",                          blurb: "Search the web for current information, and read a page by its address." },
   tasks:    { title: "Tasks",      icon: "checklist",                      blurb: "To-dos: triage, defer, complete, chain." },
   calendar: { title: "Calendar",   icon: "calendar",                       blurb: "Events and calendar tasks." },
   garden:           { title: "Notes",             icon: "leaf",                          blurb: "Everything in your notes (54 tools)." },
@@ -214,7 +214,7 @@ export function familyTitles(toolNames: string[]): string[] {
 function rawPrefix(toolName: string): string {
   const i = toolName.indexOf("__");
   if (i > 0) return toolName.slice(0, i);
-  return toolName === "web_search" ? "web" : "other";
+  return toolName === "web_search" || toolName === "read_web_page" ? "web" : "other";
 }
 
 // `garden` is 54 tools — too many for one family. Sub-split by what the tool
@@ -273,7 +273,7 @@ export function familiesForMember(all: ToolFamily[], memberId: string): ToolFami
 export async function listFamilies(memberId: string): Promise<ToolFamily[]> {
   const forMember = (all: ToolFamily[]) => familiesForMember(all, memberId);
   if (cache && Date.now() - cache.at < TTL) return forMember(cache.families);
-  const counts: Record<string, number> = { web: 1 };
+  const counts: Record<string, number> = { web: 2 };
   try {
     const sess = await McpSession.open(memberId);
     for (const t of await sess.listTools()) {

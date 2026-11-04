@@ -23,6 +23,7 @@ struct ToolStep: Identifiable, Equatable {
     /// the server segment is the identifier worth showing ("garden", "tasks").
     static func label(for tool: String, running: Bool) -> String {
         if tool == "web_search" { return L(running ? "chat.activity.webSearch" : "chat.activity.webSearchDone") }
+        if tool == "read_web_page" { return L(running ? "chat.activity.readPage" : "chat.activity.readPageDone") }
         let server = tool.components(separatedBy: "__").first ?? tool
         return L(running ? "chat.activity.usingTool" : "chat.activity.usedTool", server)
     }

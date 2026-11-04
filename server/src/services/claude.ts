@@ -4,6 +4,7 @@ import { getMessages, getParticipants, countParticipants, getContextFrom, setCon
 import { estimateText, planDrop, replyReserve } from "./contextWindow";
 import { resolveImagePath } from "./images";
 import { hasWebSearch, webSearch, formatWebSearch } from "./webSearch";
+import { READ_WEB_PAGE_TOOL, readWebPage, formatWebPage, webPageCard } from "./webPage";
 import { corpusSourceCard, webSourceCard } from "./sourceCards";
 import { narrowCorpusResults } from "./corpusResults";
 import { newSearchLedger, allowSearch, recordSearch, type SearchLedger } from "./searchBudget";
@@ -297,11 +298,11 @@ export function mailNotice(toolNames: string[], memberId: string | null | undefi
   );
 }
 
-function toolRosterNotice(toolNames: string[], web: boolean): string {
+function toolRosterNotice(toolNames: string[], web: boolean, pages: boolean): string {
   // The documentation tool is in every roster (services/mauriceDocsTool.ts):
   // a question about Maurice himself is answered from it, never from memory.
   const docs = `Questions about Maurice himself — what you can do, how something works or is set up, what is built — go to maurice_docs; answer them from its result, not from what you assume.`;
-  const names = [...(web ? ["Web search"] : []), ...familyTitles(toolNames)];
+  const names = [...(web ? ["Web search"] : []), ...(pages ? ["Reading a web page by its address (read_web_page)"] : []), ...familyTitles(toolNames)];
   if (names.length === 0) {
     return `\n\n## Your tools\nYou have no tools this turn but one, maurice_docs, Maurice's own documentation: no web search, and none of the household's personal tools. Answer from what you know and from this conversation. Anything that would need a tool — the calendar, tasks, contacts, health data, their notes, the library — you cannot reach: say so plainly rather than guessing or describing a lookup you didn't make. ${docs}`;
   }
@@ -353,6 +354,15 @@ const WEB_SEARCH_FUNCTION = {
     name: "web_search",
     description: WEB_SEARCH_TOOL.description,
     parameters: WEB_SEARCH_TOOL.input_schema,
+  },
+};
+
+const READ_WEB_PAGE_FUNCTION = {
+  type: "function",
+  function: {
+    name: READ_WEB_PAGE_TOOL.name,
+    description: READ_WEB_PAGE_TOOL.description,
+    parameters: READ_WEB_PAGE_TOOL.input_schema,
   },
 };
 
@@ -662,6 +672,12 @@ async function executeTool(
         const res = await webSearch(query);
         ctx.searches && recordSearch(ctx.searches, "web", query);
         return { text: formatWebSearch(res), isError: false, data: webSourceCard(res, query) };
+      }
+      if (name === READ_WEB_PAGE_TOOL.name) {
+        // One page by its address, fetched by the server itself
+        // (services/webPage.ts). Its card is the page, as one source.
+        const page = await readWebPage(input?.url || "");
+        return { text: formatWebPage(page), isError: false, data: webPageCard(page) };
       }
       if (name === MAURICE_DOCS_TOOL_NAME) {
         // A sub-turn on the member's behalf: charged to them in the ledger,
@@ -1705,6 +1721,10 @@ function trackedBooks(
   // Web search sends the query to Tavily, which writes an answer of its own:
   // offered only to a member whose yes covers it (services/aiConsent.ts).
   const wantsWeb = (families === "all" || families.includes("web")) && aiAllowed(memberId, "tavily");
+  // Reading a page by its address involves no one but the site itself: it
+  // rides with the web family, whatever the consent to Tavily and whether or
+  // not the household has a search key (services/webPage.ts).
+  const wantsPages = families === "all" || families.includes("web");
 
   let mcp: McpSession | null = null;
   let mcpTools: McpTool[] = [];
@@ -1755,7 +1775,7 @@ function trackedBooks(
   if (textOnly) mcpTools = [];
 
   // Now that the roster is settled, tell the model what it really holds.
-  systemPrompt += textOnly ? NO_TOOLS_NOTICE : toolRosterNotice(mcpTools.map((t) => t.name), wantsWeb && hasWebSearch());
+  systemPrompt += textOnly ? NO_TOOLS_NOTICE : toolRosterNotice(mcpTools.map((t) => t.name), wantsWeb && hasWebSearch(), wantsPages);
   systemPrompt += corpusNotice(mcpTools.map((t) => t.name));
   systemPrompt += notesNotice(mcpTools.map((t) => t.name), userLang);
   systemPrompt += mailNotice(mcpTools.map((t) => t.name), memberId, userDisplayName);
@@ -1767,7 +1787,7 @@ function trackedBooks(
   {
     const ctxK = rec?.ctx && rec.ctx > 0 ? rec.ctx : 128;
     const contextTokens = provider === "ollama" ? Math.min(ctxK * 1024, OLLAMA_NUM_CTX) : ctxK * 1024;
-    const toolText = JSON.stringify(mcpTools.map(mcpToolToFunction)) + (wantsWeb ? JSON.stringify(WEB_SEARCH_FUNCTION) : "") + JSON.stringify(mauriceDocsFunction());
+    const toolText = JSON.stringify(mcpTools.map(mcpToolToFunction)) + (wantsWeb ? JSON.stringify(WEB_SEARCH_FUNCTION) : "") + (wantsPages ? JSON.stringify(READ_WEB_PAGE_FUNCTION) : "") + JSON.stringify(mauriceDocsFunction());
     const headTokens = estimateText(systemPrompt + CONTENT_SAFETY_FLOOR + WINDOW_NOTICE) + estimateText(toolText);
     const fitted = windowMessages(conversationId, messages, ids, {
       contextTokens, headTokens, replyTokens: replyReserve(contextTokens, config.maxTokens),
@@ -1790,6 +1810,7 @@ function trackedBooks(
     if (!textOnly) {
       const fns = mcpTools.map(mcpToolToFunction);
       if (wantsWeb && hasWebSearch()) fns.push(WEB_SEARCH_FUNCTION);
+      if (wantsPages) fns.push(READ_WEB_PAGE_FUNCTION);
       fns.push(mauriceDocsFunction());
       for (const f of fns) tools.push({ name: f.function.name, description: f.function.description ?? "", inputSchema: f.function.parameters });
     }
@@ -1808,6 +1829,7 @@ function trackedBooks(
   if (provider === "ollama") {
     const tools = mcpTools.map(mcpToolToFunction);
     if (wantsWeb && hasWebSearch()) tools.push(WEB_SEARCH_FUNCTION);
+    if (wantsPages) tools.push(READ_WEB_PAGE_FUNCTION);
     tools.push(mauriceDocsFunction());
     yield* runOllamaAgentic(resolved, systemPrompt, toTextMessages(messages), tools, mcp, config.maxTokens, userLang, conversationId, signal, thinking, memberId);
     return;
@@ -1825,6 +1847,7 @@ function trackedBooks(
     }
     const tools = mcpTools.map(mcpToolToFunction);
     if (wantsWeb && hasWebSearch()) tools.push(WEB_SEARCH_FUNCTION);
+    if (wantsPages) tools.push(READ_WEB_PAGE_FUNCTION);
     tools.push(mauriceDocsFunction());
     yield* runOpenAIAgentic(
       baseUrl, key, resolved, systemPrompt,
@@ -1853,6 +1876,7 @@ function trackedBooks(
   // + the documentation tool, always.
   const tools: any[] = [];
   if (wantsWeb && hasWebSearch()) tools.push(WEB_SEARCH_TOOL);
+  if (wantsPages) tools.push(READ_WEB_PAGE_TOOL);
   for (const t of mcpTools) tools.push(mcpToolToAnthropic(t));
   tools.push(mauriceDocsTool());
 

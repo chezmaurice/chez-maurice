@@ -175,7 +175,7 @@ export async function extractArticleFromUrl(url: string): Promise<ArticleMeta> {
 }
 
 /** The URL of a `<meta http-equiv="refresh" content="0; url=…">`, absolute. */
-function metaRefreshTarget(html: string, base: string): string {
+export function metaRefreshTarget(html: string, base: string): string {
   for (const attrs of parseTags(html.slice(0, 64 * 1024), "meta")) {
     if ((attrs["http-equiv"] ?? "").toLowerCase() !== "refresh") continue;
     const target = (attrs.content ?? "").match(/url\s*=\s*['"]?([^'";]+)/i)?.[1];
@@ -218,7 +218,7 @@ const INTERSTITIAL_TITLES = [
 ];
 
 /** A bot wall: a known interstitial title over a page with no article in it. */
-function looksLikeInterstitial(article: ArticleMeta): boolean {
+export function looksLikeInterstitial(article: ArticleMeta): boolean {
   const title = article.title.trim().toLowerCase();
   if (!title) return false;
   return article.word_count < 150 && INTERSTITIAL_TITLES.some((re) => re.test(title));

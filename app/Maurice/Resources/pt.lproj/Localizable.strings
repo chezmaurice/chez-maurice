@@ -429,6 +429,8 @@
 "chat.activity.usingTool" = "A usar %@";
 "chat.activity.reconnecting" = "Ligação perdida, o Maurice continua…";
 "chat.activity.webSearchDone" = "Pesquisa web";
+"chat.activity.readPage" = "A ler uma página";
+"chat.activity.readPageDone" = "Página lida";
 "chat.activity.usedTool" = "Ferramenta %@";
 "chat.activity.secs" = "%d s";
 "chat.activity.mins" = "%d min %02d s";

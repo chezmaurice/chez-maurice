@@ -35,7 +35,7 @@ struct TurnTally: Equatable {
                 // what it was. A purpose-built card is drawn under the reply.
                 case nil:
                     switch block.tool {
-                    case "web_search": web += 1
+                    case "web_search", "read_web_page": web += 1
                     case "corpus__search": memory += 1
                     default: tools += 1
                     }
@@ -47,7 +47,7 @@ struct TurnTally: Equatable {
         for step in steps {
             let n = step.count - (doneOnly && step.running ? 1 : 0)
             switch step.tool {
-            case "web_search": web += n
+            case "web_search", "read_web_page": web += n
             case "corpus__search": memory += n
             default: tools += n
             }
