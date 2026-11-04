@@ -10,6 +10,7 @@ import AVFoundation
 /// to add another household (`onPaired` then dismisses it).
 struct PairingView: View {
     @Environment(SessionStore.self) private var session
+    @Environment(\.dismiss) private var dismiss
     /// When set (presented as a sheet to add another household), called after a
     /// successful pair so the caller can dismiss. Nil when used as the root.
     var onPaired: (() -> Void)? = nil
@@ -92,6 +93,20 @@ struct PairingView: View {
             .scrollBounceBehavior(.basedOnSize)
             }
         }
+        // As a sheet: a way out that is not a swipe (the Mac has none), and on
+        // the Mac a size of its own — a sheet takes its content's, and this
+        // screen, made to fill whatever it is given, has none.
+        .overlay(alignment: .topLeading) {
+            if onPaired != nil {
+                Button(session.localized("common.cancel")) { dismiss() }
+                    .keyboardShortcut(.cancelAction)
+                    .glassBorderedButton()
+                    .padding(16)
+            }
+        }
+        #if os(macOS)
+        .frame(width: onPaired != nil ? 480 : nil, height: onPaired != nil ? 640 : nil)
+        #endif
         .sheet(isPresented: $showSignup, onDismiss: { signupPending = SignupPoll.saved != nil }) {
             SignupSheet(onJoined: { showSignup = false; onPaired?() })
                 .environment(session)
