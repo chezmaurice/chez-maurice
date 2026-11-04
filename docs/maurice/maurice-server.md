@@ -1,6 +1,6 @@
 ---
 title: The server
-date: '2026-11-02'
+date: '2026-11-04'
 flags: []
 locale: en
 description: 'The Hono/Bun engine: API surface, the streaming agentic loop, prompt
@@ -285,10 +285,22 @@ the next top-up), remembered on the device; a member who drops past two
 thresholds in one turn hears only the deeper one. The ring, the toast and a
 *Budget* row in Settings open the *Budget* pane: the ring large with the
 percentage, the reset date for a monthly budget or, for a balance, that
-whoever runs the household fills it. **There is no way to top up in the
-apps, and there never will be** (no payment, price or "pay elsewhere" in an
-app — Apple's rules): topping up is the tower's, on the web, through Mollie;
-`can_top_up` stays false.
+whoever runs the household fills it.
+
+**Paying, in the app (3 November 2026).** A household the hosting service
+made carries two lines in its environment, `MAURICE_STORE_ACCOUNT` (the
+hosting account's token, a UUID) and `MAURICE_STORE_URL` (the service's
+address). `GET /api/me/store` gives them to the **admin** only —
+`{account, url}`, or 404 `no_store` to anyone else and to a household at
+home, which has neither line — and `can_top_up` is then true for the admin.
+That is the server's whole part: the Maurice app (iPhone, iPad, Mac) sells
+the monthly or yearly subscription and three top-ups through the App Store
+under Settings → *Subscription*, passing the account token as StoreKit's
+`appAccountToken`, and hands each transaction to the hosting service, which
+reads it back from Apple before counting it. A member sees no store, no
+price. The app never names the web's price nor sends anyone to pay
+elsewhere; on the web the same admin pays through Mollie, never both at
+once.
 
 ## Prompt caching
 

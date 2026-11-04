@@ -28,7 +28,7 @@ covers:
   maurice-knowledge: '2026-11-02'
   maurice-life: '2026-10-20'
   maurice-personas-hats: '2026-09-19'
-  maurice-server: '2026-11-02'
+  maurice-server: '2026-11-04'
   maurice-shared-gardens: '2026-10-20'
   maurice-tools: '2026-10-20'
   maurice-web-garden: '2026-10-20'
@@ -146,12 +146,12 @@ There is also a **browser clipper** that saves the page being read into the memb
 ## 8. Costs and budgets
 
 - **Prices are in euros, and there is only one.** On a hosted Maurice every amount you read — under a reply, in the *Budget* pane, on the console, on the account page — is Maurice's price, VAT and margin included: 10 € topped up is 10 € of thinking. At home, where the household pays its own provider, the figures are what the provider bills. Every turn records its cost on the message. A member can turn on **"Show what each reply cost"**: a coin under each reply (cost, cached share, a breakdown on tap) and a *Cost and tokens* section per conversation. An unpriced model shows token counts, never a false zero.
-- **One budget for the household, the same for every member, never shown to members in euros.** Everyone sees a **ring** in the sidebar: on a hosted Maurice the prepaid balance, full after each top-up and running down from there; at home, where the household pays its own provider, only if the admin sets a monthly budget, starting afresh each month — otherwise there is no ring. It turns orange then red as it runs low, with three gentle warnings (20, 10, 5 %), and opens a *Budget* pane; the admin, who pays, also reads the amount left there. Nothing is ever paid in the apps: topping up is on the web, and when the budget is spent Maurice says so and sends the member to whoever runs the household — never to a page to pay.
+- **One budget for the household, the same for every member, never shown to members in euros.** Everyone sees a **ring** in the sidebar: on a hosted Maurice the prepaid balance, full after each top-up and running down from there; at home, where the household pays its own provider, only if the admin sets a monthly budget, starting afresh each month — otherwise there is no ring. It turns orange then red as it runs low, with three gentle warnings (20, 10, 5 %), and opens a *Budget* pane; the admin, who pays, also reads the amount left there. Only the admin pays, for the household: on the web from the account page, or in the Maurice app (iPhone, iPad, Mac) through the App Store — Settings → *Subscription*, the monthly or yearly subscription and top-ups, never both channels at once. Members see no store and no price; when the budget is spent Maurice says so and sends the member to whoever runs the household — never to a page to pay.
 - **The operator sets the limits**, all optional, the tightest winning: an instance total or rolling-day cap (the hosted fleet sets a daily one per household), a household daily cap, a member daily cap, a monthly household budget, and a separate allowance for the night's automatic work — the admin types these in the console at the price they read everywhere else. Caps are checked before every model round, not once per turn. Under a cap an unpriced model is refused; local models are exempt.
 - **Who pays what:** a member's own turns, the documentation tool, scanned-attachment transcription, mail reading and its documents, a domain's first notes, chapter and article summaries and the summaries of conversations on a fiche are charged to that member; the night's briefs and domain mapping to the household's *system* spender.
 - **Orders of magnitude:** a short classic summarized chapter by chapter costs a cent or two, a long novel some tens of cents; writing a domain's first notes under a cent; a night's domain mapping a few cents per member.
 
-*Gaps:* online payment is not open yet — when it is, the admin tops up on the web, never in the apps; flashcards and signal parsing are not recorded in the ledger; the documentation tool's cost is not in the chat's displayed figure.
+*Gaps:* payment is not open yet — the web (Mollie) and the App Store are both built and wait for the hosting service to go live; a household at home has no store; flashcards and signal parsing are not recorded in the ledger; the documentation tool's cost is not in the chat's displayed figure.
 
 *Detail:* `server`, `chat`.
 
@@ -365,7 +365,7 @@ Each member has folders and files (5 GB each), in **Settings**: text, images, PD
 
 ## 24. Not built, and known gaps
 
-- **Not built:** payment and top-ups; writing back to the notes from an Obsidian clone (push); a web chat client; OAuth for mail (Outlook.com, Google contacts); mail in the corpus; flashcard review in Carnet; demo servers for trying the apps without a household (designed, deferred); a hosted member's own domain; on-device inference.
+- **Not built:** writing back to the notes from an Obsidian clone (push); a web chat client; OAuth for mail (Outlook.com, Google contacts); mail in the corpus; flashcard review in Carnet; demo servers for trying the apps without a household (designed, deferred); a hosted member's own domain; on-device inference.
 - **Not intended:** Maurice proposing notes from patterns he notices; automatic periodic reviews.
 - **Rough edges:** sessions never expire (only revoked); a reply in progress is lost on a server restart; no provider failover; external MCP clients see every mounted tool; some member-triggered background calls are not on the ledger; a member's erasure cannot reach off-site backups or exported archives (erasing a whole hosted Maurice does forget its backups); the databases are snapshot, not versioned (the notes are); after a household import the search index and git remotes are fixed by hand; the web does not ask the AI-provider question yet (a member who never answered is let through), and in a room a member who declined still has their messages read when someone else summons Maurice; the experimental tools are partly documented and absent from hosted households.
 
