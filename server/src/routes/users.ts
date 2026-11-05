@@ -14,7 +14,8 @@ import {
 import { unreadRoomCount } from "../services/conversations";
 import { saveAvatar } from "../services/avatars";
 import { registerDeviceToken, removeDeviceToken } from "../services/push";
-import { isPushEndpoint } from "../services/webpush";
+import { b64urlDecode, isPushEndpoint } from "../services/webpush";
+import { isApplePlatform } from "../services/apns";
 import { blockMember, unblockMember } from "../services/safety";
 import { createInviteCode, getInviteForUser, revokeInvite } from "../services/auth";
 import { createOpenInvite, listOpenInvites, revokeOpenInvite } from "../services/invites";
@@ -101,8 +102,19 @@ users.put("/:id/avatar", async (c) => {
 
 // ── Device push tokens ───────────────────────────────────────
 // The active user registers this device's push address; re-registered on
-// switch. An Apple app sends its APNs token. The Android app sends a Web Push
-// subscription from UnifiedPush: the endpoint URL as token, and its keys.
+// switch. An Apple app sends its APNs token, and — since November 2026 — the
+// keys its notification extension decrypts pushes with. The Android app sends a
+// Web Push subscription from UnifiedPush: the endpoint URL as token, and its keys.
+
+/** Keys an Apple device can be sealed to: a P-256 point and a 16-byte secret. */
+function appleKeysValid(k: { p256dh: string; auth: string }): boolean {
+  try {
+    const pub = b64urlDecode(k.p256dh);
+    return pub.length === 65 && pub[0] === 4 && b64urlDecode(k.auth).length === 16;
+  } catch {
+    return false;
+  }
+}
 
 users.post("/me/device-token", async (c) => {
   const { token, platform, household_tag, keys } = await c.req.json().catch(() => ({}));
@@ -110,8 +122,12 @@ users.post("/me/device-token", async (c) => {
   let pushKeys: { p256dh: string; auth: string } | undefined;
   if (keys) {
     if (typeof keys.p256dh !== "string" || typeof keys.auth !== "string") return c.json({ error: "keys.p256dh and keys.auth required" }, 400);
-    if (!isPushEndpoint(String(token))) return c.json({ error: "a Web Push endpoint must be an https URL" }, 400);
     pushKeys = { p256dh: keys.p256dh, auth: keys.auth };
+    if (isApplePlatform(platform ? String(platform) : "ios") && !isPushEndpoint(String(token))) {
+      if (!appleKeysValid(pushKeys)) return c.json({ error: "keys must be a P-256 public key and a 16-byte secret" }, 400);
+    } else if (!isPushEndpoint(String(token))) {
+      return c.json({ error: "a Web Push endpoint must be an https URL" }, 400);
+    }
   }
   registerDeviceToken(c.get("userId"), String(token), String(platform || "ios"), household_tag ? String(household_tag) : undefined, pushKeys);
   return c.json({ ok: true });

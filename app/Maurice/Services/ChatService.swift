@@ -609,22 +609,42 @@ final class ChatService {
         conversations.insert(c, at: 0)
     }
 
+    private struct DeviceTokenBody: Encodable {
+        let token: String
+        let platform: String
+        let household_tag: String
+        let keys: PushSeal.Keys?
+    }
+
     private func uploadDeviceToken(_ deviceToken: String) async {
         #if os(iOS)
         let platform = "ios"
+        // The keys the notification extension opens sealed pushes with. The
+        // Mac has no such extension yet: it gives none, and is pushed in clear.
+        let keys = PushSeal.keys()
         #else
         let platform = "macos"
+        let keys: PushSeal.Keys? = nil
         #endif
         // Register with EVERY household's server (tagged by local household id) so
         // each can push this device — even while you're viewing another household.
         for h in session.households {
             guard let bearer = session.token(for: h) else { continue }
             let api = APIClient(baseURL: h.serverURL)
-            let _: OkResponse? = try? await api.post(
+            let sealed: OkResponse? = try? await api.post(
                 "/api/users/me/device-token",
-                body: ["token": deviceToken, "platform": platform, "household_tag": h.id],
+                body: DeviceTokenBody(token: deviceToken, platform: platform, household_tag: h.id, keys: keys),
                 token: bearer
             )
+            // A household older than sealed pushes refuses keys beside an Apple
+            // token: register the token alone, and be pushed in clear there.
+            if sealed == nil, keys != nil {
+                let _: OkResponse? = try? await api.post(
+                    "/api/users/me/device-token",
+                    body: DeviceTokenBody(token: deviceToken, platform: platform, household_tag: h.id, keys: nil),
+                    token: bearer
+                )
+            }
         }
     }
 

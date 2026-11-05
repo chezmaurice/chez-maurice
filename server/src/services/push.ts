@@ -1,11 +1,22 @@
 // Push fan-out to a user's devices: APNs for the Apple apps, Web Push for the
-// Android app (UnifiedPush endpoints, payloads encrypted to the device's keys),
-// pruning what either side reports as gone. The offline complement to the live
-// per-user socket: we only push when the user has no socket connected.
+// Android app (UnifiedPush endpoints), pruning what either side reports as gone.
+// Both carry the content encrypted to the device's keys when it gave some — an
+// Apple app's notification extension opens it as Android's app does. The
+// offline complement to the live per-user socket: we only push when the user
+// has no socket connected.
 
 import db from "../db";
 import { isApplePlatform, sendApns } from "./apns";
-import { isPushEndpoint, sendWebPush } from "./webpush";
+import { b64urlDecode, b64urlEncode, encryptWebPush, isPushEndpoint, sendWebPush } from "./webpush";
+
+/** The push's content encrypted to an Apple device's keys, as Web Push would
+ *  carry it. Title and text are cut to keep the seal well under what APNs and
+ *  the push relay take (4 KB, 3 000 characters); a preview is 140 anyway. */
+export async function sealForDevice(content: Record<string, unknown>, p256dh: string, auth: string): Promise<string> {
+  const cut = (v: unknown, n: number) => (typeof v === "string" && v.length > n ? v.slice(0, n) + "…" : v);
+  const kept = { ...content, title: cut(content.title, 200), body: cut(content.body, 600) };
+  return b64urlEncode(await encryptWebPush(new TextEncoder().encode(JSON.stringify(kept)), b64urlDecode(p256dh), b64urlDecode(auth)));
+}
 
 /** A Web Push subscription's keys, as the browser API and UnifiedPush give them (base64url). */
 export interface PushKeys { p256dh: string; auth: string }
@@ -53,8 +64,10 @@ export async function pushToUser(
       continue;
     }
     try {
-      const r = await send(token, { ...payload, householdTag: household_tag ?? undefined, platform: platform ?? undefined });
-      console.log(`[push]   token=${short} tag=${household_tag} platform=${platform} → status=${r.status} reason=${r.reason ?? "ok"}`);
+      const content = { ...payload, householdTag: household_tag ?? undefined };
+      const sealed = p256dh && auth ? await sealForDevice(content, p256dh, auth) : undefined;
+      const r = await send(token, { ...content, platform: platform ?? undefined, sealed });
+      console.log(`[push]   token=${short} tag=${household_tag} platform=${platform}${sealed ? " sealed" : ""} → status=${r.status} reason=${r.reason ?? "ok"}`);
       if (r.reason === "BadDeviceToken" || r.reason === "Unregistered" || r.status === 410) {
         db.run(`DELETE FROM device_tokens WHERE token = ?`, [token]);
       }

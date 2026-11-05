@@ -1170,3 +1170,6 @@
 "signup.wait.making" = "Dein Maurice wird eingerichtet …";
 "signup.wait.making_detail" = "Das dauert ein paar Minuten. Du kommst rein, sobald er fertig ist.";
 "signup.wait.lost" = "Diese Anmeldung hat nicht geklappt. Du kannst neu beginnen.";
+
+/* A sealed push before the notification extension opens it (the push relay, APNs loc-key). */
+"New message" = "Neue Nachricht";

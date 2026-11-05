@@ -25,8 +25,10 @@
 # Store" on the mini, "… laptop" on the laptop — plus its own "3rd Party Mac
 # Developer Installer" certificate. iOS profiles carry both certificates.
 # The iOS app embeds a share extension: with manual signing, name its profile
-# too — PROVISIONING_PROFILE_IOS_SHARE (bundle eu.chezmaurice.maurice.share).
-# Both iOS profiles must carry the app group group.eu.chezmaurice.maurice.
+# too — PROVISIONING_PROFILE_IOS_SHARE (bundle eu.chezmaurice.maurice.share) —
+# and a notification service extension, which opens sealed pushes:
+# PROVISIONING_PROFILE_IOS_NOTIFICATIONS (eu.chezmaurice.maurice.notifications).
+# All three iOS profiles must carry the app group group.eu.chezmaurice.maurice.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -117,6 +119,10 @@ archive_and_upload() {
     if [[ "$plat" == "ios" ]]; then
       : "${PROVISIONING_PROFILE_IOS_SHARE:?manual iOS signing needs PROVISIONING_PROFILE_IOS_SHARE, the App Store profile of the share extension}"
       extra_profiles=$'\t\t<key>'"${bundle}.share"$'</key><string>'"${PROVISIONING_PROFILE_IOS_SHARE}"$'</string>'
+      # And the notification service extension, which opens sealed pushes
+      # (bundle <app>.notifications, same app group: the push keys live there).
+      : "${PROVISIONING_PROFILE_IOS_NOTIFICATIONS:?manual iOS signing needs PROVISIONING_PROFILE_IOS_NOTIFICATIONS, the App Store profile of the notification extension}"
+      extra_profiles+=$'\n\t\t<key>'"${bundle}.notifications"$'</key><string>'"${PROVISIONING_PROFILE_IOS_NOTIFICATIONS}"$'</string>'
     fi
     # macOS App Store pkgs are signed by the installer cert, which is NOT part of
     # the provisioning profile — it must be named separately or Xcode mis-validates.

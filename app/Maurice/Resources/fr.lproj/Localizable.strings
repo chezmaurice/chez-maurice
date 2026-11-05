@@ -1170,3 +1170,6 @@
 "signup.wait.making" = "Votre Maurice se prépare…";
 "signup.wait.making_detail" = "Cela prend quelques minutes. Vous entrerez dès qu’il sera prêt.";
 "signup.wait.lost" = "Cette inscription n’a pas abouti. Vous pouvez recommencer.";
+
+/* A sealed push before the notification extension opens it (the push relay, APNs loc-key). */
+"New message" = "Nouveau message";

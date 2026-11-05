@@ -90,6 +90,7 @@ targets:
         buildPhase: none
     dependencies:
       - target: MauriceShareExtension
+      - target: MauriceNotificationService
     scheme:
       storeKitConfiguration: Maurice.storekit
     settings:
@@ -111,6 +112,9 @@ targets:
       - path: InfoPlist/macOS
       - path: Maurice-macOS-Info.plist
         buildPhase: none
+      # For its types only: the Mac has no notification extension yet, so it
+      # gives households no keys (ChatService.uploadDeviceToken).
+      - path: Shared/PushSeal.swift
     scheme:
       storeKitConfiguration: Maurice.storekit
     settings:
@@ -183,3 +187,32 @@ targets:
               NSExtensionActivationSupportsWebPageWithMaxCount: 1
           NSExtensionPointIdentifier: com.apple.share-services
           NSExtensionPrincipalClass: "$(PRODUCT_MODULE_NAME).ShareViewController"
+
+  # Opens a sealed push before it is shown: the household encrypts each push to
+  # the device's keys, Apple carries "New message" and a blob (Shared/PushSeal.swift).
+  MauriceNotificationService:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: MauriceNotificationService
+        excludes:
+          - "*.entitlements"
+      - path: Shared/PushSeal.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: eu.chezmaurice.maurice.notifications
+        DEVELOPMENT_TEAM: F5B4ZC8LEU
+        CODE_SIGN_ENTITLEMENTS: MauriceNotificationService/MauriceNotificationService.entitlements
+        CODE_SIGN_IDENTITY: iPhone Developer
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Maurice
+        MARKETING_VERSION: "0.1"
+        CURRENT_PROJECT_VERSION: "1"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SKIP_INSTALL: YES
+    info:
+      path: MauriceNotificationService/Info-Generated.plist
+      properties:
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.usernotifications.service
+          NSExtensionPrincipalClass: "$(PRODUCT_MODULE_NAME).NotificationService"

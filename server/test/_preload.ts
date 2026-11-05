@@ -24,6 +24,8 @@ process.env.MAURICE_LIVE_DATA_DIR =
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "maurice-test-data-"));
 process.env.MAURICE_DATA_DIR = tmp;
 process.env.MAURICE_TEST_DATA_DIR = tmp;
+// No suite holds the APNs key; without this a push would go to the real relay.
+process.env.MAURICE_PUSH_RELAY_URL = "off";
 
 process.on("exit", () => {
   try { fs.rmSync(tmp, { recursive: true, force: true }); } catch {}

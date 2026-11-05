@@ -1171,3 +1171,6 @@
 "signup.wait.making" = "Je Maurice wordt klaargemaakt…";
 "signup.wait.making_detail" = "Dat duurt een paar minuten. Je komt binnen zodra hij klaar is.";
 "signup.wait.lost" = "Deze aanmelding is niet gelukt. Je kunt opnieuw beginnen.";
+
+/* A sealed push before the notification extension opens it (the push relay, APNs loc-key). */
+"New message" = "Nieuw bericht";

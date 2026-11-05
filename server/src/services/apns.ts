@@ -129,20 +129,90 @@ export interface ApnsResult {
   reason?: string;
 }
 
-/** Send one alert push to a device token. Returns Apple's status + reason
- *  (e.g. "BadDeviceToken", "Unregistered") so the caller can prune dead tokens. */
-export async function sendApns(
-  deviceToken: string,
-  payload: { title: string; body: string; conversationId?: string; householdTag?: string; platform?: string },
-): Promise<ApnsResult> {
-  const jwt = await providerToken(PROVIDER);
-  if (!jwt) return { ok: false, status: 0, reason: "NoProviderKey" };
+/** A push's content, and the same sealed for the device when it gave keys. */
+export interface ApplePush {
+  title: string;
+  body: string;
+  conversationId?: string;
+  householdTag?: string;
+  platform?: string;
+  /** The fields above, encrypted to the device's keys (RFC 8291, base64url):
+   *  then none of them is sent in clear, and the app's notification service
+   *  extension opens them. */
+  sealed?: string;
+}
 
-  const body = JSON.stringify({
-    aps: { alert: { title: payload.title, body: payload.body }, sound: "default" },
-    ...(payload.conversationId ? { conversationId: payload.conversationId } : {}),
-    ...(payload.householdTag ? { householdTag: payload.householdTag } : {}),
-  });
+/** The app a token belongs to, as the push relay names it. */
+export function appFor(platform: string | null | undefined): "maurice" | "carnet" {
+  return isCarnet(platform) ? "carnet" : "maurice";
+}
+
+/**
+ * The JSON Apple carries. A sealed push says only "New message" (`loc-key`,
+ * translated by the app's own strings) and wakes the app's notification
+ * service extension (`mutable-content`), which decrypts `sealed` and shows the
+ * real title and text; if it cannot, the generic line is what shows. Without
+ * a seal the content goes in clear: an app too old to have sent keys. The push
+ * relay builds the sealed shape itself (chezmaurice-tower, push-relay.ts).
+ */
+export function applePayload(p: ApplePush): Record<string, unknown> {
+  if (p.sealed) {
+    return { aps: { alert: { "loc-key": "New message" }, sound: "default", "mutable-content": 1 }, sealed: p.sealed };
+  }
+  return {
+    aps: { alert: { title: p.title, body: p.body }, sound: "default" },
+    ...(p.conversationId ? { conversationId: p.conversationId } : {}),
+    ...(p.householdTag ? { householdTag: p.householdTag } : {}),
+  };
+}
+
+// ── The push relay ──────────────────────────────────────────────
+
+/**
+ * A household without the APNs key — one run at home by anyone but the
+ * operator — reaches Apple devices through Chez Maurice's push relay, which
+ * holds it (chezmaurice-tower, push-relay.ts). The relay is given the token,
+ * the app and the sealed content, never anything in clear: a push for a device
+ * that gave no keys goes as the bare "New message". MAURICE_PUSH_RELAY_URL=off
+ * keeps a household from using it; it then sends no Apple push at all.
+ */
+export function pushRelayURL(): string | null {
+  const v = (process.env.MAURICE_PUSH_RELAY_URL ?? "https://push.chezmaurice.eu").trim().replace(/\/+$/, "");
+  return v && v !== "off" ? v : null;
+}
+
+export async function sendViaRelay(
+  relay: string,
+  deviceToken: string,
+  p: ApplePush,
+  fetcher: typeof fetch = fetch,
+): Promise<ApnsResult> {
+  try {
+    const res = await fetcher(`${relay}/v1/apns`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ token: deviceToken, app: appFor(p.platform), ...(p.sealed ? { sealed: p.sealed } : {}) }),
+      signal: AbortSignal.timeout(10_000),
+    });
+    const got = (await res.json().catch(() => ({}))) as Partial<ApnsResult>;
+    // Apple's answer passed through, so a dead token is pruned as on a direct send.
+    return { ok: res.ok && got.ok !== false, status: got.status ?? res.status, reason: got.reason };
+  } catch (e) {
+    return { ok: false, status: 0, reason: `relay: ${e instanceof Error ? e.message : e}` };
+  }
+}
+
+/** Send one alert push to a device token: directly when this household holds
+ *  the APNs key, else through the push relay. Returns Apple's status + reason
+ *  (e.g. "BadDeviceToken", "Unregistered") so the caller can prune dead tokens. */
+export async function sendApns(deviceToken: string, payload: ApplePush): Promise<ApnsResult> {
+  const jwt = await providerToken(PROVIDER);
+  if (!jwt) {
+    const relay = pushRelayURL();
+    return relay ? sendViaRelay(relay, deviceToken, payload) : { ok: false, status: 0, reason: "NoProviderKey" };
+  }
+
+  const body = JSON.stringify(applePayload(payload));
 
   return sendToEitherHost(deviceToken, (host) => new Promise<ApnsResult>((resolve) => {
     let settled = false;
