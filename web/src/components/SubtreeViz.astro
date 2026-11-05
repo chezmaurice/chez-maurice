@@ -112,6 +112,11 @@ function edgePath(parent: typeof allNodes[0], child: typeof allNodes[0]): string
 }
 
 // ── Build HTML fallback tree ──
+// Titles come from notes' frontmatter, so they are escaped like any text.
+function esc(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
 function buildList(node: SubtreeNode): string {
   const cls = node.isMoc ? "subtree-item--moc" : node.missing ? "subtree-item--missing" : "";
   const icon = node.icon
@@ -119,7 +124,7 @@ function buildList(node: SubtreeNode): string {
     : "";
   const prefix = node.missing ? "? " : "";
   let html = `<li class="subtree-item ${cls}">`;
-  html += `<a href="${node.url}">${icon}${prefix}${node.title}</a>`;
+  html += `<a href="${esc(node.url)}">${icon}${prefix}${esc(node.title)}</a>`;
   if (node.children.length > 0) {
     html += `<ul class="subtree-list">`;
     for (const child of node.children) html += buildList(child);

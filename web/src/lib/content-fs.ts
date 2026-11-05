@@ -31,6 +31,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { createMarkdownProcessor, parseFrontmatter, type MarkdownProcessor } from "@astrojs/markdown-remark";
 import remarkCrossRef from "@app/plugins/remark-cross-ref";
+import { sanitizeNotePlugins } from "@app/lib/sanitize";
 import { gardenRoot } from "@app/lib/garden";
 import { listAllNotes, listNotes, noteFilePath } from "@app/lib/notes-fs";
 
@@ -233,6 +234,7 @@ function processor(): Promise<MarkdownProcessor> {
   _processor ??= createMarkdownProcessor({
     shikiConfig: { theme: "github-dark" },
     remarkPlugins: [remarkCrossRef],
+    rehypePlugins: sanitizeNotePlugins,
   });
   return _processor;
 }

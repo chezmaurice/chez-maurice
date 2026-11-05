@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { marked } from "marked";
 import { gardenRoot } from "./garden";
+import { sanitizeHtml } from "./sanitize";
 
 /**
  * Reading the parts of a fiche that do not come through the content layer.
@@ -46,7 +47,7 @@ export function parseFragments(dir: string): Fragment[] {
         summary = sumLine?.replace(/^summary:\s*["']?|["']?\s*$/g, "") ?? "";
         body = m[2];
       }
-      return { id: f.replace(/\.frag$/, ""), summary, html: mailLinks(marked.parse(body.trim(), { async: false }) as string) };
+      return { id: f.replace(/\.frag$/, ""), summary, html: mailLinks(sanitizeHtml(marked.parse(body.trim(), { async: false }) as string)) };
     });
 }
 

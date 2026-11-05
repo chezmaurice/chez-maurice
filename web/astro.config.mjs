@@ -5,6 +5,7 @@ import node from "@astrojs/node";
 import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 import remarkCrossRef from "./src/plugins/remark-cross-ref.mjs";
+import { sanitizeNotePlugins } from "./src/lib/sanitize.ts";
 import encryptPrivate from "./src/integrations/encrypt-private.ts";
 import gardenImageLinks from "./src/integrations/garden-image-links.ts";
 import publicPages from "./src/integrations/public-pages.ts";
@@ -100,6 +101,7 @@ export default defineConfig({
       theme: "github-dark",
     },
     remarkPlugins: [remarkCrossRef],
+    rehypePlugins: sanitizeNotePlugins,
   },
   vite: {
     plugins: [themeResolver()],

@@ -7,6 +7,7 @@ import { getAlternateContentPath } from "@app/i18n/translations";
 import { renderEntry } from "@app/lib/content-fs";
 import { isPublic, isEncrypted, isMoc as isMocFlag, hasFlag } from "@app/lib/flags";
 import { marked } from "marked";
+import { sanitizeHtml } from "@app/lib/sanitize";
 import fs from "node:fs";
 import path from "node:path";
 import { scanSubtree, countNodes } from "@app/lib/subtree-scan";
@@ -45,7 +46,7 @@ function parseFragments(dir: string): Fragment[] {
         summary = sumLine?.replace(/^summary:\s*["']?|["']?\s*$/g, "") ?? "";
         body = m[2];
       }
-      return { summary, html: marked.parse(body.trim(), { async: false }) as string };
+      return { summary, html: sanitizeHtml(marked.parse(body.trim(), { async: false }) as string) };
     });
 }
 
@@ -343,7 +344,7 @@ function monthSeparator(d: Date): string | null {
       </section>
     )}
 
-    <script type="application/json" id="moc-meta" set:html={JSON.stringify({ mocs: mocMeta, children: [...childSlugs] })} />
+    <script type="application/json" id="moc-meta" set:html={JSON.stringify({ mocs: mocMeta, children: [...childSlugs] }).replace(/</g, "\\u003c")} />
     <script is:inline>
     (function() {
       var data = JSON.parse(document.getElementById('moc-meta').textContent);
