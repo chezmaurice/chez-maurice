@@ -18,6 +18,7 @@
 		1C180714056F0B06EA63444D /* EntryChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 624FED3E13C53E4FC9F6BDE1 /* EntryChrome.swift */; };
 		1C9935AA1A0250C77FB2DD24 /* LifeFactCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD148722F24F06001FE66540 /* LifeFactCard.swift */; };
 		1EDBAD0EE35437F751F1020F /* ReplyText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CBC2BEE43BAA75E37C89569 /* ReplyText.swift */; };
+		202FCE9D5F1645F8E6EE1849 /* MauriceNotificationService_macOS.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 4D2715B1BBD85CEBE8FBD1AF /* MauriceNotificationService_macOS.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		22273DE6923544F195C76CAD /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 462A7ECD4C83B5ADC43A81CB /* ContentView.swift */; };
 		2340BD7CC5C127A91D4E04CF /* ShareInbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6819EDCDB3EE127E1D35CAB /* ShareInbox.swift */; };
 		24F52690A583D2E8AAB611BE /* PushSeal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3277381BCF86792BD4A81D61 /* PushSeal.swift */; };
@@ -78,6 +79,7 @@
 		91BB6662F41EF0DD9EDC2AB0 /* StoreStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F87E3560E9BC0F827F7693AD /* StoreStore.swift */; };
 		98920F5C7DB20F4AF25B7C78 /* SortMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC55EBC69472BBED58BC1614 /* SortMenu.swift */; };
 		9BCAFB3EF7CD1C5F4BB61912 /* DomainsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2BCD320C3B31E341073ED84 /* DomainsViews.swift */; };
+		A31998C79716D5BEDFE0C7CA /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = DF5965FB1D837BDFAF711698 /* PrivacyInfo.xcprivacy */; };
 		A648F12DC28F799D60455067 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = EF5A62D451E946B594365B33 /* Localizable.strings */; };
 		A6490C4406B6EA6D2FA33CBF /* SourcesCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 988F2B4726342A3066B8B593 /* SourcesCard.swift */; };
 		A6A95407C9E08C388517C0CB /* MauriceNotificationService.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 494E09508E0EED77E5888934 /* MauriceNotificationService.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -93,6 +95,7 @@
 		B80161B44335BB6CEC01F7DA /* YoungSerif-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 723F14E6AB7B2EAB08CC94EF /* YoungSerif-Regular.ttf */; };
 		BA3A758A5BFEC6E054910E44 /* AIConsentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66B15A7DAA63249B9A1B8CEF /* AIConsentStore.swift */; };
 		BA51E568256E682B32B4FD40 /* ThinkingPulse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60C505B6E7E7122F0D8C38C4 /* ThinkingPulse.swift */; };
+		BF7B4063A0CE6200A44B7159 /* PushSeal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3277381BCF86792BD4A81D61 /* PushSeal.swift */; };
 		C3F16250A82E93FC469EAA89 /* BudgetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 475D8D96ACDB87A322874BFA /* BudgetViews.swift */; };
 		C572E26B4642F721F7EEBBCB /* StoreStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F87E3560E9BC0F827F7693AD /* StoreStore.swift */; };
 		C75DA94A1212FB984F5CDC62 /* DomainEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D1A322B73BEA06F034F1718 /* DomainEditorView.swift */; };
@@ -127,10 +130,18 @@
 		F6BC32800FA70AEE6D0B42FA /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 2FF2F9C47247C82E89055A04 /* PrivacyInfo.xcprivacy */; };
 		F8D5EA6FB79DA0781074F0DA /* ScopePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68242686E76201D100B8C3A9 /* ScopePickerView.swift */; };
 		F96C2B2D974F15AC97AFC477 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C5F7A16D701B0F743DEDA0E9 /* PrivacyInfo.xcprivacy */; };
+		FC048C01A4C3D1A8A1288D23 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC1D1CF5E771602027F16201 /* NotificationService.swift */; };
 		FF9F6DF88F721A8C74CFAEF4 /* PairingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00B700626149A3D1C0D6D5CB /* PairingView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		0D12452F35379D49C6970D7B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4CA168FEE059EC3395A91EE1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 2C4A2B73A96ED8D75698876F;
+			remoteInfo = MauriceNotificationService_macOS;
+		};
 		11282DE8466FFEDCF3C04AD9 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4CA168FEE059EC3395A91EE1 /* Project object */;
@@ -156,6 +167,17 @@
 			files = (
 				EB4C28812634CBBFFA2D4B02 /* MauriceShareExtension.appex in Embed Foundation Extensions */,
 				A6A95407C9E08C388517C0CB /* MauriceNotificationService.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		49D63B91A4E50D125FFF81FD /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				202FCE9D5F1645F8E6EE1849 /* MauriceNotificationService_macOS.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -194,6 +216,7 @@
 		475D8D96ACDB87A322874BFA /* BudgetViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetViews.swift; sourceTree = "<group>"; };
 		494E09508E0EED77E5888934 /* MauriceNotificationService.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = MauriceNotificationService.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		4A902302DDAF91A3A5B2DB9A /* SubscriptionViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionViews.swift; sourceTree = "<group>"; };
+		4D2715B1BBD85CEBE8FBD1AF /* MauriceNotificationService_macOS.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MauriceNotificationService_macOS.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		4E01BB325D88F4E74B3571BC /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		4E0D0DF979284275260F31D2 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		51780E1D57A085038F7AB3A4 /* OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = OFL.txt; sourceTree = "<group>"; };
@@ -241,6 +264,7 @@
 		CEB5E21AE21611A0C6FC115B /* DictateIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictateIntent.swift; sourceTree = "<group>"; };
 		D8EA76446DB39E558173EA2A /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Localizable.strings; sourceTree = "<group>"; };
 		D91B47992093B9201D94B7D7 /* Maurice_iOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Maurice_iOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		DC5AE2631E69E9BD8C724FB4 /* MauriceNotificationService.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MauriceNotificationService.entitlements; sourceTree = "<group>"; };
 		DCDEAA0E48CC14C7C18BE8FD /* Hats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Hats.swift; sourceTree = "<group>"; };
 		DF5965FB1D837BDFAF711698 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		E426EF47C1F4A6CE4105AA44 /* BudgetStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetStore.swift; sourceTree = "<group>"; };
@@ -315,6 +339,7 @@
 			children = (
 				D91B47992093B9201D94B7D7 /* Maurice_iOS.app */,
 				C51DFC4112740952D536AA5F /* Maurice_macOS.app */,
+				4D2715B1BBD85CEBE8FBD1AF /* MauriceNotificationService_macOS.appex */,
 				494E09508E0EED77E5888934 /* MauriceNotificationService.appex */,
 				FFEC5DA17CABDEC1BF693557 /* MauriceShareExtension.appex */,
 			);
@@ -410,6 +435,14 @@
 			path = Models;
 			sourceTree = "<group>";
 		};
+		C22F7E8439B2B5FA153F4B03 /* MauriceNotificationService_macOS */ = {
+			isa = PBXGroup;
+			children = (
+				DC5AE2631E69E9BD8C724FB4 /* MauriceNotificationService.entitlements */,
+			);
+			path = MauriceNotificationService_macOS;
+			sourceTree = "<group>";
+		};
 		C331BA31ABD6A594580C9D2D /* Services */ = {
 			isa = PBXGroup;
 			children = (
@@ -461,6 +494,7 @@
 				720C19BEB3A68EF3DEC3A5D4 /* macOS */,
 				1494F6FE9E62E4610A005B68 /* Maurice */,
 				D1DA8D4C818019B51B015C45 /* MauriceNotificationService */,
+				C22F7E8439B2B5FA153F4B03 /* MauriceNotificationService_macOS */,
 				05D3B4FD63AA39F6811A4102 /* MauriceShareExtension */,
 				62DBEB69F0C83895AB9B0920 /* Shared */,
 				1BB583D8B7C5D14E61393EB3 /* Products */,
@@ -477,10 +511,12 @@
 				6B23FB9DBD097088DFDE369E /* Sources */,
 				8E226A47710180AEB5CE1BEC /* Resources */,
 				F74E8921A16002CA14E1E72C /* Frameworks */,
+				49D63B91A4E50D125FFF81FD /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				CEDF39E614157E53A24DAD32 /* PBXTargetDependency */,
 			);
 			name = Maurice_macOS;
 			packageProductDependencies = (
@@ -506,6 +542,24 @@
 			);
 			productName = MauriceShareExtension;
 			productReference = FFEC5DA17CABDEC1BF693557 /* MauriceShareExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		2C4A2B73A96ED8D75698876F /* MauriceNotificationService_macOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 62DF4C52C96C269FD346C41D /* Build configuration list for PBXNativeTarget "MauriceNotificationService_macOS" */;
+			buildPhases = (
+				CB2199401580CC79C550AA02 /* Sources */,
+				E858EF54105B5578043D2786 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MauriceNotificationService_macOS;
+			packageProductDependencies = (
+			);
+			productName = MauriceNotificationService_macOS;
+			productReference = 4D2715B1BBD85CEBE8FBD1AF /* MauriceNotificationService_macOS.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
 		43DF2AA6952B9CBB37EDDA30 /* MauriceNotificationService */ = {
@@ -566,6 +620,10 @@
 						DevelopmentTeam = F5B4ZC8LEU;
 						ProvisioningStyle = Automatic;
 					};
+					2C4A2B73A96ED8D75698876F = {
+						DevelopmentTeam = F5B4ZC8LEU;
+						ProvisioningStyle = Automatic;
+					};
 					43DF2AA6952B9CBB37EDDA30 = {
 						DevelopmentTeam = F5B4ZC8LEU;
 						ProvisioningStyle = Automatic;
@@ -600,6 +658,7 @@
 			projectRoot = "";
 			targets = (
 				43DF2AA6952B9CBB37EDDA30 /* MauriceNotificationService */,
+				2C4A2B73A96ED8D75698876F /* MauriceNotificationService_macOS */,
 				09AB478A423671404897F4A7 /* MauriceShareExtension */,
 				BE41AFBA15F7E24D1881B207 /* Maurice_iOS */,
 				047472439A78AABB86703D1F /* Maurice_macOS */,
@@ -651,6 +710,14 @@
 				91817BB3A32C4F1FE886B982 /* OFL.txt in Resources */,
 				F96C2B2D974F15AC97AFC477 /* PrivacyInfo.xcprivacy in Resources */,
 				5B4288B9598CBE20AE92F4D9 /* YoungSerif-Regular.ttf in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E858EF54105B5578043D2786 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A31998C79716D5BEDFE0C7CA /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -784,6 +851,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		CB2199401580CC79C550AA02 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FC048C01A4C3D1A8A1288D23 /* NotificationService.swift in Sources */,
+				BF7B4063A0CE6200A44B7159 /* PushSeal.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -791,6 +867,11 @@
 			isa = PBXTargetDependency;
 			target = 43DF2AA6952B9CBB37EDDA30 /* MauriceNotificationService */;
 			targetProxy = EE8452407FEE403883F0976F /* PBXContainerItemProxy */;
+		};
+		CEDF39E614157E53A24DAD32 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 2C4A2B73A96ED8D75698876F /* MauriceNotificationService_macOS */;
+			targetProxy = 0D12452F35379D49C6970D7B /* PBXContainerItemProxy */;
 		};
 		DA93368D191482DA86BAD731 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -881,6 +962,30 @@
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
+		};
+		0BE767159AFF0EB7F959CB3D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = MauriceNotificationService_macOS/MauriceNotificationService.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = F5B4ZC8LEU;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "MauriceNotificationService_macOS/Info-Generated.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Chez Maurice";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = eu.chezmaurice.maurice.notifications;
+				PRODUCT_NAME = MauriceNotificationService;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
 		};
 		11AFE4E9F37569F492573989 /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -1151,6 +1256,30 @@
 			};
 			name = Release;
 		};
+		98E440B43A91E0DE0DAA6A02 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = MauriceNotificationService_macOS/MauriceNotificationService.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = F5B4ZC8LEU;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "MauriceNotificationService_macOS/Info-Generated.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Chez Maurice";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = eu.chezmaurice.maurice.notifications;
+				PRODUCT_NAME = MauriceNotificationService;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
 		D3E7F15843D7C089B52B3AFB /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1256,6 +1385,15 @@
 			buildConfigurations = (
 				D3E7F15843D7C089B52B3AFB /* Debug */,
 				8A0DE2AE50748267E848AC6D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		62DF4C52C96C269FD346C41D /* Build configuration list for PBXNativeTarget "MauriceNotificationService_macOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				98E440B43A91E0DE0DAA6A02 /* Debug */,
+				0BE767159AFF0EB7F959CB3D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

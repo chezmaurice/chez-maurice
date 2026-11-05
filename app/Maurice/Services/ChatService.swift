@@ -619,13 +619,11 @@ final class ChatService {
     private func uploadDeviceToken(_ deviceToken: String) async {
         #if os(iOS)
         let platform = "ios"
-        // The keys the notification extension opens sealed pushes with. The
-        // Mac has no such extension yet: it gives none, and is pushed in clear.
-        let keys = PushSeal.keys()
         #else
         let platform = "macos"
-        let keys: PushSeal.Keys? = nil
         #endif
+        // The keys the notification extension opens sealed pushes with.
+        let keys = PushSeal.keys()
         // Register with EVERY household's server (tagged by local household id) so
         // each can push this device — even while you're viewing another household.
         for h in session.households {

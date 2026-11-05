@@ -68,7 +68,9 @@ enum PushSeal {
         [kSecClass as String: kSecClassGenericPassword,
          kSecAttrService as String: service,
          kSecAttrAccount as String: account,
-         kSecAttrAccessGroup as String: group]
+         kSecAttrAccessGroup as String: group,
+         // On the Mac, the keychain an app group can share (iOS has no other).
+         kSecUseDataProtectionKeychain as String: true]
     }
 
     private static func stored() -> (P256.KeyAgreement.PrivateKey, Data)? {

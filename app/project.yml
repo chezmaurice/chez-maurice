@@ -112,9 +112,11 @@ targets:
       - path: InfoPlist/macOS
       - path: Maurice-macOS-Info.plist
         buildPhase: none
-      # For its types only: the Mac has no notification extension yet, so it
-      # gives households no keys (ChatService.uploadDeviceToken).
+      # The push keys it gives households (ChatService.uploadDeviceToken); the
+      # rest of Shared is the iOS share extension's.
       - path: Shared/PushSeal.swift
+    dependencies:
+      - target: MauriceNotificationService_macOS
     scheme:
       storeKitConfiguration: Maurice.storekit
     settings:
@@ -214,5 +216,38 @@ targets:
       path: MauriceNotificationService/Info-Generated.plist
       properties:
         NSExtension:
+          NSExtensionPointIdentifier: com.apple.usernotifications.service
+          NSExtensionPrincipalClass: "$(PRODUCT_MODULE_NAME).NotificationService"
+
+  # The same extension for the Mac app: same code and bundle id, sandboxed, and
+  # its own profile (one per signing Mac, as the app's).
+  MauriceNotificationService_macOS:
+    type: app-extension
+    platform: macOS
+    sources:
+      - path: MauriceNotificationService/NotificationService.swift
+      - path: MauriceNotificationService/PrivacyInfo.xcprivacy
+      - path: Shared/PushSeal.swift
+      - path: MauriceNotificationService_macOS/MauriceNotificationService.entitlements
+        buildPhase: none
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: eu.chezmaurice.maurice.notifications
+        PRODUCT_NAME: MauriceNotificationService
+        DEVELOPMENT_TEAM: F5B4ZC8LEU
+        CODE_SIGN_ENTITLEMENTS: MauriceNotificationService_macOS/MauriceNotificationService.entitlements
+        ENABLE_HARDENED_RUNTIME: YES
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Chez Maurice
+        MARKETING_VERSION: "0.1"
+        CURRENT_PROJECT_VERSION: "1"
+        SKIP_INSTALL: YES
+    info:
+      path: MauriceNotificationService_macOS/Info-Generated.plist
+      properties:
+        NSExtension:
+          # Without it macOS launches the extension, never hands it the push,
+          # and kills it two seconds later ("sluggish startup"): iOS needs no such line.
+          Subsystems: [NSExtensionService_Subsystem]
           NSExtensionPointIdentifier: com.apple.usernotifications.service
           NSExtensionPrincipalClass: "$(PRODUCT_MODULE_NAME).NotificationService"
