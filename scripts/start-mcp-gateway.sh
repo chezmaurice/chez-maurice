@@ -15,18 +15,14 @@ PY="$(find_python)" || {
   exit 1
 }
 
-# OAuth mode (needed for the Claude.ai consent flow) requires one of these.
-# Without it the gateway would refuse to start with --require-auth, so we
-# fall back to running unauthenticated (fine for the local API-proxied path).
-AUTH_ARGS=()
-if [[ -n "${MAURICE_OAUTH_PASSWORD:-${MAURICE_MCP_TOKEN:-${AKITA_OAUTH_PASSWORD:-${AKITA_MCP_TOKEN:-}}}}" ]]; then
-  AUTH_ARGS=(--require-auth)
-else
-  echo "⚠  No MAURICE_OAUTH_PASSWORD / MAURICE_MCP_TOKEN set — starting WITHOUT auth."
-  echo "   Claude.ai OAuth consent needs MAURICE_OAUTH_PASSWORD in $REPO/.env."
+# The server proxies /mcp to the internet, so the gateway never runs open:
+# without one of these it refuses to start.
+if [[ -z "${MAURICE_OAUTH_PASSWORD:-${MAURICE_MCP_TOKEN:-${AKITA_OAUTH_PASSWORD:-${AKITA_MCP_TOKEN:-}}}}" ]]; then
+  echo "✗  No MAURICE_MCP_TOKEN / MAURICE_OAUTH_PASSWORD set in $REPO/.env — the gateway will not start open."
+  exit 1
 fi
 
 cd "$REPO"
 echo "→ MCP gateway on http://127.0.0.1:8710/mcp (python: $PY)"
 exec "$PY" tools/mcp_gateway/server.py \
-  --host 127.0.0.1 --port 8710 --base-path /mcp "${AUTH_ARGS[@]}" "$@"
+  --host 127.0.0.1 --port 8710 --base-path /mcp --require-auth "$@"

@@ -398,8 +398,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--require-auth",
         action="store_true",
-        default=False,
-        help="Require Bearer token auth (reads MAURICE_MCP_TOKEN env var)",
+        default=True,
+        help="Kept for old launchers: auth is always required now",
     )
     return parser.parse_args()
 
@@ -420,8 +420,10 @@ def main() -> None:
         else:
             auth_token = os.environ.get("MAURICE_MCP_TOKEN") or os.environ.get("AKITA_MCP_TOKEN")
             if not auth_token:
+                # The server proxies /mcp to the internet, so an open gateway
+                # lets anyone call every tool; there is no unauthenticated mode.
                 logging.error(
-                    "--require-auth set but neither MAURICE_OAUTH_PASSWORD nor MAURICE_MCP_TOKEN env var is set"
+                    "Refusing to start: set MAURICE_MCP_TOKEN (or MAURICE_OAUTH_PASSWORD)"
                 )
                 sys.exit(1)
             logging.info("Bearer token auth enabled")

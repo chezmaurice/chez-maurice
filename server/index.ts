@@ -81,6 +81,7 @@ import { pushPendingAccountEvents } from "./src/services/accountEventsPush";
 import { imagesDir } from "./src/services/images";
 import { avatarsDir } from "./src/services/avatars";
 import { proxyAuth, validateApiTokenRaw, validateHealthToken } from "./src/middleware/auth";
+import { carriesStaticKey, gatewayHeaders } from "./src/services/gatewayProxy";
 import gitRoutes from "./src/routes/git";
 import { requestOrigin } from "./lib/requestOrigin";
 import { JOIN_APPS, joinPlatform, appleAppSiteAssociation, assetLinks } from "./src/services/appLinks";
@@ -712,15 +713,18 @@ async function proxyToGateway(c: any, gatewayPath: string): Promise<Response> {
   const fwdHost = c.req.header("x-forwarded-host") || c.req.header("host") || "localhost:3001";
   const fwdProto = c.req.header("x-forwarded-proto") || "https";
 
-  const headers = new Headers(c.req.raw.headers);
+  // The static key is the server's own, for loopback calls; never from outside.
+  if (carriesStaticKey(c.req.header("authorization"), process.env.MAURICE_MCP_TOKEN || "")) {
+    return c.json({ error: "Forbidden" }, 403);
+  }
+
+  // Forward resolved member identity (Bearer maur_* path); OAuth tokens carry
+  // their own member_id inside the gateway, so this is only a fallback. A
+  // member id the client sent itself is never passed on.
+  const headers = gatewayHeaders(c.req.raw.headers, c.get("userId"));
   headers.set("host", `127.0.0.1:${mcpPort}`);
   headers.set("X-Forwarded-Host", fwdHost);
   headers.set("X-Forwarded-Proto", fwdProto);
-
-  // Forward resolved member identity (Bearer maur_* path); OAuth tokens carry
-  // their own member_id inside the gateway, so this is only a fallback.
-  const memberId = c.get("userId");
-  if (memberId) headers.set("X-Maurice-Member-Id", memberId);
 
   const resp = await fetch(
     new Request(target.toString(), {
