@@ -152,10 +152,76 @@ def _via_relay(req: Any) -> Any:
     )
 
 
-def _urlopen(req: Any, **kwargs: Any) -> Any:
+def _public_peer(sock: Any) -> None:
+    """Refuse a connection that landed on a private address.
+
+    Checked on the socket actually connected, after DNS, so a name that
+    resolves (or rebinds) to 127.0.0.1, the LAN or 169.254.169.254 is caught.
+    """
+    import ipaddress
+
+    addr = ipaddress.ip_address(sock.getpeername()[0])
+    if getattr(addr, "ipv4_mapped", None):
+        addr = addr.ipv4_mapped
+    if not addr.is_global:
+        sock.close()
+        raise PermissionError(f"Refusing to fetch from a private address ({addr})")
+
+
+def _guarded_opener() -> Any:
+    """An opener for the open web only: http(s), public peers, redirects
+    re-checked by the same connection classes. No file://, ftp:// or data:."""
+    import http.client
     import urllib.request
 
-    return urllib.request.urlopen(_via_relay(req), **kwargs)
+    class _HTTPConnection(http.client.HTTPConnection):
+        def connect(self) -> None:
+            super().connect()
+            _public_peer(self.sock)
+
+    class _HTTPSConnection(http.client.HTTPSConnection):
+        def connect(self) -> None:
+            super().connect()
+            _public_peer(self.sock)
+
+    class _HTTPHandler(urllib.request.HTTPHandler):
+        def http_open(self, req: Any) -> Any:
+            return self.do_open(_HTTPConnection, req)
+
+    class _HTTPSHandler(urllib.request.HTTPSHandler):
+        def https_open(self, req: Any) -> Any:
+            return self.do_open(_HTTPSConnection, req, context=self._context)
+
+    opener = urllib.request.OpenerDirector()
+    for handler in (
+        urllib.request.ProxyHandler({}),
+        urllib.request.UnknownHandler(),
+        _HTTPHandler(),
+        _HTTPSHandler(),
+        urllib.request.HTTPDefaultErrorHandler(),
+        urllib.request.HTTPRedirectHandler(),
+        urllib.request.HTTPErrorProcessor(),
+    ):
+        opener.add_handler(handler)
+    return opener
+
+
+def _urlopen(req: Any, **kwargs: Any) -> Any:
+    """Every fetch this tool makes. URLs reach it from pages, mails and the
+    model (og:image, covers, article links), so it only opens the public web;
+    the household's own metadata relay, which may sit on a private network,
+    is the one exception."""
+    import urllib.parse
+    import urllib.request
+
+    req = _via_relay(req)
+    url = req if isinstance(req, str) else req.full_url
+    relay_base, _ = _metadata_relay()
+    if relay_base and url.startswith(relay_base + "/"):
+        return urllib.request.urlopen(req, **kwargs)
+    if urllib.parse.urlsplit(url).scheme not in ("http", "https"):
+        raise PermissionError("Only http(s) URLs can be fetched")
+    return _guarded_opener().open(req, **kwargs)
 
 
 def member_root() -> Path:

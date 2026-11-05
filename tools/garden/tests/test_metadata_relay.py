@@ -59,7 +59,13 @@ def sent(monkeypatch):
         seen.append(req)
         return Answer()
 
+    class Opener:
+        def open(self, req, **kwargs):
+            return fake(req, **kwargs)
+
+    # The relay goes out through urlopen; the open web through the guarded opener.
     monkeypatch.setattr(urllib.request, "urlopen", fake)
+    monkeypatch.setattr(g, "_guarded_opener", lambda: Opener())
     monkeypatch.setattr(g, "_MUSICBRAINZ_MIN_INTERVAL", 0)
     return seen
 
