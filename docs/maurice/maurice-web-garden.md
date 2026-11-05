@@ -1,6 +1,6 @@
 ---
 title: The site
-date: '2026-10-20'
+date: '2026-11-05'
 flags: []
 locale: en
 description: 'The Astro renderer: per-request theme engine, content collections, wiki-links,
@@ -42,6 +42,8 @@ Content collections (`web/src/content.config.ts`) load from the member's notes u
 A note Maurice wrote at a domain's adoption and the owner has not reviewed yet (`meta.opened: false` in its frontmatter, see [[maurice-knowledge]]) opens on a **banner** — *Written by Maurice, not reviewed yet · From 16 conversations, with deepseek-v4-flash-0731* — with, for the owner, the two gestures that are not the toolbar's: **Keep** (`POST /api/v1/garden-tools/review-note`, the mark goes and the banner fades) and **Throw away** (the toolbar's delete, then back to the notes index; correcting is the toolbar's *Edit*). The notes index and a MOC's child list show *to review* beside such a note. Both are in the default theme's `NoteDetail` and `NotesList`, which every shipped theme inherits; a non-owner sees the banner without the buttons.
 
 A **dev bar** on the private view gives its controls back to the reader: toggle a note public or encrypted, reorder, delete, open the page in Obsidian on the Mac or Working Copy on the iPad, and what the dev bar writes is committed like any other write to the notes. Drafts show in search there.
+
+**A note's HTML is cleaned before it is shown** (since 5 November 2026, `web/src/lib/sanitize.ts`). The pages are served on the household's own origin, the one `/api` answers on, so a `<script>` or an `onerror=` in a note — written by a member, shared, clipped from a page or drawn from a mail — would have acted with the reader's session; one of the owner's mail-derived notes did carry a literal `<script>`. `rehype-sanitize` runs in the three markdown processors (the engine's `notes-fs` and `content-fs`, and `astro.config`'s for static builds — after its own `rehype-raw`, since Astro applies that one after the user plugins) and on fragments (`marked`). GitHub's schema, widened to what gardens hold: layout `div`/`span` with `class`, `style` and `data-*`, inline SVG, inert controls (`button`, `select`, `input`), Shiki's styled code, `maurice-mail:` / `maurice:` / `note:` links; scripts, iframes, `on*` attributes and `javascript:` URLs go. `web/scripts/check-sanitize.ts` runs fixed cases, or says note by note what a garden would lose (on the owner's 1 169 notes: 1 163 unchanged, the rest only placeholder tags such as `<host>` that rendered as nothing anyway). The JSON a note page embeds for its MOC map and the titles of the subtree list are escaped too. The private `candide` theme takes the same `sanitizeHtml`.
 
 Routing is locale-aware: English at `/`, French under `/fr/` (with localized segments — resources live at `/resources/…` in English, `/fr/trouvailles/…` in French). Drafts vs. published is the `public` flag (`web/src/lib/flags.ts`): no `public` flag → visible in dev, hidden in the production build.
 
@@ -145,6 +147,8 @@ Since 17 October 2026 a member can clone their own notes from `https://<househol
 
 ## Gaps & notes
 
+- **No Content-Security-Policy on the garden pages.** The themes carry inline scripts (the dark-mode toggle, the note page's toolbar), so a policy that would stop an injected script needs nonces or the scripts moved out first. The cleaning above is the defence until then.
+- **Still open from the 5 November 2026 audit:** a private MOC's title reaches public builds through the note page's MOC map and breadcrumb, and a public MOC lists every child's title (the leak test has no MOC); a public encrypted note's title and description are in `search-index.json`; a share cannot be revoked and comes back if a new note takes the old slug; `/g/<member>/` lets non-navigation requests through to the engine (the fiches list has no owner check).
 - **The clone is read-only.** Writing back from Obsidian would need receive-pack in fast-forward only (`receive.denyNonFastForwards`, a push refused when the histories diverge, as the bare remotes' `post-receive` hook already does), the live tree moved by a fast-forward merge, then the corpus re-indexed for the files that changed and the engine's caches dropped.
 - **Not yet tried on the devices.** `git clone` and `git pull` are tested end to end (`server/test/git-clone.test.ts`, clients asking for either protocol). Obsidian Git on iPad runs isomorphic-git, which speaks v0/v1, the protocol served, but it is untested on a device; Working Copy likewise.
 

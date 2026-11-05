@@ -30,8 +30,8 @@ covers:
   maurice-personas-hats: '2026-09-19'
   maurice-server: '2026-11-05'
   maurice-shared-gardens: '2026-10-20'
-  maurice-tools: '2026-11-04'
-  maurice-web-garden: '2026-10-20'
+  maurice-tools: '2026-11-05'
+  maurice-web-garden: '2026-11-05'
 ---
 
 # Maurice — the digest
@@ -277,11 +277,11 @@ Each member has folders and files (5 GB each), in **Settings**: text, images, PD
 - **The gateway** mounts whatever tools are installed and scopes every call to the member asking. Tool names look like `garden__create_note`, `corpus__search`.
 - **Families:** a conversation holds only some tools (a model given a hundred tools does worse). Always on in a private conversation: web search (when a search key is set), reading a web page by its address (the server fetches it itself, no third party; paywalls, logins and pages built in the browser stay unreadable), the note-writing tools, the reading side of the corpus, email (once a mailbox is added) and the documentation tool. Other families are chosen per conversation or per domain. Corpus, email and mail triage are withdrawn as soon as a second person joins. Maurice's instructions list only the tools actually present, so "what can you do?" gets a true answer.
 - **Experimental gate:** everything beyond those core families needs an admin to tick *experimental tools* for the member.
-- **External clients:** a member can add their Maurice as a **custom connector** in Claude Desktop or claude.ai (OAuth with a personal token) and use their notes and corpus there. Hosted gateways refuse anonymous callers.
+- **External clients:** a member can add their Maurice as a **custom connector** in Claude Desktop, claude.ai or Claude Code (OAuth with a personal token) and use their notes and corpus there. The tool gateway never runs without a key, so no install answers anonymous callers, and a caller can never name another member. The sign-in page sends access only to Claude or to a client on the member's own machine; another client's address must be allowed by the operator (`MAURICE_OAUTH_REDIRECT_HOSTS`).
 - **The documentation tool** (`maurice_docs`) answers questions about Maurice himself from this documentation, on a strong cloud model of the household's provider, charged to the member who asks; it can also return any documentation note in full.
 - **The private overlay** (home only, experimental): health (from Apple Health exports), signals and coaching plans declared as notes, tasks, calendar (CalDAV), contacts lookup, Calibre chat tools, Readwise, captured thoughts, dashboard layouts for Carnet, research tracks, social scanning and publishing, and the owner's mail triage (it files messages from a closed list of actions and never sends or deletes).
 
-*Gaps:* an external client connected with a member's token sees every mounted tool, since families and the experimental gate are enforced by the server, not the gateway; there is no per-tool sandbox.
+*Gaps:* an external client connected with a member's token sees every mounted tool, since families and the experimental gate are enforced by the server, not the gateway — the corpus's maintenance tools (forget, import, prune, reindex) among them; there is no per-tool sandbox.
 
 *Detail:* `tools`, `life`.
 
@@ -318,12 +318,13 @@ Each member has folders and files (5 GB each), in **Settings**: text, images, PD
 
 - **Private view:** each member's site at `/g/<member>/` shows all their notes, rendered from disk on every request, live-reloading when a note changes, in English and French. Wiki-links resolve the way Obsidian does. The owner sees drafts, fiches and a toolbar (public/private/encrypted, delete, reorder, open in Obsidian or Working Copy). Unreviewed notes Maurice wrote carry a *Keep / Throw away* banner; mail person fiches a review panel.
 - **Public, private, encrypted:** a note is published **only with the `public` flag**. An `encrypted` note is encrypted in the page (AES-256-GCM, the password typed in the browser) or withheld. Fiches, drafts, unopened articles, person fiches and other members' content never enter a published build — checked by an automated leak test.
+- **What a note may contain:** its HTML is cleaned before it is shown — layout, inline drawings, code and links stay; scripts, embedded frames and event handlers are removed — so a note written by someone else, clipped from a page or drawn from a mail cannot act with the reader's session.
 - **A member's site:** the household's public pages at `/@<member>/`, a static build every member may publish to at any time (a child once the admin allows it); or a domain of one's own (today only at home, through Cloudflare Pages).
 - **Themes:** manuscript (default), botanical, newsprint, terminal, chosen in the app (Settings → *Your site*).
 - **The notes as a git address:** `https://<household>/git/<member>.git`, for `git clone`, Obsidian (the *Git* plugin) or Working Copy. HTTP Basic: any username, the member's git key as the password; a member clones only their own notes; a push is refused. Notes not yet versioned become a repository at their first clone. The clone is a vault and a near-complete backup (see §6); flashcards, mail and the search index are not in it.
 - **Shared notes:** sharing is a property of a note — its audience. The app lists *My notes*, then one set per audience (*You & Paola / notes*): simply the notes sharing that audience; members can see who reads a note, share it, or leave its audience. A shared note is read inside its owner's site, in the owner's theme.
 
-*Gaps:* the git clone is read-only (writing back from Obsidian is not built), and untested so far on an iPad with Obsidian Git or Working Copy; English-only site search; translation and social sharing unavailable in the container; shared notes have no roles (read-only vs co-editor), and a theme set for a shared audience is stored but not used; a public host's duties (reporting, takedown) are not defined.
+*Gaps:* the git clone is read-only (writing back from Obsidian is not built), and untested so far on an iPad with Obsidian Git or Working Copy; English-only site search; translation and social sharing unavailable in the container; shared notes have no roles (read-only vs co-editor), and a theme set for a shared audience is stored but not used; a public host's duties (reporting, takedown) are not defined; the private view's pages carry no Content-Security-Policy yet; a private map note's title can show on public pages that belong to it, and a public encrypted note's title is in the site search; a share cannot be withdrawn.
 
 *Detail:* `web-garden`, `shared-gardens`.
 
