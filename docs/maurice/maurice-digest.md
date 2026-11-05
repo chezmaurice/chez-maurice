@@ -24,7 +24,7 @@ covers:
   maurice-docs: '2026-10-20'
   maurice-domains: '2026-10-20'
   maurice-files: '2026-06-19'
-  maurice-households-rooms: '2026-11-04'
+  maurice-households-rooms: '2026-11-05'
   maurice-knowledge: '2026-11-02'
   maurice-life: '2026-10-20'
   maurice-personas-hats: '2026-09-19'
@@ -125,6 +125,8 @@ There is also a **browser clipper** that saves the page being read into the memb
 - **Your notes as a git clone:** each member can clone their own notes (Settings → *My data* → *Clone my notes*), read-only, with a key that opens nothing else. The clone holds the notes, fiches and their history, and every night Maurice writes into it, under `_maurice/`, the member's highlights, reading positions, archived entries and domains (brief, instructions, context, what is filed in each), and their conversations if they turn that on. It is **not encrypted**: notes marked encrypted are in clear text in it, as they are on the server's disk.
 - **Household archive:** the whole household as one file (databases, every member's notes with their history, files, configuration, the household key) to move it elsewhere. No password is in it: each member reconnects their mailbox after a move. At home it comes from the admin console on the machine. A hosted household's admin asks for it on their Chez Maurice account, with their password, and gets a link by mail that works once, for a few hours. That copy holds no session, PIN or provider key either, nor the household key and the mail it seals: in the new home everyone joins again with a code and reconnects their mailbox, which Maurice reads again.
 - **Moving without losing anyone:** the apps know a household by its address. A household on a domain of its own that keeps its name and points it at the new machine moves unnoticed, sessions and all, when it is moved with the console's archive. One that changes its name leaves a DNS record under the old one (`_maurice.<old name>`, TXT, `v=maurice1; moved=https://<new address>`): the Maurice app and Carnet on Apple devices then follow it by themselves, after checking that the new address holds the household's identity key, which no forged record can fake. Android and the desktop do not follow yet.
+
+*Gaps:* a notification on an iPhone, iPad or Mac passes through Apple in clear — the room's title, who wrote and the start of the message; on Android it is encrypted for the device. A household run on your own machine cannot notify Apple devices: the apps' push key is held only by Maurice's hosting.
 
 *Detail:* `data-model`, `server`, `architecture`.
 

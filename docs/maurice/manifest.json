@@ -1,7 +1,7 @@
 {
   "format": "maurice-docs",
   "version": 1,
-  "generated_at": "2026-11-04T22:48:07Z",
+  "generated_at": "2026-11-05T07:14:08Z",
   "notes": [
     { "file": "maurice-applications.md", "slug": "maurice-applications", "date": "2026-10-20", "bytes": 13985, "sha256": "309ebda8442d3ee0005ad5989355d4679e8c0ea1d7aea5bade516ee47f019452" },
     { "file": "maurice-architecture.md", "slug": "maurice-architecture", "date": "2026-10-26", "bytes": 39359, "sha256": "b8b73dbf1f84cd185583ce368e9e9d0ef9481a9d7c2764633356debba012d568" },
@@ -9,11 +9,11 @@
     { "file": "maurice-chat.md", "slug": "maurice-chat", "date": "2026-11-03", "bytes": 73451, "sha256": "ddd21b8dfee4b4e184be1973791ef4623f6093fd9bbb12a4e7a2c5c55296dfd8" },
     { "file": "maurice-composer.md", "slug": "maurice-composer", "date": "2026-10-20", "bytes": 11028, "sha256": "4ab3c3fa5aca47feefff8bafbb949bfc0db5060b680d575fff571469d17a6008" },
     { "file": "maurice-data-model.md", "slug": "maurice-data-model", "date": "2026-10-29", "bytes": 38528, "sha256": "86f42433982ee7da5028d13d4be6bc401ca368a824feadaf739d3b6076fb4ecd" },
-    { "file": "maurice-digest.md", "slug": "maurice-digest", "date": "2026-11-03", "bytes": 65973, "sha256": "413f4ff6a9cffe3c73d56d356d90fe611994ce317a4ee2654412b709d0fcbbc3" },
+    { "file": "maurice-digest.md", "slug": "maurice-digest", "date": "2026-11-03", "bytes": 66277, "sha256": "d45457be313856df5921fc0feb0463fdb64cff60c0dc40f4687cc166ca6b545b" },
     { "file": "maurice-docs.md", "slug": "maurice-docs", "date": "2026-10-20", "bytes": 7988, "sha256": "a842779ec5a832eb627a8f3e340aa70a5aaa1782230a5f7373ed5a28db971d99" },
     { "file": "maurice-domains.md", "slug": "maurice-domains", "date": "2026-10-20", "bytes": 45676, "sha256": "4610beb01b7deb3761315a48725d3d84f68437afca7da5c503394e1b0cbe0b02" },
     { "file": "maurice-files.md", "slug": "maurice-files", "date": "2026-06-19", "bytes": 2618, "sha256": "efcfdcde55ae0036dede5249af40155debc54b2711290f1d9fae22fde7660c82" },
-    { "file": "maurice-households-rooms.md", "slug": "maurice-households-rooms", "date": "2026-11-04", "bytes": 26310, "sha256": "f73992e840ffbb9cd32438e05cace1a21ef0023533b5561aa8607192690cdc68" },
+    { "file": "maurice-households-rooms.md", "slug": "maurice-households-rooms", "date": "2026-11-05", "bytes": 26752, "sha256": "c7be3f7857a50ea32770dad02ebb5f03d5e9962817bd70e752ad9a82364c39d3" },
     { "file": "maurice-knowledge.md", "slug": "maurice-knowledge", "date": "2026-11-02", "bytes": 42994, "sha256": "a07e246d6300e76a23813f02c44d8adac6069c7221d828e8bf5a430b49ab6c40" },
     { "file": "maurice-life.md", "slug": "maurice-life", "date": "2026-10-20", "bytes": 4932, "sha256": "4a6474e3284e97ede426730051d388d962a8946e5238758e830639dfe846680c" },
     { "file": "maurice-personas-hats.md", "slug": "maurice-personas-hats", "date": "2026-09-19", "bytes": 10367, "sha256": "614e09adfab99ff0457eb9f2eb9937e6a3e38838a981e1867dd5eebfebe1a9a0" },

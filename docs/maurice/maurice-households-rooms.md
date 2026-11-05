@@ -1,6 +1,6 @@
 ---
 title: Households, rooms & devices
-date: '2026-11-04'
+date: '2026-11-05'
 flags: []
 locale: en
 description: Members and roles, guests, multi-person rooms, device pairing and PINs,
@@ -85,7 +85,7 @@ In a shared room, the long-press menu on a message offers **Report** and **Block
 
 ## Push
 
-When an event can't reach a live socket, it becomes an APNs push (`server/src/services/push.ts` + `apns.ts`, token-based ES256 over HTTP/2) — a room's activity, an invitation to a room, or a conversation Maurice opened ("Maurice: …", opening on the conversation when tapped). Device tokens carry a `platform` and a `household_tag`; the platform picks the APNs topic (`carnet-ios` → Carnet's bundle id `eu.chezmaurice.carnet.app` since the apps moved to the company team on 13 October 2026, `APNS_CARNET_TOPIC`; anything else → the Maurice app, `eu.chezmaurice.maurice`, `APNS_TOPIC`; a token is tried on both APNs environments, so a TestFlight build is reached from any server), so a conversation Maurice opens reaches Carnet too (19 September 2026, evening); dead tokens are pruned on Apple's say-so. Since 21 October 2026 the same events also reach a device that registered a Web Push subscription (the Android app, through UnifiedPush): the payload is encrypted to the device's keys and handed to its relay, which cannot read it ([[maurice-server]]). This is what notifies you across households when you're a guest elsewhere.
+When an event can't reach a live socket, it becomes an APNs push (`server/src/services/push.ts` + `apns.ts`, token-based ES256 over HTTP/2) — a room's activity, an invitation to a room, or a conversation Maurice opened ("Maurice: …", opening on the conversation when tapped). Device tokens carry a `platform` and a `household_tag`; the platform picks the APNs topic (`carnet-ios` → Carnet's bundle id `eu.chezmaurice.carnet.app` since the apps moved to the company team on 13 October 2026, `APNS_CARNET_TOPIC`; anything else → the Maurice app, `eu.chezmaurice.maurice`, `APNS_TOPIC`; a token is tried on both APNs environments, so a TestFlight build is reached from any server), so a conversation Maurice opens reaches Carnet too (19 September 2026, evening); dead tokens are pruned on Apple's say-so. Since 21 October 2026 the same events also reach a device that registered a Web Push subscription (the Android app, through UnifiedPush): the payload is encrypted to the device's keys and handed to its relay, which cannot read it ([[maurice-server]]). This is what notifies you across households when you're a guest elsewhere. **An Apple push is not sealed:** its title and body — the room's title, the author's name, the start of the message — reach Apple in clear, since neither app has a Notification Service Extension to decrypt a sealed payload. Android's are sealed. Encrypting them, and a relay in the tower so a self-hosted household can push to Apple devices at all (the APNs key lives only on the fleet host), are designed and deferred (5 November 2026).
 
 ## The household archive
 
