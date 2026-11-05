@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import html as html_lib
 import logging
 import os
 import secrets
@@ -14,6 +15,7 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote, urlsplit
 
 import httpx
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -255,49 +257,103 @@ async def authorization_server_metadata(request: Request) -> JSONResponse:
     })
 
 
+# Where an authorization code may be sent. Registration is open (RFC 7591, as
+# Claude's connector needs), so a client's own redirect_uris prove nothing — an
+# attacker registers theirs. The code therefore only ever goes back to a known
+# MCP client: Claude on the web, or a client on the member's own machine.
+# MAURICE_OAUTH_REDIRECT_HOSTS adds hosts (comma-separated) for other clients.
+_REDIRECT_HOSTS = {"claude.ai", "claude.com"}
+_LOOPBACK_HOSTS = {"localhost", "127.0.0.1", "::1"}
+
+_PAGE_HEADERS = {
+    "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'",
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "no-referrer",
+    "Cache-Control": "no-store",
+}
+
+
+def _redirect_allowed(client_id: str, redirect_uri: str) -> bool:
+    client = registered_clients.get(client_id)
+    if not client or redirect_uri not in (client.get("redirect_uris") or []):
+        return False
+    try:
+        parts = urlsplit(redirect_uri)
+        host = (parts.hostname or "").lower()
+    except ValueError:
+        return False
+    if parts.scheme == "http":
+        return host in _LOOPBACK_HOSTS
+    extra = {
+        h.strip().lower()
+        for h in os.environ.get("MAURICE_OAUTH_REDIRECT_HOSTS", "").split(",")
+        if h.strip()
+    }
+    return parts.scheme == "https" and host in (_REDIRECT_HOSTS | extra)
+
+
+def _render_authorize(params: dict[str, str], error: str = "", status_code: int = 200) -> HTMLResponse:
+    """The consent page, every value escaped: they all come from the URL."""
+    page = (TEMPLATES_DIR / "authorize.html").read_text()
+    for key in ("client_id", "redirect_uri", "state", "scope", "code_challenge", "code_challenge_method"):
+        page = page.replace("{{" + key + "}}", html_lib.escape(params.get(key, ""), quote=True))
+    client = registered_clients.get(params.get("client_id", ""), {})
+    name = client.get("client_name") or params.get("client_id", "")
+    page = page.replace("{{client_name}}", html_lib.escape(str(name), quote=True))
+    page = page.replace(
+        "{{redirect_host}}", html_lib.escape(urlsplit(params.get("redirect_uri", "")).hostname or "", quote=True)
+    )
+    if error:
+        page = page.replace("<!-- ERROR -->", f'<p style="color:red">{html_lib.escape(error)}</p>')
+    return HTMLResponse(page, status_code=status_code, headers=_PAGE_HEADERS)
+
+
+def _refusal(message: str) -> HTMLResponse:
+    body = f"<!doctype html><meta charset=utf-8><title>Refused</title><p>{html_lib.escape(message)}</p>"
+    return HTMLResponse(body, status_code=400, headers=_PAGE_HEADERS)
+
+
 async def authorize_get(request: Request) -> HTMLResponse:
     """GET /authorize — render consent page."""
-    template_path = TEMPLATES_DIR / "authorize.html"
-    html = template_path.read_text()
-
-    client_id = request.query_params.get("client_id", "")
-    redirect_uri = request.query_params.get("redirect_uri", "")
-    state = request.query_params.get("state", "")
-    scope = request.query_params.get("scope", "mcp")
-    code_challenge = request.query_params.get("code_challenge", "")
-    code_challenge_method = request.query_params.get("code_challenge_method", "")
-
-    html = html.replace("{{client_id}}", client_id)
-    html = html.replace("{{redirect_uri}}", redirect_uri)
-    html = html.replace("{{state}}", state)
-    html = html.replace("{{scope}}", scope)
-    html = html.replace("{{code_challenge}}", code_challenge)
-    html = html.replace("{{code_challenge_method}}", code_challenge_method)
-
-    return HTMLResponse(html)
+    q = request.query_params
+    params = {
+        "client_id": q.get("client_id", ""),
+        "redirect_uri": q.get("redirect_uri", ""),
+        "state": q.get("state", ""),
+        "scope": q.get("scope", "mcp"),
+        "code_challenge": q.get("code_challenge", ""),
+        "code_challenge_method": q.get("code_challenge_method", ""),
+    }
+    if not _redirect_allowed(params["client_id"], params["redirect_uri"]):
+        logger.warning("Refused /authorize: client_id=%s", params["client_id"])
+        return _refusal("This application is not allowed to connect to Maurice.")
+    return _render_authorize(params)
 
 
 async def authorize_post(request: Request) -> RedirectResponse | HTMLResponse:
     """POST /authorize — verify Maurice MCP token, issue auth code, redirect."""
     form = await request.form()
     submitted_token = str(form.get("token", ""))
-    client_id = form.get("client_id", "")
-    redirect_uri = form.get("redirect_uri", "")
-    state = form.get("state", "")
-    scope = form.get("scope", "mcp")
-    code_challenge = form.get("code_challenge", "")
+    params = {
+        "client_id": str(form.get("client_id", "")),
+        "redirect_uri": str(form.get("redirect_uri", "")),
+        "state": str(form.get("state", "")),
+        "scope": str(form.get("scope", "mcp")),
+        "code_challenge": str(form.get("code_challenge", "")),
+        "code_challenge_method": "S256",
+    }
+    client_id = params["client_id"]
+    redirect_uri = params["redirect_uri"]
+    state = params["state"]
+    scope = params["scope"]
+    code_challenge = params["code_challenge"]
+
+    if not _redirect_allowed(client_id, redirect_uri):
+        logger.warning("Refused /authorize POST: client_id=%s", client_id)
+        return _refusal("This application is not allowed to connect to Maurice.")
 
     def _render_error(message: str) -> HTMLResponse:
-        template_path = TEMPLATES_DIR / "authorize.html"
-        html = template_path.read_text()
-        html = html.replace("{{client_id}}", str(client_id))
-        html = html.replace("{{redirect_uri}}", str(redirect_uri))
-        html = html.replace("{{state}}", str(state))
-        html = html.replace("{{scope}}", str(scope))
-        html = html.replace("{{code_challenge}}", str(code_challenge))
-        html = html.replace("{{code_challenge_method}}", "S256")
-        html = html.replace("<!-- ERROR -->", f'<p style="color:red">{message}</p>')
-        return HTMLResponse(html, status_code=403)
+        return _render_authorize(params, error=message, status_code=403)
 
     if not submitted_token:
         return _render_error("Please enter your Maurice MCP token.")
@@ -335,9 +391,9 @@ async def authorize_post(request: Request) -> RedirectResponse | HTMLResponse:
     logger.info("Issued auth code for client_id=%s member_id=%s", client_id, member_id)
 
     sep = "&" if "?" in str(redirect_uri) else "?"
-    location = f"{redirect_uri}{sep}code={code}"
+    location = f"{redirect_uri}{sep}code={quote(code, safe='')}"
     if state:
-        location += f"&state={state}"
+        location += f"&state={quote(state, safe='')}"
     return RedirectResponse(url=location, status_code=302)
 
 

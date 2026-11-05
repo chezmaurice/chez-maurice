@@ -19,7 +19,7 @@
 <body>
     <div class="card">
         <h1>Authorize MCP Access</h1>
-        <p class="client">Client: <strong>{{client_id}}</strong></p>
+        <p class="client">Client: <strong>{{client_name}}</strong> — access goes to <strong>{{redirect_host}}</strong></p>
         <!-- ERROR -->
         <form method="POST" action="/authorize">
             <input type="hidden" name="client_id" value="{{client_id}}">
