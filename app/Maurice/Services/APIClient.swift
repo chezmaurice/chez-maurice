@@ -1090,6 +1090,10 @@ struct HealthResponse: Decodable {
     let household: String?
     let household_color: String?
     let household_icon: String?
+    /// The household's public key (pinned at pairing) and, when asked with
+    /// `?proof=`, its signature of the device's nonce (see HouseholdMove).
+    var identity_key: String? = nil
+    var proof: String? = nil
 }
 
 struct UnreadResponse: Decodable {

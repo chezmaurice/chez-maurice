@@ -34,6 +34,9 @@ struct Household: Codable, Identifiable, Hashable {
     /// Foyer identity from the server (/api/health) — nil falls back to derived.
     var color: String? = nil
     var icon: String? = nil
+    /// The household's public key, pinned the first time /api/health gives it:
+    /// what lets the device follow the household to a new address.
+    var key: String? = nil
     var deviceUsers: [DeviceUser]
     var activeUserId: String?
     /// Unread rooms for the active user here (from /api/users/me/unread).
@@ -236,19 +239,27 @@ final class SessionStore {
     /// foyers concurrently with a short timeout; safe to fire-and-forget so it
     /// never blocks a household switch.
     func refreshFoyers() async {
-        struct FoyerUpdate { let id: String; let health: HealthResponse?; let unread: Int? }
-        let snapshot = households.map { (id: $0.id, url: $0.serverURL, bearer: token(for: $0)) }
+        struct FoyerUpdate { let id: String; let health: HealthResponse?; let unread: Int?; var movedTo: String? = nil }
+        let snapshot = households.map { (id: $0.id, url: $0.serverURL, bearer: token(for: $0), key: $0.key) }
         let updates = await withTaskGroup(of: FoyerUpdate.self) { group in
             for f in snapshot {
                 group.addTask {
-                    let api = APIClient(baseURL: f.url)
-                    let health: HealthResponse? = try? await api.get("/api/health", timeout: 8)
+                    var api = APIClient(baseURL: f.url)
+                    var health: HealthResponse? = try? await api.get("/api/health", timeout: 8)
+                    // Silent at its address: has it moved? Only a household
+                    // whose key this device holds can be followed.
+                    var movedTo: String? = nil
+                    if health == nil, let key = f.key, let target = await HouseholdMove.follow(from: f.url, key: key) {
+                        movedTo = target
+                        api = APIClient(baseURL: target)
+                        health = try? await api.get("/api/health", timeout: 8)
+                    }
                     var unread: Int? = nil
                     if let bearer = f.bearer {
                         let r: UnreadResponse? = try? await api.get("/api/users/me/unread", token: bearer, timeout: 8)
                         unread = r?.unread
                     }
-                    return FoyerUpdate(id: f.id, health: health, unread: unread)
+                    return FoyerUpdate(id: f.id, health: health, unread: unread, movedTo: movedTo)
                 }
             }
             var out: [FoyerUpdate] = []
@@ -257,10 +268,14 @@ final class SessionStore {
         }
         for u in updates {
             updateHousehold(id: u.id) {
+                // Same household, new address: its id, members and tokens stay.
+                if let target = u.movedTo { $0.serverURL = target }
                 if let h = u.health {
                     if let n = h.household, !n.isEmpty { $0.name = n }
                     $0.color = h.household_color
                     $0.icon = h.household_icon
+                    // Pin once; a different key later is not this household.
+                    if $0.key == nil, let k = h.identity_key { $0.key = k }
                 }
                 if let unread = u.unread { $0.unread = unread }
             }

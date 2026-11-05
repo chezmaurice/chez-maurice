@@ -34,6 +34,9 @@ db.run(`
 // app falls back to a derived colour/icon when null).
 try { db.run(`ALTER TABLE households ADD COLUMN color TEXT`); } catch {}
 try { db.run(`ALTER TABLE households ADD COLUMN icon TEXT`); } catch {}
+// The household's Ed25519 key (PEM), made on first use: what devices recognise
+// it by when its address changes (services/householdKey.ts).
+try { db.run(`ALTER TABLE households ADD COLUMN identity_key TEXT`); } catch {}
 
 // Ensure the single household row exists
 db.run(`

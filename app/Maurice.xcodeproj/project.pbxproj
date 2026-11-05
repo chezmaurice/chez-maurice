@@ -64,6 +64,7 @@
 		8354A2864D971667617A4546 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2E85AEEB530CF3C1C5C3E79F /* Assets.xcassets */; };
 		8420EA02F7C918A622052FF4 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 462A7ECD4C83B5ADC43A81CB /* ContentView.swift */; };
 		87ECEC8E0F3C684D0577613C /* DictateIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEB5E21AE21611A0C6FC115B /* DictateIntent.swift */; };
+		8A2222E63BE34BE4F1DF490B /* HouseholdMove.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA83968710425729BB55ADC4 /* HouseholdMove.swift */; };
 		8A7260C6686668374F180779 /* GuestInvite.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DA84A76FE543F2FFA210287 /* GuestInvite.swift */; };
 		8D85F19C2F440203BAFC484F /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E01BB325D88F4E74B3571BC /* ChatView.swift */; };
 		8ED1CEE075FB6C3A3F0F53D2 /* SubscriptionViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A902302DDAF91A3A5B2DB9A /* SubscriptionViews.swift */; };
@@ -93,6 +94,7 @@
 		C8C934C400A253AFC27851C2 /* SearchKeyboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 437B5ED8350A54E9167D4BF5 /* SearchKeyboard.swift */; };
 		CAF942F37AE2F3E45A4761D0 /* Hats.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCDEAA0E48CC14C7C18BE8FD /* Hats.swift */; };
 		CB71AD2912D05739932A2EB1 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E01BB325D88F4E74B3571BC /* ChatView.swift */; };
+		CBEC30F2178A81308041A1E0 /* HouseholdMove.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA83968710425729BB55ADC4 /* HouseholdMove.swift */; };
 		CC9F77433FFC0CCC7F8668EA /* UserPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB58402567AEED97404D604C /* UserPickerView.swift */; };
 		CCEF2532174820F615C4C61F /* ChatService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDFA39C22354B093CDDBB691 /* ChatService.swift */; };
 		CE90734410E4B676F48703A0 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = C492F1816D8C83E70D98A908 /* InfoPlist.strings */; };
@@ -225,6 +227,7 @@
 		E426EF47C1F4A6CE4105AA44 /* BudgetStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetStore.swift; sourceTree = "<group>"; };
 		E76EA458EBA05810D312BA7F /* SharedArticles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedArticles.swift; sourceTree = "<group>"; };
 		E787764ABF2A58E353CC45C2 /* PersonReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonReviewView.swift; sourceTree = "<group>"; };
+		EA83968710425729BB55ADC4 /* HouseholdMove.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HouseholdMove.swift; sourceTree = "<group>"; };
 		EC11013AABCDEFB7A0329FD9 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		EC8F39C1E181257A07AA5B05 /* Info-Generated.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Info-Generated.plist"; sourceTree = "<group>"; };
 		EDFA39C22354B093CDDBB691 /* ChatService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatService.swift; sourceTree = "<group>"; };
@@ -396,6 +399,7 @@
 				CEB5E21AE21611A0C6FC115B /* DictateIntent.swift */,
 				8DD6FC0052BD394074159538 /* Dictation.swift */,
 				5DA84A76FE543F2FFA210287 /* GuestInvite.swift */,
+				EA83968710425729BB55ADC4 /* HouseholdMove.swift */,
 				8C96937F0554878BAF247D3F /* MauriceStore.swift */,
 				405F9AA69C83E58A86FDD625 /* SessionStore.swift */,
 				E76EA458EBA05810D312BA7F /* SharedArticles.swift */,
@@ -614,6 +618,7 @@
 				EEF2722A0817C78F1649422B /* Glass.swift in Sources */,
 				B7B27FA57D3972C51780458C /* GuestInvite.swift in Sources */,
 				CAF942F37AE2F3E45A4761D0 /* Hats.swift in Sources */,
+				8A2222E63BE34BE4F1DF490B /* HouseholdMove.swift in Sources */,
 				5B7821ABC8358319D3368DF8 /* ImportConversationsView.swift in Sources */,
 				90686293A6D77F3679770294 /* LifeFactCard.swift in Sources */,
 				7416ECF23A6705C449F95A51 /* MauriceApp.swift in Sources */,
@@ -676,6 +681,7 @@
 				6E60BACFAEB5A57C921B21BE /* Glass.swift in Sources */,
 				8A7260C6686668374F180779 /* GuestInvite.swift in Sources */,
 				58C19733EBF8E99AB41D71A9 /* Hats.swift in Sources */,
+				CBEC30F2178A81308041A1E0 /* HouseholdMove.swift in Sources */,
 				E0931CFF7A305AC88466021B /* ImportConversationsView.swift in Sources */,
 				1C9935AA1A0250C77FB2DD24 /* LifeFactCard.swift in Sources */,
 				01BF41C8D7454D75BCFE569A /* MauriceApp.swift in Sources */,

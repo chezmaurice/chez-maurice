@@ -71,6 +71,7 @@ import maurices from "./src/routes/maurices";
 import models from "./src/routes/models";
 import toolFamilies from "./src/routes/toolFamilies";
 import { adminExists, getUser, getUserByUsername, householdName, householdInfo } from "./src/services/users";
+import { householdPublicKey, proveHousehold, NONCE_RE } from "./src/services/householdKey";
 import { pinNewInvocations, refreshAutoPins, seedAncillaryPinsOnce } from "./src/services/ancillary";
 import ancillaryRoute from "./src/routes/ancillary";
 import db, { dataDir } from "./src/db";
@@ -929,8 +930,13 @@ app.get("/join", (c) => {
 
 // ── Health / status ─────────────────────────────────────────────
 
+// `identity_key` is what a device pins at pairing; `?proof=<nonce>` asks the
+// household to sign the device's nonce, which is how a device checks that a
+// new address is the household it knew (services/householdKey.ts).
 app.get("/api/health", (c) => {
   const h = householdInfo();
+  const nonce = c.req.query("proof");
+  if (nonce !== undefined && !NONCE_RE.test(nonce)) return c.json({ error: "bad_nonce" }, 400);
   return c.json({
     status: "ok",
     version: "0.1.0",
@@ -938,6 +944,8 @@ app.get("/api/health", (c) => {
     household: h.name,
     household_color: h.color,
     household_icon: h.icon,
+    identity_key: householdPublicKey(),
+    ...(nonce !== undefined ? { proof: proveHousehold(nonce) } : {}),
   });
 });
 
