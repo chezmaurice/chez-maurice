@@ -1,6 +1,6 @@
 ---
 title: Carnet — the pocket companion
-date: '2026-11-03'
+date: '2026-11-05'
 flags: []
 locale: en
 description: 'The iOS/iPadOS companion to Maurice: log what happened, read books and
@@ -117,7 +117,7 @@ A conversation Maurice opened is **read** here (`Views/Domains/OpenedConversatio
 
 On a book's page, the *This book* drawer says whether Maurice follows the book — *Followed by Maurice · JTTW guide · conversation in the Maurice app* — and, when he does not, offers **Follow**: a row of `maurices` of kind `companion` bound to the book at the reading position (`POST /api/maurices`, `kind: companion`, the book on the composer's `progress` scope). The companion begins on the book's page; its pinned conversation lives in the Maurice app.
 
-**Push.** Carnet keeps no socket to the server, so what it must hear about comes as an APNs push — today, the conversation Maurice opens ([[maurice-chat]]). Once a member is signed in the app asks for notifications, registers the device (`aps-environment` in the entitlements) and hands the token to **every paired household** as `POST /api/users/me/device-token` with `platform: carnet-ios` and the local household id as `household_tag` (`Services/CarnetNotifications.swift`); a tap on the notification switches to the household it came from and opens the conversation, on a cold start too (the notification-center delegate is set before launch ends). The [[maurice-server|server]] picks the APNs topic by that platform.
+**Push.** Carnet keeps no socket to the server, so what it must hear about comes as an APNs push — today, the conversation Maurice opens ([[maurice-chat]]). Once a member is signed in the app asks for notifications, registers the device (`aps-environment` in the entitlements) and hands the token to **every paired household** as `POST /api/users/me/device-token` with `platform: carnet-ios` and the local household id as `household_tag` (`Services/CarnetNotifications.swift`); a tap on the notification switches to the household it came from and opens the conversation, on a cold start too (the notification-center delegate is set before launch ends). The [[maurice-server|server]] picks the APNs topic by that platform. Since 5 November 2026 the token goes with the device's push keys (`Shared/PushSeal.swift`, under the app group `group.eu.chezmaurice.carnet.app`), the household seals the push, and `CarnetNotificationService` opens it on the phone; a household that refuses the keys gets the bare token and pushes in clear ([[maurice-households-rooms]]). The extension needs its own App Store profile, "<profile> Notifications" in `build-testflight.sh`.
 
 The domains shelf is the same in both scopes; the API lives in `Services/DomainsAPI.swift` (`GET /api/domains`, the brief routes, `GET /api/conversations`, `POST /api/maurices`, the device token).
 

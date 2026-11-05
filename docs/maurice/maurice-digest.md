@@ -1,6 +1,6 @@
 ---
 title: Maurice — the digest
-date: '2026-11-03'
+date: '2026-11-05'
 flags: []
 locale: en
 description: 'The system documentation condensed to what a user needs: everything
@@ -17,7 +17,7 @@ digest: true
 covers:
   maurice-applications: '2026-10-20'
   maurice-architecture: '2026-10-26'
-  maurice-carnet: '2026-11-03'
+  maurice-carnet: '2026-11-05'
   maurice-chat: '2026-11-03'
   maurice-composer: '2026-10-20'
   maurice-data-model: '2026-10-29'
@@ -28,7 +28,7 @@ covers:
   maurice-knowledge: '2026-11-02'
   maurice-life: '2026-10-20'
   maurice-personas-hats: '2026-09-19'
-  maurice-server: '2026-11-04'
+  maurice-server: '2026-11-05'
   maurice-shared-gardens: '2026-10-20'
   maurice-tools: '2026-11-04'
   maurice-web-garden: '2026-10-20'
@@ -96,7 +96,8 @@ There is also a **browser clipper** that saves the page being read into the memb
   - **guest** — full capabilities but a limited *reach*: an explicit contact list, checked both ways, and only the domains shared with them. This is how you host someone, or are hosted. Any member (a child only if the admin allows it) can **invite a friend as their guest** from Settings or Carnet's member sheet — single use, 7 days: the friend sees only them, and does not count as a member;
   - **child** — a flag an admin ticks (the server knows no ages): publishes only once the admin allows it, never proposed domains, never sent a conversation Maurice opened. It does not change model access or content rules.
 - **Login safety:** a PIN is mandatory because the server is on the internet; failures are rate-limited and all answer the same "Invalid credentials". On the phone and the Mac, sessions are kept in the system **Keychain**. A session ended on the server — revoked, or the member removed — sends the device back to the member picker, which says so.
-- **Push notifications** reach the Maurice app and Carnet when someone writes to you, including as a guest in another household: through Apple's service for the Apple apps, and through Web Push for a device that registers a subscription — the Android app, in private testing, via UnifiedPush and a relay such as ntfy. The payload is encrypted to the device: the relay sees that a message passed, not what it says.- **Personal tokens** (`maur_…`) let a member connect other clients (see §18).
+- **Push notifications** reach the Maurice app and Carnet when someone writes to you, including as a guest in another household: through Apple's service for the Apple apps, and through Web Push for a device that registers a subscription — the Android app, in private testing, via UnifiedPush and a relay such as ntfy. The payload is encrypted to the device: the relay sees that a message passed, not what it says. On an iPhone or iPad the same holds for Apple: it carries "New message" and a sealed block that the app opens on the device to show the room, who wrote and the text. A household run on your own machine notifies Apple devices through Chez Maurice's push relay, which receives only the device's token and that sealed block; it can be turned off (`MAURICE_PUSH_RELAY_URL=off`), and Apple devices are then not notified.
+- **Personal tokens** (`maur_…`) let a member connect other clients (see §18).
 
 *Gaps:* sessions do not expire (they end only when revoked); a household cannot be renamed in the app; an admin's open invitation still makes a standard member, and a guest's reach beyond the member who invited them is set in the console; `maurice://` invitation links open only on iOS.
 
@@ -126,7 +127,7 @@ There is also a **browser clipper** that saves the page being read into the memb
 - **Household archive:** the whole household as one file (databases, every member's notes with their history, files, configuration, the household key) to move it elsewhere. No password is in it: each member reconnects their mailbox after a move. At home it comes from the admin console on the machine. A hosted household's admin asks for it on their Chez Maurice account, with their password, and gets a link by mail that works once, for a few hours. That copy holds no session, PIN or provider key either, nor the household key and the mail it seals: in the new home everyone joins again with a code and reconnects their mailbox, which Maurice reads again.
 - **Moving without losing anyone:** the apps know a household by its address. A household on a domain of its own that keeps its name and points it at the new machine moves unnoticed, sessions and all, when it is moved with the console's archive. One that changes its name leaves a DNS record under the old one (`_maurice.<old name>`, TXT, `v=maurice1; moved=https://<new address>`): the Maurice app and Carnet on Apple devices then follow it by themselves, after checking that the new address holds the household's identity key, which no forged record can fake. Android and the desktop do not follow yet.
 
-*Gaps:* a notification on an iPhone, iPad or Mac passes through Apple in clear — the room's title, who wrote and the start of the message; on Android it is encrypted for the device. A household run on your own machine cannot notify Apple devices: the apps' push key is held only by Maurice's hosting.
+*Gaps:* a notification on the Mac still passes through Apple in clear — the room's title, who wrote and the start of the message — as it does for app versions older than November 2026; iPhone, iPad and Android are encrypted for the device.
 
 *Detail:* `data-model`, `server`, `architecture`.
 
