@@ -951,7 +951,7 @@ class CorpusMCPServer:
     def _read_summary(self, summary_path: str | None) -> dict[str, Any]:
         if not summary_path:
             raise ValueError("summary_path is required")
-        path = Path(summary_path)
+        path = self._book_file(summary_path)
         text = self._read_text_file(path)
         chapter_path = self._derive_chapter_path(path)
         return {
@@ -963,11 +963,14 @@ class CorpusMCPServer:
     def _read_chapter_text(self, args: dict[str, Any]) -> dict[str, Any]:
         chapter_path = args.get("chapter_path")
         summary_path = args.get("summary_path")
-        resolved = Path(chapter_path) if chapter_path else None
-        if not resolved and summary_path:
-            resolved = self._derive_chapter_path(summary_path)
-        if not resolved:
+        if chapter_path:
+            resolved = self._book_file(chapter_path)
+        elif summary_path:
+            resolved = self._derive_chapter_path(self._book_file(summary_path))
+        else:
             raise ValueError("Provide chapter_path or summary_path")
+        if not resolved:
+            raise ValueError("No chapter for that summary")
         text = self._read_text_file(resolved)
         return {"chapter_path": str(resolved), "content": text}
 
@@ -988,6 +991,38 @@ class CorpusMCPServer:
         elif name.endswith(".summary"):
             chapter_path = chapter_path.with_name(name.replace(".summary", ""))
         return chapter_path
+
+    def _book_file(self, raw: str | Path) -> Path:
+        """The book artifact a caller names, or a refusal.
+
+        These two tools take a path because search_book_summaries hands one
+        out — but the path comes back from the model or an external client, so
+        it is only read when the index itself knows it: a book summary on
+        record, or the chapter that summary derives to. Anything else (another
+        member's notes, the .env, /proc) is refused before it is opened.
+        """
+        path = Path(raw)
+        if path.parent.name not in ("chapters", "chapter_summaries") or ".." in path.parts:
+            raise PermissionError("Not a book chapter or summary")
+        wanted = str(path)
+        summary = wanted
+        if path.parent.name == "chapters":
+            parts = list(path.parts)
+            parts[-2] = "chapter_summaries"
+            stem = Path(*parts)
+            candidates = [str(stem.with_name(stem.stem + ".summary" + stem.suffix)), str(stem.with_name(stem.name + ".summary"))]
+        else:
+            candidates = [summary]
+        for member in (None, "_default"):
+            for candidate in candidates:
+                hits = self.orchestrator.indexer.count(
+                    where={"file_path": candidate, "source_type": "book"}, member_id=member
+                )
+                if hits:
+                    if path.parent.name == "chapters" and self._derive_chapter_path(candidate) != path:
+                        continue
+                    return path
+        raise PermissionError("Not a book chapter or summary")
 
     def _read_text_file(self, path: Path) -> str:
         if not path.exists():
