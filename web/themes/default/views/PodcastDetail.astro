@@ -6,6 +6,7 @@ import { t, resourcePath, formatDate, stripLocalePrefix, formatShortDate } from 
 import { getAlternateContentPath } from "@app/i18n/translations";
 import { getCollection, renderEntry } from "@app/lib/content-fs";
 import { isPublic } from "@app/lib/flags";
+import { excerpt } from "@app/lib/excerpt";
 
 interface Props {
   podcast: any;
@@ -44,7 +45,7 @@ const renderedEpisodes = await Promise.all(
 );
 ---
 
-<Base title={podcast.data.title} locale={locale} alternatePath={alternatePath}>
+<Base title={podcast.data.title} description={podcast.data.description || excerpt(contentHtml)} image={podcast.data.image} type="article" locale={locale} alternatePath={alternatePath}>
   <article>
     <header>
       {podcast.data.image && (

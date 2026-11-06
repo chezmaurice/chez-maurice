@@ -23,6 +23,11 @@ THEME="${THEME:-$GARDEN}"
 # garden, or the reverse — silently, since wrangler would just accept it.
 : "${GARDEN_PAGES_PROJECT:?set GARDEN_PAGES_PROJECT (the Cloudflare Pages project this garden publishes to) in .env}"
 
+# The address the site is served at (https://candide.me): the canonical link
+# and what a shared link shows (title, words, picture) are made from it.
+# Without it the pages go out with no absolute address at all.
+[[ -n "${GARDEN_SITE_URL:-}" ]] || echo "  ! GARDEN_SITE_URL is not set in .env — shared links will show no picture"
+
 # Which Pages environment this lands in. Wrangler otherwise infers it from the
 # CURRENT GIT BRANCH of this checkout — which has nothing to do with what is
 # being published: the site's content comes from the member's garden, not from
@@ -58,7 +63,7 @@ unset WEB_SSR
 
 # NODE_ENV=production is what excludes drafts and fiches from the build.
 echo "→ building $GARDEN (theme: $THEME) into web/$OUT"
-NODE_ENV=production GARDEN="$GARDEN" THEME="$THEME" npm run build -- --outDir "$OUT"
+NODE_ENV=production GARDEN="$GARDEN" THEME="$THEME" SITE_URL="${GARDEN_SITE_URL:-}" npm run build -- --outDir "$OUT"
 [[ -f "$OUT/index.html" ]] || { echo "✗ the build left no site in web/$OUT"; exit 1; }
 
 # The site is plain files. The adapter also leaves a Worker beside them

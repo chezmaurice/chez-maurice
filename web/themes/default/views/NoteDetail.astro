@@ -14,6 +14,7 @@ import { scanSubtree, countNodes } from "@app/lib/subtree-scan";
 import { notesDir } from "@app/lib/garden";
 import { listNotes } from "@app/lib/notes-fs";
 import SubtreeViz from "@app/components/SubtreeViz.astro";
+import { excerpt } from "@app/lib/excerpt";
 
 interface Props {
   note: any;
@@ -156,7 +157,7 @@ function monthSeparator(d: Date): string | null {
 
 ---
 
-<Base title={note.data.title} description={note.data.description} locale={locale} alternatePath={alternatePath}>
+<Base title={note.data.title} description={note.data.description || (isEncrypted(note.data) ? undefined : excerpt(contentHtml))} image={isEncrypted(note.data) ? undefined : note.data.image} type="article" locale={locale} alternatePath={alternatePath}>
   <article {...(isEncrypted(note.data) ? {"data-private": ""} : {})} {...(isDream ? {"data-dream": ""} : {})}>
     {parentNote && (
       <nav class="breadcrumb">

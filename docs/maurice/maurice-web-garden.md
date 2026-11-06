@@ -1,6 +1,6 @@
 ---
 title: The site
-date: '2026-11-05'
+date: '2026-11-06'
 flags: []
 locale: en
 description: 'The Astro renderer: per-request theme engine, content collections, wiki-links,
@@ -55,6 +55,12 @@ Routing is locale-aware: English at `/`, French under `/fr/` (with localized seg
 - **Typed cross-refs** `[text](note:slug)`, `(book:…)`, `(movie:…)`, etc. → routed through a `ROUTE_MAP` to the right collection, tagged `cross-ref cross-ref--<type>` for themed styling.
 
 MOC notes render their wiki-link children as cards.
+
+## What a shared link shows
+
+Since 6 November 2026 every page carries what a messenger or a social network reads to show a link as a card rather than a bare address: Open Graph (`og:title`, `og:description`, `og:image`, `og:url`, `og:type`, `og:site_name`, `og:locale`), the Twitter card, and a canonical link. One component (`src/components/SocialMeta.astro`) writes them; every theme's `Base` puts it in its head and takes two more props for it, `image` and `type`. The detail views pass the entry's own picture (a note's image, a cover, a poster) and its `description`, or else the opening words of its text (`src/lib/excerpt.ts`, about 200 characters cut at a word); with a picture of its own a page asks for the large card, without one it shows the garden's avatar, small. An encrypted note gives neither its words nor its picture, and `encrypt-private` strips all of these tags from its page anyway.
+
+The addresses are absolute, so a build must know where it will be served: a member's public pages take the household's host (`SITE_URL`, set by `buildPublicPages`) and the `public-pages` integration adds their `/@<member>` prefix; `scripts/publish-web.sh` takes it from `GARDEN_SITE_URL` in `.env` (`https://candide.me` for the owner's site) and warns when it is missing. A build that has no address of its own — `localhost` — writes no absolute address at all (no canonical, no `og:url`, no picture) rather than one that leads nowhere. The leak test checks the tags on a member's pages: title, prefixed address, the card's picture as a large card, the avatar as a small one, the note's opening words.
 
 ## Build-time integrations
 

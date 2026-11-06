@@ -31,7 +31,7 @@ covers:
   maurice-server: '2026-11-05'
   maurice-shared-gardens: '2026-10-20'
   maurice-tools: '2026-11-05'
-  maurice-web-garden: '2026-11-05'
+  maurice-web-garden: '2026-11-06'
 ---
 
 # Maurice — the digest
@@ -320,6 +320,7 @@ Each member has folders and files (5 GB each), in **Settings**: text, images, PD
 - **Public, private, encrypted:** a note is published **only with the `public` flag**. An `encrypted` note is encrypted in the page (AES-256-GCM, the password typed in the browser) or withheld. Fiches, drafts, unopened articles, person fiches and other members' content never enter a published build — checked by an automated leak test.
 - **What a note may contain:** its HTML is cleaned before it is shown — layout, inline drawings, code and links stay; scripts, embedded frames and event handlers are removed — so a note written by someone else, clipped from a page or drawn from a mail cannot act with the reader's session.
 - **A member's site:** the household's public pages at `/@<member>/`, a static build every member may publish to at any time (a child once the admin allows it); or a domain of one's own (today only at home, through Cloudflare Pages).
+- **A shared link shows a card:** every published page carries Open Graph and Twitter-card tags — title, the entry's description or its opening words, its picture (a note's image, a cover, a poster) as a large card, else the site's avatar as a small one. A domain of one's own needs its address (`GARDEN_SITE_URL`) for the picture and the link to appear; an encrypted note shows neither its words nor its picture.
 - **Themes:** manuscript (default), botanical, newsprint, terminal, chosen in the app (Settings → *Your site*).
 - **The notes as a git address:** `https://<household>/git/<member>.git`, for `git clone`, Obsidian (the *Git* plugin) or Working Copy. HTTP Basic: any username, the member's git key as the password; a member clones only their own notes; a push is refused. Notes not yet versioned become a repository at their first clone. The clone is a vault and a near-complete backup (see §6); flashcards, mail and the search index are not in it.
 - **Shared notes:** sharing is a property of a note — its audience. The app lists *My notes*, then one set per audience (*You & Paola / notes*): simply the notes sharing that audience; members can see who reads a note, share it, or leave its audience. A shared note is read inside its owner's site, in the owner's theme.

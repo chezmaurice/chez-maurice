@@ -5,6 +5,7 @@ import type { Locale } from "@app/i18n/config";
 import { t, resourcePath, formatDate } from "@app/i18n/utils";
 import { getAlternateContentPath } from "@app/i18n/translations";
 import { renderEntry } from "@app/lib/content-fs";
+import { excerpt } from "@app/lib/excerpt";
 
 interface Props {
   album: any;
@@ -16,7 +17,7 @@ const contentHtml = await renderEntry(album);
 const alternatePath = await getAlternateContentPath("music", album.data.translationKey, locale);
 ---
 
-<Base title={album.data.title} locale={locale} alternatePath={alternatePath}>
+<Base title={album.data.title} description={album.data.description || excerpt(contentHtml)} image={album.data.image} type="article" locale={locale} alternatePath={alternatePath}>
   <article>
     {album.data.image && (
       <div class="hero-image">

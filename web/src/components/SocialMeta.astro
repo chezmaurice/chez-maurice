@@ -1,0 +1,63 @@
+---
+// What a link to this page shows once pasted into a message or a post: Open
+// Graph for most networks and messengers, the Twitter card for X. Every
+// theme's Base puts it in its <head>.
+//
+// The addresses are absolute, made from the site's: on a member's
+// public pages the build's last step adds their /@<member> prefix to them
+// (integrations/public-pages.ts), and an encrypted page has all of this taken
+// out again (integrations/encrypt-private.ts).
+import type { Locale } from "@app/i18n/config";
+import { gardenConfig } from "@app/lib/garden";
+import { currentBase } from "@app/lib/garden-context";
+
+interface Props {
+  /** The page's own title, without the garden's name. */
+  title: string;
+  description?: string;
+  /** The page's picture (a cover, a poster, a note's image), root path or URL. */
+  image?: string | null;
+  /** "article" for a piece of writing or a resource, "website" for the rest. */
+  type?: "article" | "website";
+  locale?: Locale;
+}
+
+const { title, description, image, type = "website", locale = "en" } = Astro.props;
+const garden = gardenConfig();
+
+// A build knows its address only from SITE_URL (scripts/publish-web.sh takes
+// it from GARDEN_SITE_URL); the engine, from the host it was reached by. A
+// build without one gets no addresses at all rather than localhost's.
+const local = (u: URL | undefined) => !u || /^(localhost|127\.|\[::1\])/.test(u.hostname);
+const origin = !local(Astro.site) ? Astro.site!.origin : !local(Astro.url) ? Astro.url.origin : null;
+// Paths are the garden's, root-absolute: its prefix (/g/<member>, /@<member>)
+// goes in front, as the middleware does for the links it rewrites.
+const base = currentBase();
+const absolute = (p: string) => {
+  if (/^https?:\/\//.test(p)) return p;
+  if (!origin) return null;
+  const path = base && p !== base && !p.startsWith(`${base}/`) ? `${base}${p}` : p;
+  return new URL(path, origin).href;
+};
+
+const url = absolute(Astro.url.pathname.replace(/\.html$/, ""));
+// A page without a picture of its own shows the garden's face, small.
+const own = image || garden.avatar;
+const picture = own ? absolute(own) : null;
+const card = image && picture ? "summary_large_image" : "summary";
+const name = title || garden.title;
+const text = description?.replace(/\s+/g, " ").trim();
+---
+{url && <link rel="canonical" href={url} />}
+<meta property="og:site_name" content={garden.title} />
+<meta property="og:title" content={name} />
+<meta property="og:type" content={type} />
+{url && <meta property="og:url" content={url} />}
+<meta property="og:locale" content={locale === "fr" ? "fr_FR" : "en_US"} />
+{text && <meta property="og:description" content={text} />}
+{picture && <meta property="og:image" content={picture} />}
+{picture && <meta property="og:image:alt" content={name} />}
+<meta name="twitter:card" content={card} />
+<meta name="twitter:title" content={name} />
+{text && <meta name="twitter:description" content={text} />}
+{picture && <meta name="twitter:image" content={picture} />}

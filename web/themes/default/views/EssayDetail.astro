@@ -4,6 +4,7 @@ import type { Locale } from "@app/i18n/config";
 import { t, localizedPath, formatFullDate, formatDate } from "@app/i18n/utils";
 import { getAlternateContentPath } from "@app/i18n/translations";
 import { renderEntry } from "@app/lib/content-fs";
+import { excerpt } from "@app/lib/excerpt";
 
 interface Props {
   essay: any;
@@ -15,7 +16,7 @@ const contentHtml = await renderEntry(essay);
 const alternatePath = await getAlternateContentPath("essays", essay.data.translationKey, locale);
 ---
 
-<Base title={essay.data.title} description={essay.data.description} locale={locale} alternatePath={alternatePath}>
+<Base title={essay.data.title} description={essay.data.description || excerpt(contentHtml)} image={essay.data.image} type="article" locale={locale} alternatePath={alternatePath}>
   <article>
     <header>
       <h1 class="title">{essay.data.title}</h1>

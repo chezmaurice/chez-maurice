@@ -5,6 +5,7 @@ import type { Locale } from "@app/i18n/config";
 import { t, resourcePath, formatDate, localizedPath, stripLocalePrefix } from "@app/i18n/utils";
 import { getAlternateContentPath } from "@app/i18n/translations";
 import { getCollection, renderEntry } from "@app/lib/content-fs";
+import { excerpt } from "@app/lib/excerpt";
 
 interface Props {
   book: any;
@@ -22,7 +23,7 @@ const fiches = await getCollection("fiches", ({ data }) =>
 const fiche = fiches.length > 0 ? fiches[0] : null;
 ---
 
-<Base title={`${book.data.title} ${t(locale, "books.by")} ${book.data.author}`} locale={locale} alternatePath={alternatePath}>
+<Base title={`${book.data.title} ${t(locale, "books.by")} ${book.data.author}`} description={book.data.description || excerpt(contentHtml)} image={book.data.image} type="article" locale={locale} alternatePath={alternatePath}>
   <article>
     <header>
       {book.data.image && (

@@ -3,6 +3,7 @@ import Base from "@app/layouts/Base.astro";
 import type { Locale } from "@app/i18n/config";
 import { getCollection, renderEntry } from "@app/lib/content-fs";
 import { gardenConfig, gardenInitials } from "@app/lib/garden";
+import { excerpt } from "@app/lib/excerpt";
 
 interface Props {
   locale?: Locale;
@@ -15,7 +16,7 @@ const [page] = await getCollection("pages", ({ data }) => data.translationKey ==
 const contentHtml = page ? await renderEntry(page) : null;
 ---
 
-<Base title={page?.data.title ?? garden.title} locale={locale}>
+<Base title={page?.data.title ?? garden.title} description={page?.data.description || excerpt(contentHtml)} locale={locale}>
   <div class="hero">
     <div class="hero-avatar">
       {garden.avatar

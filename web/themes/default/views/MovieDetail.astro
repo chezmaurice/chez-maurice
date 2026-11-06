@@ -5,6 +5,7 @@ import type { Locale } from "@app/i18n/config";
 import { t, resourcePath, formatDate } from "@app/i18n/utils";
 import { getAlternateContentPath } from "@app/i18n/translations";
 import { renderEntry } from "@app/lib/content-fs";
+import { excerpt } from "@app/lib/excerpt";
 
 interface Props {
   movie: any;
@@ -16,7 +17,7 @@ const contentHtml = await renderEntry(movie);
 const alternatePath = await getAlternateContentPath("movies", movie.data.translationKey, locale);
 ---
 
-<Base title={movie.data.title} locale={locale} alternatePath={alternatePath}>
+<Base title={movie.data.title} description={movie.data.description || excerpt(contentHtml)} image={movie.data.image} type="article" locale={locale} alternatePath={alternatePath}>
   <article>
     {movie.data.image && (
       <div class="hero-image">

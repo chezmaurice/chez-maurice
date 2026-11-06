@@ -6,6 +6,7 @@ import { t, resourcePath, formatDate, stripLocalePrefix, formatShortDate } from 
 import { getAlternateContentPath } from "@app/i18n/translations";
 import { getCollection, renderEntry } from "@app/lib/content-fs";
 import { isPublic } from "@app/lib/flags";
+import { excerpt } from "@app/lib/excerpt";
 
 interface Props {
   series: any;
@@ -54,7 +55,7 @@ await Promise.all(
 );
 ---
 
-<Base title={series.data.title} locale={locale} alternatePath={alternatePath}>
+<Base title={series.data.title} description={series.data.description || excerpt(contentHtml)} image={series.data.image} type="article" locale={locale} alternatePath={alternatePath}>
   <article>
     {series.data.image && (
       <div class="hero-image">

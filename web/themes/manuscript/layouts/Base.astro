@@ -3,6 +3,7 @@ import "../global.css";
 import Nav from "@app/components/Nav.astro";
 import DevToolbar from "@app/components/DevToolbar.astro";
 import GardenReload from "@app/components/GardenReload.astro";
+import SocialMeta from "@app/components/SocialMeta.astro";
 import type { Locale } from "@app/i18n/config";
 import { t, localizedPath, getAlternatePath } from "@app/i18n/utils";
 import { gardenConfig } from "@app/lib/garden";
@@ -10,12 +11,15 @@ import { gardenConfig } from "@app/lib/garden";
 interface Props {
   title: string;
   description?: string;
+  /** The picture a shared link shows (SocialMeta). */
+  image?: string | null;
+  type?: "article" | "website";
   locale?: Locale;
   alternatePath?: string | null;
 }
 
 const garden = gardenConfig();
-const { title, description, locale = "en", alternatePath: contentAlternatePath } = Astro.props;
+const { title, description, image, type, locale = "en", alternatePath: contentAlternatePath } = Astro.props;
 const siteTitle = garden.title;
 const fullTitle = title ? `${title} · ${siteTitle}` : siteTitle;
 // On a member garden, Astro.url.pathname carries the base (/g/<member>/…). But
@@ -50,6 +54,7 @@ const alternateAvailable = alternatePath !== null;
     <meta name="api-base" content={`https://${Astro.url.hostname}:2077`} />
     {description && <meta name="description" content={description} />}
     <title>{fullTitle}</title>
+    <SocialMeta title={title} description={description} image={image} type={type} locale={locale} />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />

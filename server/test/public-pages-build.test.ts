@@ -175,6 +175,20 @@ describe.skipIf(!canBuild)("a published build holds nothing private", () => {
       expect(home).not.toMatch(/="https:\/\/magik\.chezmaurice\.eu\/(?!@anna)/);
       expect(all).not.toContain("garden-tools/events");
       expect(resolvePublicFile("/@anna/fiches")).toBeNull();
+
+      // A link to a page shows its title, its opening words and its picture,
+      // at addresses under the prefix: the card's own image, large…
+      const film = fs.readFileSync(resolvePublicFile("/@anna/fr/trouvailles/films/film-publie")!, "utf-8");
+      expect(film).toContain('<meta property="og:title" content="Film publié">');
+      expect(film).toContain('<meta property="og:url" content="https://magik.chezmaurice.eu/@anna/fr/trouvailles/films/film-publie">');
+      expect(film).toContain('<meta property="og:image" content="https://magik.chezmaurice.eu/@anna/images/anna/resources/movies/fr-film-publie.jpg">');
+      expect(film).toContain('<meta name="twitter:card" content="summary_large_image">');
+      expect(film).toMatch(/<meta property="og:description" content="ZQPUBCARD">/);
+      // …else the garden's face, small.
+      const note = fs.readFileSync(resolvePublicFile("/@anna/fr/notes/note-publique")!, "utf-8");
+      expect(note).toMatch(/<meta property="og:description" content="ZQPUBNOTE, et un renvoi vers [^"]*">/);
+      expect(note).toMatch(/<meta property="og:image" content="https:\/\/magik\.chezmaurice\.eu\/@anna\/avatars\/[^"]+">/);
+      expect(note).toContain('<meta name="twitter:card" content="summary">');
     } finally {
       for (const key of Object.keys(process.env)) if (!(key in saved)) delete process.env[key];
       Object.assign(process.env, saved);
