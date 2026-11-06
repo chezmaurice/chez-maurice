@@ -273,8 +273,11 @@ enum ConnectDisclosure {
 }
 
 /// Blocking modal a non-owner must acknowledge before entering a server they
-/// don't operate. "Cancel" disconnects. Copy is verbatim per the safety spec.
+/// don't operate. "Cancel" disconnects. Copy follows the safety spec, except
+/// that it no longer says the operator cannot read a member's data: whoever
+/// runs the Maurice can step into an account, and the member is told.
 struct ConnectDisclosureOverlay: View {
+    @Environment(SessionStore.self) private var session
     var onAccept: () -> Void
     var onCancel: () -> Void
 
@@ -282,21 +285,21 @@ struct ConnectDisclosureOverlay: View {
         ZStack {
             Color.black.opacity(0.55).ignoresSafeArea()
             VStack(alignment: .leading, spacing: 16) {
-                Text("Before you connect").font(.title2).bold()
-                Text("You're joining a Maurice server run by someone else.")
+                Text(session.localized("connect.disclosure.title")).font(.title2).bold()
+                Text(session.localized("connect.disclosure.intro"))
                 VStack(alignment: .leading, spacing: 10) {
-                    bullet("The operator of this server controls how Maurice behaves here — its personality and its instructions.")
-                    bullet("Anything you post in a shared room is visible to other members of that room, and to the operator.")
-                    bullet("Your private conversations stay private. Maurice keeps each member's personal data isolated, and the operator cannot read it.")
-                    bullet("You can leave any room, block other members, and report content at any time.")
+                    bullet(session.localized("connect.disclosure.operator"))
+                    bullet(session.localized("connect.disclosure.rooms"))
+                    bullet(session.localized("connect.disclosure.private"))
+                    bullet(session.localized("connect.disclosure.safety"))
                 }
-                Text("If you weren't expecting to join this server, or someone you don't know asked you to install Maurice and connect here, don't connect.")
+                Text(session.localized("connect.disclosure.warning"))
                     .bold()
                 HStack(spacing: 12) {
-                    Button("Cancel", role: .cancel, action: onCancel)
+                    Button(session.localized("connect.disclosure.cancel"), role: .cancel, action: onCancel)
                         .glassBorderedButton()
                     Spacer()
-                    Button("I understand — Connect", action: onAccept)
+                    Button(session.localized("connect.disclosure.accept"), action: onAccept)
                         .glassProminentButton()
                 }
                 .padding(.top, 4)

@@ -980,7 +980,7 @@
 "ai.consent.intro" = "Maurice is an AI. To answer you, your household’s server sends what you give Maurice to an artificial-intelligence service run by another company:";
 "ai.consent.new_provider" = "A provider has been added since you last agreed.";
 "ai.consent.providers.header" = "Where your data goes";
-"ai.consent.providers.none" = "No provider outside your household’s machine: nothing leaves it.";
+"ai.consent.providers.none" = "No provider outside your Maurice’s own machine: nothing leaves it.";
 "ai.consent.new" = "New";
 "ai.consent.data.header" = "What is sent";
 "ai.consent.data.messages" = "Your messages to Maurice";
@@ -991,7 +991,7 @@
 "ai.consent.data.night" = "The work done at night from the same data: summaries, domains, facts Maurice keeps";
 "ai.consent.data.dictation" = "Your dictations, only if you choose to have them transcribed by the server";
 "ai.consent.accuracy" = "Maurice is an AI; his answers can be inaccurate. Check what matters.";
-"ai.consent.local" = "Models that run on your household’s own machine are not concerned: nothing leaves it.";
+"ai.consent.local" = "Models that run on your Maurice’s own machine are not concerned: nothing leaves it.";
 "ai.consent.footer" = "You can change your mind at any time in Settings → My data → AI providers.";
 "ai.consent.privacy" = "Privacy Policy";
 "ai.consent.accept" = "Accept";
@@ -1034,11 +1034,11 @@
 "report.ai.queue.open" = "Open reports";
 
 /* Mail reading and imports: the AI model named (MailPane, ImportProviderCard) */
-"mail.reading.by" = "Read by your household’s AI model: %@.";
-"mail.reading.by_local" = "Read by a model on your household’s own machine: nothing leaves it.";
+"mail.reading.by" = "Read by your Maurice’s AI model: %@.";
+"mail.reading.by_local" = "Read by a model on your Maurice’s own machine: nothing leaves it.";
 "ai.consent.needed" = "First accept sending to the AI providers, in Settings → My data → AI providers.";
-"settings.import.ai" = "Imported conversations go to your household’s AI model to be indexed and read at night: %@.";
-"settings.import.ai_local" = "Imported conversations are indexed and read by models on your household’s own machine: nothing leaves it.";
+"settings.import.ai" = "Imported conversations go to your Maurice’s AI model to be indexed and read at night: %@.";
+"settings.import.ai_local" = "Imported conversations are indexed and read by models on your Maurice’s own machine: nothing leaves it.";
 "settings.import.confirm.title" = "Send these conversations to the AI model?";
 "settings.import.confirm.text" = "Your %@ conversations will be stored on your household’s server and sent to %@ to be indexed and read at night.";
 "settings.import.confirm.ok" = "Choose the export";
@@ -1173,3 +1173,14 @@
 
 /* A sealed push before the notification extension opens it (the push relay, APNs loc-key). */
 "New message" = "New message";
+
+/* Connect disclosure: before joining a Maurice someone else runs */
+"connect.disclosure.title" = "Before you connect";
+"connect.disclosure.intro" = "You’re joining a Maurice run by someone else.";
+"connect.disclosure.operator" = "Whoever runs this Maurice decides how it behaves here — its personality and its instructions.";
+"connect.disclosure.rooms" = "Anything you post in a shared room is visible to the other members of that room, and to whoever runs this Maurice.";
+"connect.disclosure.private" = "Your private conversations are yours. Whoever runs this Maurice can, if they must, step into your account — and you are told when they do. Join the Maurice of someone you trust.";
+"connect.disclosure.safety" = "You can leave any room, block other members, and report content at any time.";
+"connect.disclosure.warning" = "If you weren’t expecting to join this Maurice, or someone you don’t know asked you to install Maurice and connect here, don’t connect.";
+"connect.disclosure.cancel" = "Cancel";
+"connect.disclosure.accept" = "I understand — Connect";

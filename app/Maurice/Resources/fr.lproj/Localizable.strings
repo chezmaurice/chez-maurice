@@ -980,7 +980,7 @@
 "ai.consent.intro" = "Maurice est une IA. Pour vous répondre, le serveur de votre foyer envoie ce que vous lui confiez à un service d’intelligence artificielle tenu par une autre entreprise :";
 "ai.consent.new_provider" = "Un fournisseur s’est ajouté depuis votre dernier accord.";
 "ai.consent.providers.header" = "Où vont vos données";
-"ai.consent.providers.none" = "Aucun fournisseur hors de la machine de votre foyer : rien n’en sort.";
+"ai.consent.providers.none" = "Aucun fournisseur hors de la machine de votre Maurice : rien n’en sort.";
 "ai.consent.new" = "Nouveau";
 "ai.consent.data.header" = "Ce qui est envoyé";
 "ai.consent.data.messages" = "Vos messages à Maurice";
@@ -991,7 +991,7 @@
 "ai.consent.data.night" = "Le travail de nuit fait à partir des mêmes données : résumés, domaines, faits retenus";
 "ai.consent.data.dictation" = "Vos dictées, seulement si vous choisissez de les faire transcrire par le serveur";
 "ai.consent.accuracy" = "Maurice est une IA ; ses réponses peuvent être inexactes. Vérifiez ce qui compte.";
-"ai.consent.local" = "Les modèles qui tournent sur la machine de votre foyer ne sont pas concernés : rien n’en sort.";
+"ai.consent.local" = "Les modèles qui tournent sur la machine de votre Maurice ne sont pas concernés : rien n’en sort.";
 "ai.consent.footer" = "Vous pouvez changer d’avis à tout moment dans Réglages → Mes données → Fournisseurs d’IA.";
 "ai.consent.privacy" = "Politique de confidentialité";
 "ai.consent.accept" = "Accepter";
@@ -1034,11 +1034,11 @@
 "report.ai.queue.open" = "Signalements en attente";
 
 /* Mail reading and imports: the AI model named (MailPane, ImportProviderCard) */
-"mail.reading.by" = "Lu par le modèle d’IA de votre foyer : %@.";
-"mail.reading.by_local" = "Lu par un modèle sur la machine de votre foyer : rien n’en sort.";
+"mail.reading.by" = "Lu par le modèle d’IA de votre Maurice : %@.";
+"mail.reading.by_local" = "Lu par un modèle sur la machine de votre Maurice : rien n’en sort.";
 "ai.consent.needed" = "Acceptez d’abord l’envoi aux fournisseurs d’IA, dans Réglages → Mes données → Fournisseurs d’IA.";
-"settings.import.ai" = "Les conversations importées partent au modèle d’IA de votre foyer pour être indexées et lues la nuit : %@.";
-"settings.import.ai_local" = "Les conversations importées sont indexées et lues par des modèles sur la machine de votre foyer : rien n’en sort.";
+"settings.import.ai" = "Les conversations importées partent au modèle d’IA de votre Maurice pour être indexées et lues la nuit : %@.";
+"settings.import.ai_local" = "Les conversations importées sont indexées et lues par des modèles sur la machine de votre Maurice : rien n’en sort.";
 "settings.import.confirm.title" = "Envoyer ces conversations au modèle d’IA ?";
 "settings.import.confirm.text" = "Vos conversations %@ seront gardées sur le serveur de votre foyer et envoyées à %@ pour être indexées et lues la nuit.";
 "settings.import.confirm.ok" = "Choisir l’export";
@@ -1173,3 +1173,14 @@
 
 /* A sealed push before the notification extension opens it (the push relay, APNs loc-key). */
 "New message" = "Nouveau message";
+
+/* Connect disclosure: before joining a Maurice someone else runs */
+"connect.disclosure.title" = "Avant de vous connecter";
+"connect.disclosure.intro" = "Vous rejoignez un Maurice tenu par quelqu’un d’autre.";
+"connect.disclosure.operator" = "La personne qui tient ce Maurice décide de son comportement ici : sa personnalité et ses instructions.";
+"connect.disclosure.rooms" = "Ce que vous écrivez dans un salon partagé est visible des autres membres de ce salon, et de la personne qui tient ce Maurice.";
+"connect.disclosure.private" = "Vos conversations privées sont à vous. La personne qui tient ce Maurice peut, s’il le faut, entrer dans votre compte — et vous en êtes averti. Rejoignez le Maurice de quelqu’un en qui vous avez confiance.";
+"connect.disclosure.safety" = "Vous pouvez à tout moment quitter un salon, bloquer un membre et signaler un contenu.";
+"connect.disclosure.warning" = "Si vous ne vous attendiez pas à rejoindre ce Maurice, ou si un inconnu vous a demandé d’installer Maurice et de vous connecter ici, ne vous connectez pas.";
+"connect.disclosure.cancel" = "Annuler";
+"connect.disclosure.accept" = "J’ai compris — Me connecter";

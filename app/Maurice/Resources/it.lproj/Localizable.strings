@@ -980,7 +980,7 @@
 "ai.consent.intro" = "Maurice è un’IA. Per risponderti, il server della tua casa invia ciò che gli affidi a un servizio di intelligenza artificiale gestito da un’altra azienda:";
 "ai.consent.new_provider" = "Si è aggiunto un fornitore dal tuo ultimo consenso.";
 "ai.consent.providers.header" = "Dove vanno i tuoi dati";
-"ai.consent.providers.none" = "Nessun fornitore fuori dalla macchina della tua casa: non ne esce nulla.";
+"ai.consent.providers.none" = "Nessun fornitore fuori dalla macchina del tuo Maurice: non ne esce nulla.";
 "ai.consent.new" = "Nuovo";
 "ai.consent.data.header" = "Cosa viene inviato";
 "ai.consent.data.messages" = "I tuoi messaggi a Maurice";
@@ -991,7 +991,7 @@
 "ai.consent.data.night" = "Il lavoro notturno fatto sugli stessi dati: riassunti, domini, fatti ricordati";
 "ai.consent.data.dictation" = "Le tue dettature, solo se scegli di farle trascrivere dal server";
 "ai.consent.accuracy" = "Maurice è un’IA; le sue risposte possono essere inesatte. Verifica ciò che conta.";
-"ai.consent.local" = "I modelli che girano sulla macchina della tua casa non sono interessati: non ne esce nulla.";
+"ai.consent.local" = "I modelli che girano sulla macchina del tuo Maurice non sono interessati: non ne esce nulla.";
 "ai.consent.footer" = "Puoi cambiare idea in qualsiasi momento in Impostazioni → I miei dati → Fornitori di IA.";
 "ai.consent.privacy" = "Informativa sulla privacy";
 "ai.consent.accept" = "Accetta";
@@ -1034,11 +1034,11 @@
 "report.ai.queue.open" = "Segnalazioni aperte";
 
 /* Mail reading and imports: the AI model named (MailPane, ImportProviderCard) */
-"mail.reading.by" = "Letta dal modello di IA della tua casa: %@.";
-"mail.reading.by_local" = "Letta da un modello sulla macchina della tua casa: non ne esce nulla.";
+"mail.reading.by" = "Letta dal modello di IA del tuo Maurice: %@.";
+"mail.reading.by_local" = "Letta da un modello sulla macchina del tuo Maurice: non ne esce nulla.";
 "ai.consent.needed" = "Accetta prima l’invio ai fornitori di IA, in Impostazioni → I miei dati → Fornitori di IA.";
-"settings.import.ai" = "Le conversazioni importate vanno al modello di IA della tua casa per essere indicizzate e lette di notte: %@.";
-"settings.import.ai_local" = "Le conversazioni importate sono indicizzate e lette da modelli sulla macchina della tua casa: non ne esce nulla.";
+"settings.import.ai" = "Le conversazioni importate vanno al modello di IA del tuo Maurice per essere indicizzate e lette di notte: %@.";
+"settings.import.ai_local" = "Le conversazioni importate sono indicizzate e lette da modelli sulla macchina del tuo Maurice: non ne esce nulla.";
 "settings.import.confirm.title" = "Inviare queste conversazioni al modello di IA?";
 "settings.import.confirm.text" = "Le tue conversazioni %@ saranno conservate sul server della tua casa e inviate a %@ per essere indicizzate e lette di notte.";
 "settings.import.confirm.ok" = "Scegli l’esportazione";
@@ -1173,3 +1173,14 @@
 
 /* A sealed push before the notification extension opens it (the push relay, APNs loc-key). */
 "New message" = "Nuovo messaggio";
+
+/* Connect disclosure: before joining a Maurice someone else runs */
+"connect.disclosure.title" = "Prima di connetterti";
+"connect.disclosure.intro" = "Stai entrando in un Maurice gestito da qualcun altro.";
+"connect.disclosure.operator" = "Chi gestisce questo Maurice decide come si comporta qui: la sua personalità e le sue istruzioni.";
+"connect.disclosure.rooms" = "Ciò che scrivi in una stanza condivisa è visibile agli altri membri di quella stanza e a chi gestisce questo Maurice.";
+"connect.disclosure.private" = "Le tue conversazioni private sono tue. Chi gestisce questo Maurice può, se necessario, entrare nel tuo account, e ne vieni avvisato. Entra nel Maurice di qualcuno di cui ti fidi.";
+"connect.disclosure.safety" = "Puoi lasciare qualsiasi stanza, bloccare altri membri e segnalare contenuti in qualsiasi momento.";
+"connect.disclosure.warning" = "Se non ti aspettavi di entrare in questo Maurice, o uno sconosciuto ti ha chiesto di installare Maurice e connetterti qui, non connetterti.";
+"connect.disclosure.cancel" = "Annulla";
+"connect.disclosure.accept" = "Ho capito — Connetti";

@@ -967,7 +967,7 @@
 "ai.consent.intro" = "Maurice is een AI. Om je te antwoorden stuurt de server van je huishouden wat je hem toevertrouwt naar een AI-dienst van een ander bedrijf:";
 "ai.consent.new_provider" = "Sinds je laatste toestemming is er een aanbieder bijgekomen.";
 "ai.consent.providers.header" = "Waar je gegevens naartoe gaan";
-"ai.consent.providers.none" = "Geen aanbieder buiten de computer van je huishouden: er gaat niets naar buiten.";
+"ai.consent.providers.none" = "Geen aanbieder buiten de computer van je Maurice: er gaat niets naar buiten.";
 "ai.consent.new" = "Nieuw";
 "ai.consent.data.header" = "Wat er wordt verstuurd";
 "ai.consent.data.messages" = "Je berichten aan Maurice";
@@ -978,7 +978,7 @@
 "ai.consent.data.night" = "Het nachtwerk op basis van dezelfde gegevens: samenvattingen, domeinen, onthouden feiten";
 "ai.consent.data.dictation" = "Je dicteringen, alleen als je ze door de server laat uitschrijven";
 "ai.consent.accuracy" = "Maurice is een AI; zijn antwoorden kunnen onjuist zijn. Controleer wat belangrijk is.";
-"ai.consent.local" = "Modellen die op de computer van je huishouden draaien vallen hierbuiten: er gaat niets naar buiten.";
+"ai.consent.local" = "Modellen die op de computer van je Maurice draaien vallen hierbuiten: er gaat niets naar buiten.";
 "ai.consent.footer" = "Je kunt op elk moment van gedachten veranderen in Instellingen → Mijn gegevens → AI-aanbieders.";
 "ai.consent.privacy" = "Privacybeleid";
 "ai.consent.accept" = "Accepteren";
@@ -1021,11 +1021,11 @@
 "report.ai.queue.open" = "Openstaande meldingen";
 
 /* Mail reading and imports: the AI model named (MailPane, ImportProviderCard) */
-"mail.reading.by" = "Gelezen door het AI-model van je huishouden: %@.";
-"mail.reading.by_local" = "Gelezen door een model op de computer van je huishouden: er gaat niets naar buiten.";
+"mail.reading.by" = "Gelezen door het AI-model van je Maurice: %@.";
+"mail.reading.by_local" = "Gelezen door een model op de computer van je Maurice: er gaat niets naar buiten.";
 "ai.consent.needed" = "Accepteer eerst het versturen naar de AI-aanbieders, in Instellingen → Mijn gegevens → AI-aanbieders.";
-"settings.import.ai" = "Geïmporteerde gesprekken gaan naar het AI-model van je huishouden om te worden geïndexeerd en ’s nachts gelezen: %@.";
-"settings.import.ai_local" = "Geïmporteerde gesprekken worden geïndexeerd en gelezen door modellen op de computer van je huishouden: er gaat niets naar buiten.";
+"settings.import.ai" = "Geïmporteerde gesprekken gaan naar het AI-model van je Maurice om te worden geïndexeerd en ’s nachts gelezen: %@.";
+"settings.import.ai_local" = "Geïmporteerde gesprekken worden geïndexeerd en gelezen door modellen op de computer van je Maurice: er gaat niets naar buiten.";
 "settings.import.confirm.title" = "Deze gesprekken naar het AI-model sturen?";
 "settings.import.confirm.text" = "Je %@-gesprekken worden op de server van je huishouden bewaard en naar %@ gestuurd om te worden geïndexeerd en ’s nachts gelezen.";
 "settings.import.confirm.ok" = "Export kiezen";
@@ -1174,3 +1174,14 @@
 
 /* A sealed push before the notification extension opens it (the push relay, APNs loc-key). */
 "New message" = "Nieuw bericht";
+
+/* Connect disclosure: before joining a Maurice someone else runs */
+"connect.disclosure.title" = "Voor je verbinding maakt";
+"connect.disclosure.intro" = "Je sluit je aan bij een Maurice die door iemand anders wordt beheerd.";
+"connect.disclosure.operator" = "Wie deze Maurice beheert, bepaalt hoe hij zich hier gedraagt: zijn persoonlijkheid en zijn instructies.";
+"connect.disclosure.rooms" = "Wat je in een gedeelde ruimte plaatst, is zichtbaar voor de andere leden van die ruimte en voor wie deze Maurice beheert.";
+"connect.disclosure.private" = "Je privégesprekken zijn van jou. Wie deze Maurice beheert, kan zo nodig je account betreden — en je krijgt dat te horen. Sluit je aan bij de Maurice van iemand die je vertrouwt.";
+"connect.disclosure.safety" = "Je kunt op elk moment een ruimte verlaten, andere leden blokkeren en inhoud melden.";
+"connect.disclosure.warning" = "Als je niet verwachtte bij deze Maurice aan te sluiten, of een onbekende je vroeg Maurice te installeren en hier verbinding te maken, maak dan geen verbinding.";
+"connect.disclosure.cancel" = "Annuleren";
+"connect.disclosure.accept" = "Begrepen — Verbinden";

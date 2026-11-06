@@ -967,7 +967,7 @@
 "ai.consent.intro" = "O Maurice é uma IA. Para lhe responder, o servidor da sua casa envia o que lhe confia a um serviço de inteligência artificial de outra empresa:";
 "ai.consent.new_provider" = "Foi adicionado um fornecedor desde o seu último consentimento.";
 "ai.consent.providers.header" = "Para onde vão os seus dados";
-"ai.consent.providers.none" = "Nenhum fornecedor fora da máquina da sua casa: nada sai dela.";
+"ai.consent.providers.none" = "Nenhum fornecedor fora da máquina do seu Maurice: nada sai dela.";
 "ai.consent.new" = "Novo";
 "ai.consent.data.header" = "O que é enviado";
 "ai.consent.data.messages" = "As suas mensagens ao Maurice";
@@ -978,7 +978,7 @@
 "ai.consent.data.night" = "O trabalho noturno feito com os mesmos dados: resumos, domínios, factos guardados";
 "ai.consent.data.dictation" = "Os seus ditados, só se escolher que o servidor os transcreva";
 "ai.consent.accuracy" = "O Maurice é uma IA; as respostas dele podem ser inexatas. Verifique o que importa.";
-"ai.consent.local" = "Os modelos que correm na máquina da sua casa não são abrangidos: nada sai dela.";
+"ai.consent.local" = "Os modelos que correm na máquina do seu Maurice não são abrangidos: nada sai dela.";
 "ai.consent.footer" = "Pode mudar de ideias a qualquer momento em Definições → Os meus dados → Fornecedores de IA.";
 "ai.consent.privacy" = "Política de privacidade";
 "ai.consent.accept" = "Aceitar";
@@ -1021,11 +1021,11 @@
 "report.ai.queue.open" = "Denúncias pendentes";
 
 /* Mail reading and imports: the AI model named (MailPane, ImportProviderCard) */
-"mail.reading.by" = "Lido pelo modelo de IA da sua casa: %@.";
-"mail.reading.by_local" = "Lido por um modelo na máquina da sua casa: nada sai dela.";
+"mail.reading.by" = "Lido pelo modelo de IA do seu Maurice: %@.";
+"mail.reading.by_local" = "Lido por um modelo na máquina do seu Maurice: nada sai dela.";
 "ai.consent.needed" = "Aceite primeiro o envio aos fornecedores de IA, em Definições → Os meus dados → Fornecedores de IA.";
-"settings.import.ai" = "As conversas importadas vão para o modelo de IA da sua casa para serem indexadas e lidas à noite: %@.";
-"settings.import.ai_local" = "As conversas importadas são indexadas e lidas por modelos na máquina da sua casa: nada sai dela.";
+"settings.import.ai" = "As conversas importadas vão para o modelo de IA do seu Maurice para serem indexadas e lidas à noite: %@.";
+"settings.import.ai_local" = "As conversas importadas são indexadas e lidas por modelos na máquina do seu Maurice: nada sai dela.";
 "settings.import.confirm.title" = "Enviar estas conversas para o modelo de IA?";
 "settings.import.confirm.text" = "As suas conversas do %@ serão guardadas no servidor da sua casa e enviadas para %@ para serem indexadas e lidas à noite.";
 "settings.import.confirm.ok" = "Escolher a exportação";
@@ -1174,3 +1174,14 @@
 
 /* A sealed push before the notification extension opens it (the push relay, APNs loc-key). */
 "New message" = "Nova mensagem";
+
+/* Connect disclosure: before joining a Maurice someone else runs */
+"connect.disclosure.title" = "Antes de se ligar";
+"connect.disclosure.intro" = "Está a juntar-se a um Maurice gerido por outra pessoa.";
+"connect.disclosure.operator" = "Quem gere este Maurice decide como ele se comporta aqui: a sua personalidade e as suas instruções.";
+"connect.disclosure.rooms" = "O que publicar numa sala partilhada é visível para os outros membros dessa sala e para quem gere este Maurice.";
+"connect.disclosure.private" = "As suas conversas privadas são suas. Quem gere este Maurice pode, se for preciso, entrar na sua conta — e é avisado quando o faz. Junte-se ao Maurice de alguém em quem confia.";
+"connect.disclosure.safety" = "Pode sair de qualquer sala, bloquear outros membros e denunciar conteúdo a qualquer momento.";
+"connect.disclosure.warning" = "Se não esperava juntar-se a este Maurice, ou se um desconhecido lhe pediu para instalar o Maurice e ligar-se aqui, não se ligue.";
+"connect.disclosure.cancel" = "Cancelar";
+"connect.disclosure.accept" = "Compreendo — Ligar";

@@ -980,7 +980,7 @@
 "ai.consent.intro" = "Maurice es una IA. Para responderte, el servidor de tu hogar envía lo que le confías a un servicio de inteligencia artificial de otra empresa:";
 "ai.consent.new_provider" = "Se ha añadido un proveedor desde tu último consentimiento.";
 "ai.consent.providers.header" = "Adónde van tus datos";
-"ai.consent.providers.none" = "Ningún proveedor fuera de la máquina de tu hogar: nada sale de ella.";
+"ai.consent.providers.none" = "Ningún proveedor fuera de la máquina de tu Maurice: nada sale de ella.";
 "ai.consent.new" = "Nuevo";
 "ai.consent.data.header" = "Qué se envía";
 "ai.consent.data.messages" = "Tus mensajes a Maurice";
@@ -991,7 +991,7 @@
 "ai.consent.data.night" = "El trabajo nocturno hecho con los mismos datos: resúmenes, dominios, hechos recordados";
 "ai.consent.data.dictation" = "Tus dictados, solo si eliges que los transcriba el servidor";
 "ai.consent.accuracy" = "Maurice es una IA; sus respuestas pueden ser inexactas. Comprueba lo que importa.";
-"ai.consent.local" = "Los modelos que funcionan en la máquina de tu hogar no están afectados: nada sale de ella.";
+"ai.consent.local" = "Los modelos que funcionan en la máquina de tu Maurice no están afectados: nada sale de ella.";
 "ai.consent.footer" = "Puedes cambiar de opinión en cualquier momento en Ajustes → Mis datos → Proveedores de IA.";
 "ai.consent.privacy" = "Política de privacidad";
 "ai.consent.accept" = "Aceptar";
@@ -1034,11 +1034,11 @@
 "report.ai.queue.open" = "Denuncias pendientes";
 
 /* Mail reading and imports: the AI model named (MailPane, ImportProviderCard) */
-"mail.reading.by" = "Leído por el modelo de IA de tu hogar: %@.";
-"mail.reading.by_local" = "Leído por un modelo en la máquina de tu hogar: nada sale de ella.";
+"mail.reading.by" = "Leído por el modelo de IA de tu Maurice: %@.";
+"mail.reading.by_local" = "Leído por un modelo en la máquina de tu Maurice: nada sale de ella.";
 "ai.consent.needed" = "Acepta primero el envío a los proveedores de IA, en Ajustes → Mis datos → Proveedores de IA.";
-"settings.import.ai" = "Las conversaciones importadas van al modelo de IA de tu hogar para indexarse y leerse de noche: %@.";
-"settings.import.ai_local" = "Las conversaciones importadas las indexan y leen modelos en la máquina de tu hogar: nada sale de ella.";
+"settings.import.ai" = "Las conversaciones importadas van al modelo de IA de tu Maurice para indexarse y leerse de noche: %@.";
+"settings.import.ai_local" = "Las conversaciones importadas las indexan y leen modelos en la máquina de tu Maurice: nada sale de ella.";
 "settings.import.confirm.title" = "¿Enviar estas conversaciones al modelo de IA?";
 "settings.import.confirm.text" = "Tus conversaciones de %@ se guardarán en el servidor de tu hogar y se enviarán a %@ para indexarse y leerse de noche.";
 "settings.import.confirm.ok" = "Elegir la exportación";
@@ -1173,3 +1173,14 @@
 
 /* A sealed push before the notification extension opens it (the push relay, APNs loc-key). */
 "New message" = "Mensaje nuevo";
+
+/* Connect disclosure: before joining a Maurice someone else runs */
+"connect.disclosure.title" = "Antes de conectarte";
+"connect.disclosure.intro" = "Te unes a un Maurice que gestiona otra persona.";
+"connect.disclosure.operator" = "Quien gestiona este Maurice decide cómo se comporta aquí: su personalidad y sus instrucciones.";
+"connect.disclosure.rooms" = "Lo que publiques en una sala compartida lo ven los demás miembros de esa sala y quien gestiona este Maurice.";
+"connect.disclosure.private" = "Tus conversaciones privadas son tuyas. Quien gestiona este Maurice puede, si hace falta, entrar en tu cuenta, y se te avisa cuando lo hace. Únete al Maurice de alguien de confianza.";
+"connect.disclosure.safety" = "Puedes salir de cualquier sala, bloquear a otros miembros y denunciar contenido en cualquier momento.";
+"connect.disclosure.warning" = "Si no esperabas unirte a este Maurice, o un desconocido te pidió instalar Maurice y conectarte aquí, no te conectes.";
+"connect.disclosure.cancel" = "Cancelar";
+"connect.disclosure.accept" = "Entendido — Conectar";
