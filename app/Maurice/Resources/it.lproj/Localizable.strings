@@ -689,7 +689,7 @@
 "mail.password.plain" = "Password";
 "mail.connect" = "Collega";
 "mail.checking" = "Verifica con la tua casella…";
-"mail.added" = "Collegata. Maurice può leggerla quando glielo chiedi; ciò che legge va al modello di IA della tua casa.";
+"mail.added" = "Collegata. Maurice può leggerla quando glielo chiedi; ciò che legge va al modello di IA del tuo Maurice.";
 "mail.refused" = "La tua casella ha rifiutato questa password.";
 "mail.failed" = "Non ha funzionato.";
 "mail.unreachable" = "Maurice non è riuscito a raggiungere questa casella. Controlla il nome del server e la porta.";

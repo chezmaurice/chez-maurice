@@ -689,7 +689,7 @@
 "mail.password.plain" = "Contraseña";
 "mail.connect" = "Conectar";
 "mail.checking" = "Comprobando con tu buzón…";
-"mail.added" = "Conectado. Maurice puede leerlo cuando se lo pidas; lo que lee va al modelo de IA de tu hogar.";
+"mail.added" = "Conectado. Maurice puede leerlo cuando se lo pidas; lo que lee va al modelo de IA de tu Maurice.";
 "mail.refused" = "Tu buzón ha rechazado esta contraseña.";
 "mail.failed" = "No ha funcionado.";
 "mail.unreachable" = "Maurice no ha podido conectar con este buzón. Revisa el nombre del servidor y el puerto.";

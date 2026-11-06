@@ -689,7 +689,7 @@
 "mail.password.plain" = "Wachtwoord";
 "mail.connect" = "Verbinden";
 "mail.checking" = "Controleren bij je mailbox…";
-"mail.added" = "Verbonden. Maurice kan hem lezen wanneer je dat vraagt; wat hij leest gaat naar het AI-model van je huishouden.";
+"mail.added" = "Verbonden. Maurice kan hem lezen wanneer je dat vraagt; wat hij leest gaat naar het AI-model van je Maurice.";
 "mail.refused" = "Je mailbox weigerde dit wachtwoord.";
 "mail.failed" = "Dat lukte niet.";
 "mail.unreachable" = "Maurice kon deze mailbox niet bereiken. Controleer de servernaam en de poort.";

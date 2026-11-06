@@ -689,7 +689,7 @@
 "mail.password.plain" = "Password";
 "mail.connect" = "Connect";
 "mail.checking" = "Checking with your mailbox…";
-"mail.added" = "Connected. Maurice can read it when you ask him; what he reads goes to your household’s AI model.";
+"mail.added" = "Connected. Maurice can read it when you ask him; what he reads goes to your Maurice’s AI model.";
 "mail.refused" = "Your mailbox refused this password.";
 "mail.failed" = "That didn't work.";
 "mail.unreachable" = "Maurice couldn't reach this mailbox. Check the server's name and port.";

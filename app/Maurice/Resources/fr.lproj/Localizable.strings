@@ -689,7 +689,7 @@
 "mail.password.plain" = "Mot de passe";
 "mail.connect" = "Connecter";
 "mail.checking" = "Vérification auprès de votre boîte…";
-"mail.added" = "Connectée. Maurice peut la lire quand vous le lui demandez ; ce qu’il lit part au modèle d’IA de votre foyer.";
+"mail.added" = "Connectée. Maurice peut la lire quand vous le lui demandez ; ce qu’il lit part au modèle d’IA de votre Maurice.";
 "mail.refused" = "Votre boîte a refusé ce mot de passe.";
 "mail.failed" = "Ça n'a pas marché.";
 "mail.unreachable" = "Maurice n'a pas pu joindre cette boîte. Vérifiez le nom du serveur et le port.";

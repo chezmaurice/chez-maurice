@@ -689,7 +689,7 @@
 "mail.password.plain" = "Palavra-passe";
 "mail.connect" = "Ligar";
 "mail.checking" = "A verificar com a tua caixa…";
-"mail.added" = "Ligada. O Maurice pode lê-la quando lhe pedir; o que ele lê vai para o modelo de IA da sua casa.";
+"mail.added" = "Ligada. O Maurice pode lê-la quando lhe pedir; o que ele lê vai para o modelo de IA do seu Maurice.";
 "mail.refused" = "A tua caixa recusou esta palavra-passe.";
 "mail.failed" = "Não funcionou.";
 "mail.unreachable" = "O Maurice não conseguiu chegar a esta caixa. Verifica o nome do servidor e a porta.";
