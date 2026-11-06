@@ -14,7 +14,7 @@ import { spawnSync } from "node:child_process";
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), "maurice-write-"));
 process.env.MAURICE_GARDENS_DIR = path.join(TMP, "gardens");
 
-const { addNote, noteBlock, withNote, writeShared, setPublished, setDeployRunner, deployState, requestDeploy, deleteEntry, archiveEntry, completeCard, completeCover, completeDetails, setCover, EntryWriteError } =
+const { addNote, noteBlock, withNote, writeShared, setPublished, setDeployRunner, deployState, requestDeploy, deleteEntry, archiveEntry, completeCard, completeCover, completeDetails, setCover, cardPrint, republishIfChanged, EntryWriteError } =
   await import("../data-api/services/gardenWrite");
 const { getShelfEntry, listShelf } = await import("../data-api/services/gardenShelf");
 const { searchLinkTargets } = await import("../data-api/services/gardenLinks");
@@ -235,6 +235,42 @@ describe("publishing", () => {
     requestDeploy(garden);
     await new Promise((r) => setTimeout(r, 5));
     expect(deployState(garden.username).status).toBe("idle");
+  });
+
+  test("a published card that changes goes online again; a draft, or the same text, does not", async () => {
+    const runs: string[] = [];
+    setDeployRunner((g) => { runs.push(g.username); return Promise.resolve(); });
+    const ref = { collection: "movies", locale: "fr", slug: "while-were-young" };
+    setPublished(MEMBER.id, garden, ref, true);
+    await new Promise((r) => setTimeout(r, 5));
+    runs.length = 0;
+
+    let print = cardPrint(garden, ref);
+    writeShared(MEMBER.id, garden, ref, { body: "Très habile, et cruel." });
+    expect(republishIfChanged(MEMBER.id, garden, ref, print)?.status).toBe("running");
+    await new Promise((r) => setTimeout(r, 5));
+    expect(runs).toHaveLength(1);
+
+    // The same text again: the page would be what it is.
+    print = cardPrint(garden, ref);
+    writeShared(MEMBER.id, garden, ref, { body: "Très habile, et cruel." });
+    expect(republishIfChanged(MEMBER.id, garden, ref, print)).toBeNull();
+
+    // A new cover changes the page too.
+    print = cardPrint(garden, ref);
+    setCover(MEMBER.id, garden, ref, new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3, 0xff, 0xd9]));
+    expect(republishIfChanged(MEMBER.id, garden, ref, print)?.status).toBe("running");
+    await new Promise((r) => setTimeout(r, 5));
+    expect(runs).toHaveLength(2);
+
+    // Unpublished, it is a draft again: written, not deployed.
+    setPublished(MEMBER.id, garden, ref, false);
+    await new Promise((r) => setTimeout(r, 5));
+    runs.length = 0;
+    print = cardPrint(garden, ref);
+    writeShared(MEMBER.id, garden, ref, { body: "Très habile." });
+    expect(republishIfChanged(MEMBER.id, garden, ref, print)).toBeNull();
+    expect(runs).toHaveLength(0);
   });
 
   test("refused when nothing is written, and when the member has no site", () => {

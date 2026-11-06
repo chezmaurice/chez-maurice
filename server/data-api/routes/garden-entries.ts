@@ -14,7 +14,7 @@ import { cardsFace } from "../services/flashcards";
 import { getShelfEntry, listNotes, listShelf, siteFor } from "../services/gardenShelf";
 import { conversationsAbout, EntryConversationError, summaryFor } from "../services/entryConversations";
 import {
-  addNote, archiveEntry, completeCard, completeDetails, deleteEntry, deleteNote, editNote, setCover, deployState, entryForBook, EntryWriteError, setPublished, writeShared, type EntryRef,
+  addNote, archiveEntry, cardPrint, completeCard, completeDetails, deleteEntry, deleteNote, editNote, republishIfChanged, setCover, deployState, entryForBook, EntryWriteError, setPublished, writeShared, type EntryRef,
 } from "../services/gardenWrite";
 
 import {
@@ -344,16 +344,21 @@ app.post("/entries/from-book", async (c) => {
   });
 });
 
-/** The shared side: the body of the card, a draft until published. */
+/**
+ * The shared side: the body of the card, a draft until published. A card
+ * already online is deployed again, and the answer carries that deploy.
+ */
 app.put("/entries/:collection/:locale/:slug/shared", async (c) => {
   const body = await jsonBody(c);
   if (!body || typeof body.body !== "string") return c.json({ error: "body required" }, 400);
   return written(c, null, async (memberId, garden, ref) => {
     const before = await getShelfEntry(memberId, garden, ref.collection, ref.locale, ref.slug);
+    const print = cardPrint(garden, ref);
     writeShared(memberId, garden, ref, { body: body.body, title: body.title });
     // A card that was just made gets its cover too, which is a fetch and so
     // not writeShared's to do. A failure there leaves a card without a cover.
     if (!before?.shared) await completeCard(memberId, garden, ref).catch(() => {});
+    return republishIfChanged(memberId, garden, ref, print);
   });
 });
 
@@ -365,7 +370,11 @@ app.post("/entries/:collection/:locale/:slug/details", (c) =>
   // The same request for every kind and every shape of entry: a cover for one
   // that has none, whatever faces it has; then the card's own fields, when
   // there is a card.
-  written(c, null, completeDetails));
+  written(c, null, async (memberId, garden, ref) => {
+    const print = cardPrint(garden, ref);
+    await completeDetails(memberId, garden, ref);
+    return republishIfChanged(memberId, garden, ref, print);
+  }));
 
 /** Publish: the `public` flag, then a deploy of the member's site. */
 app.post("/entries/:collection/:locale/:slug/shared/publish", (c) =>
@@ -382,7 +391,9 @@ app.delete("/entries/:collection/:locale/:slug/shared/publish", (c) =>
  */
 app.put("/entries/:collection/:locale/:slug/cover", (c) =>
   written(c, null, async (memberId, garden, ref) => {
+    const print = cardPrint(garden, ref);
     setCover(memberId, garden, ref, new Uint8Array(await c.req.arrayBuffer()));
+    return republishIfChanged(memberId, garden, ref, print);
   }));
 
 /**

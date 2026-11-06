@@ -17,7 +17,7 @@ digest: true
 covers:
   maurice-applications: '2026-10-20'
   maurice-architecture: '2026-10-26'
-  maurice-carnet: '2026-11-06'
+  maurice-carnet: '2026-11-07'
   maurice-chat: '2026-11-03'
   maurice-composer: '2026-10-20'
   maurice-data-model: '2026-10-29'
@@ -28,7 +28,7 @@ covers:
   maurice-knowledge: '2026-11-02'
   maurice-life: '2026-10-20'
   maurice-personas-hats: '2026-09-19'
-  maurice-server: '2026-11-05'
+  maurice-server: '2026-11-07'
   maurice-shared-gardens: '2026-10-20'
   maurice-tools: '2026-11-05'
   maurice-web-garden: '2026-11-06'
@@ -300,7 +300,7 @@ Each member has folders and files (5 GB each), in **Settings**: text, images, PD
 
 - **Joining:** the same way in as the Maurice app, same steps and same words (§5): *Carnet* with *Chez Maurice* beneath, *Scan an invitation*, or *Enter a code or an address*; the invitation's link opens Carnet too; then *Who's here?* and a PIN, and there, under *Other options*, *Sign in as admin*. Both screens sit on a card over the app icon's blocks, tiled, as in the Maurice app. Several households on one device; a session ended on the server sends the device back to *Who's here?*. The member sheet, from your badge, holds households, members, captures waiting to be sent, *Add a device*, *Sign out*, *Forget this household*, and **Privacy** (privacy policy, terms, **Delete my account**). A member who does not run the household is told once, before entering, who controls it and what stays private.
 - **Home: one list of entries** of every kind — books, articles, films, series, music, podcasts, games, posts — each row saying what the member has on it (notes, *Draft*, *Published*, *Not opened*) and where they are in it. Filters by kind, search and sort, an offline copy of the list. Swipe right to archive, left to delete (with a confirmation saying what is removed). A round **+** asks *What would you like to add?*: a few words, and the proposals a conversation with Maurice would make come back — keep one and its entry opens, with no conversation. What the device keeps offline is kept per member: on a phone two members share, each sees only their own, and it is erased when they sign out.
-- **An entry's page:** identity and cover, the source (read, resume, chapters, original), and **one sheet with two faces**; an article opens on its summary instead — the essence, then *See more…* for the long one — its sheet a tap away (*Fiche*, beside *Read*) — the member's side (dated notes and quotes, with a page) and the shared side (write, publish, unpublish; publishing takes about 15 s). Dictation beside every field, in the entry's language on the device; Whisper recognises the language spoken. A share button sends **the card** through the phone's share sheet — a picture of the cover, title, author and your stars, with the original link when there is one — and never anything of the fiche or anything an AI wrote.
+- **An entry's page:** identity and cover, the source (read, resume, chapters, original), and **one sheet with two faces**; an article opens on its summary instead — the essence, then *See more…* for the long one — its sheet a tap away (*Fiche*, beside *Read*) — the member's side (dated notes and quotes, with a page) and the shared side (write, publish, unpublish beside *Open*; publishing takes about 15 s, and editing a published card puts the new version online by itself). Dictation beside every field, in the entry's language on the device; Whisper recognises the language spoken. A share button sends **the card** through the phone's share sheet — a picture of the cover, title, author and your stars, with the original link when there is one — and never anything of the fiche or anything an AI wrote.
 - **Reading:** books from the household's library with chapters, summaries, highlights, the exact position synced per member and offline; *pause tracking* to look ahead without it counting; *Resume* takes another device's position when it is newer. Articles with their styles, a Text/Summary switch, cached on the device.
 - **Sharing an entry** with other members: a book, a film or the like is not copied — they read it and may add signed notes (a first cut). An **article is given**: the member gets their own copy, text and summaries included, marked *Shared by …*, and keeps it whatever you then do with yours; your notes and highlights stay yours.
 - **Giving an entry to someone in another household** (where you are their guest): from *Share*, pick them under their household, tick what goes — the source, the fiche's prose, each note, highlights, the card even as a draft, each conversation with Maurice as its summary or whole — and see all of it before *Send*. It lands as your entry in their household, shared live with them: you both read it and add notes there; nothing comes back to your fiche at home. A conversation arrives read-only; one someone else took part in cannot be sent; the card arrives as a draft.

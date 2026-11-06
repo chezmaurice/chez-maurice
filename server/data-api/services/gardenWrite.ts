@@ -558,6 +558,43 @@ export async function completeDetails(memberId: string, garden: GardenRef, ref: 
   await completeCard(memberId, garden, ref);
 }
 
+// ── A published card, changed ──
+//
+// The site is a build: a card edited after it was published stayed as it had
+// been built until something else asked for a deploy. Whatever changes what
+// the page shows — its text, its title, its fields, its cover — asks for one
+// itself, when the card is online.
+
+/**
+ * What the card's page is made of, as one string: the card's file and its
+ * cover's. Null when there is no card, or no entry at all.
+ */
+export function cardPrint(garden: GardenRef, ref: EntryRef): string | null {
+  let entry: GardenEntry;
+  try { entry = findEntry(garden, ref); } catch { return null; }
+  if (!entry.card) return null;
+  const file = path.join(garden.root, entry.card.file);
+  const raw = fs.existsSync(file) ? fs.readFileSync(file, "utf-8") : "";
+  const cover = resourceImagePaths(garden, entry.collection as ResourceCollection, entry.locale, entry.slug).file;
+  const stat = fs.existsSync(cover) ? fs.statSync(cover) : null;
+  return `${raw}\n${stat ? `${stat.size}:${stat.mtimeMs}` : ""}`;
+}
+
+/**
+ * Deploy the member's site again when the card is published and no longer
+ * what `before` (its `cardPrint` before the write) was. Null when nothing is
+ * to be done: unchanged, a draft, or no site to deploy to.
+ */
+export function republishIfChanged(memberId: string, garden: GardenRef, ref: EntryRef, before: string | null): DeployState | null {
+  const after = cardPrint(garden, ref);
+  if (after === null || after === before) return null;
+  const entry = findEntry(garden, ref);
+  const flags = readFace(garden, entry.card?.file)?.fm.flags;
+  if (!(Array.isArray(flags) && flags.map(String).includes("public"))) return null;
+  if (!canDeploy(memberId, garden)) return null;
+  return requestDeploy(garden, deployKind(memberId));
+}
+
 // ── Deleting, putting away ──
 
 /** Every locale of the subject `entry` is one of: the row the list shows. */
