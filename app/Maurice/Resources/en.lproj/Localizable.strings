@@ -1,25 +1,25 @@
 /* English — generated */
 "app.tagline" = "A cozy place to chat";
-"pairing.instructions" = "Every household has its own Maurice. Your invitation lets you in.";
+"pairing.instructions" = "Each Maurice is a place of its own. Your invitation lets you in.";
 "pairing.connect" = "Connect";
 "pairing.error.status" = "Server returned unexpected status";
 "pairing.error.connect" = "Could not connect: %@";
-"pairing.error.invalid_url" = "That doesn't look like a valid address. Example: https://monfoyer.chezmaurice.eu";
+"pairing.error.invalid_url" = "That doesn't look like a valid address. Example: https://martin.chezmaurice.eu";
 "pairing.error.unreachable" = "the server didn't respond";
 "pairing.error.https_hint" = "Maurice servers use https — try https:// instead of http://.";
 "picker.title" = "Who's here?";
-"picker.empty" = "To join this household on this device, enter the invitation code you were given.";
+"picker.empty" = "To join this Maurice on this device, enter the invitation code you were given.";
 "picker.admin_signin" = "Sign in as admin";
-"picker.disconnect" = "Forget this household";
+"picker.disconnect" = "Forget this Maurice";
 "picker.pin.title" = "Enter your PIN";
 "picker.pin.placeholder" = "PIN";
 "picker.pin.error" = "Invalid PIN";
-"picker.session_ended" = "Your session on this household has ended. Sign in again.";
+"picker.session_ended" = "Your session on this Maurice has ended. Sign in again.";
 "picker.needs_invite" = "%@ has no PIN: enter an invitation code to sign in on this device.";
 "picker.pin.cancel" = "Cancel";
 "picker.pin.submit" = "Enter";
 "picker.admin.title" = "Admin sign-in";
-"picker.admin.subtitle" = "Sign in to load household members";
+"picker.admin.subtitle" = "Sign in to load this Maurice’s members";
 "picker.admin.username" = "Username";
 "picker.admin.password" = "Password";
 "picker.admin.cancel" = "Cancel";
@@ -211,7 +211,7 @@
 "context.section.conversations" = "Conversations";
 "context.searchPlaceholder" = "Search notes, books, conversations…";
 "context.nothingMatches" = "nothing matches “%@”";
-"pairing.url_placeholder" = "XXXX-XXXX or myhome.chezmaurice.eu";
+"pairing.url_placeholder" = "XXXX-XXXX or martin.chezmaurice.eu";
 
 /* Enrollment + PIN setup */
 "enroll.cta" = "Have an invite code?";
@@ -226,9 +226,9 @@
 "pinsetup.submit" = "Set PIN";
 "pinsetup.invalid" = "PIN must be 4–6 digits";
 "pinsetup.mismatch" = "PINs don't match";
-"household.add" = "Add household";
-"foyer.switch_overline" = "Your households";
-"foyer.switch_title" = "Switch household";
+"household.add" = "Add a Maurice";
+"foyer.switch_overline" = "Your Maurices";
+"foyer.switch_title" = "Switch Maurice";
 "common.cancel" = "Cancel";
 "common.save" = "Save";
 "common.create" = "Create";
@@ -340,7 +340,7 @@
 "dictation.error.audio_session" = "Couldn't take over the microphone.";
 "dictation.error.interrupted" = "Dictation stopped — something else took the microphone. What was heard is kept.";
 "dictation.error.audio_engine" = "Couldn't start recording.";
-"dictation.error.transcription_failed" = "Dictation stopped, and the recording could not be transcribed — neither by your household's server nor on this device.";
+"dictation.error.transcription_failed" = "Dictation stopped, and the recording could not be transcribed — neither by your Maurice’s server nor on this device.";
 "dictation.downloading_model" = "Apple is downloading the dictation model — %d %%. First time only; it carries on if you leave the app.";
 
 /* Dictation consent */
@@ -355,9 +355,9 @@
 "settings.pulse.caption" = "The mark that shows Maurice at work, on the line that gathers what a reply has done so far. Try each one in a conversation.";
 "settings.dictation.group" = "DICTATION";
 "settings.dictation.allow_server" = "Allow Apple transcription";
-"settings.dictation.caption" = "Dictation uses this device's own recogniser or your household's server. If neither can, and the language has no offline model here, allowing this lets Apple transcribe it instead — the audio then leaves your device. The microphone shows a cloud while that is happening.";
-"settings.dictation.prefer_household" = "Transcribe on the household server";
-"settings.dictation.household_caption" = "Off by default: dictation stays on this device. Turned on, your household’s server hears the whole recording (Whisper), and punctuation and names come out right far more often. On a server at home the audio never leaves the house; on a hosted Maurice it is transcribed by your household’s AI provider (Scaleway, Paris), and only if you have accepted that provider. The device still writes the words as you speak; the server’s text replaces them when you stop.";
+"settings.dictation.caption" = "Dictation uses this device's own recogniser or your Maurice’s server. If neither can, and the language has no offline model here, allowing this lets Apple transcribe it instead — the audio then leaves your device. The microphone shows a cloud while that is happening.";
+"settings.dictation.prefer_household" = "Transcribe on your Maurice’s server";
+"settings.dictation.household_caption" = "Off by default: dictation stays on this device. Turned on, your Maurice’s server hears the whole recording (Whisper), and punctuation and names come out right far more often. On a server at home the audio never leaves the house; on a hosted Maurice it is transcribed by your Maurice’s AI provider (Scaleway, Paris), and only if you have accepted that provider. The device still writes the words as you speak; the server’s text replaces them when you stop.";
 
 /* App Shortcut (Action Button / Shortcuts list) */
 "Dictate to Maurice" = "Dictate to Maurice";
@@ -643,14 +643,14 @@
 "invite.scan" = "Scan an invitation";
 "invite.scan.not_invitation" = "That QR code isn't a Maurice invitation.";
 "enroll.profile.title" = "Who's joining?";
-"enroll.profile.subtitle" = "Your name, as the household will see it, and a colour.";
+"enroll.profile.subtitle" = "Your name, as the others here will see it, and a colour.";
 "enroll.profile.name" = "Your first name";
 "enroll.failed" = "The invitation couldn't be used. Ask for a new one.";
 "members.title" = "Members";
 "members.invite_someone" = "Invite someone";
 "members.invite_someone.hint" = "A QR code for one person, valid for seven days. They choose their name when they arrive.";
 "members.pending" = "Invitations waiting";
-"members.list" = "In this household";
+"members.list" = "In this Maurice";
 "members.new_device" = "New device";
 "members.new_device.hint" = "Tap someone to show a code that sets up the app on another of their devices.";
 "members.new_device.for" = "A new device for %@";
@@ -680,7 +680,7 @@
 "mail.remove.confirm" = "Maurice will stop reading %@. You can also revoke the password at your provider.";
 "mail.forget" = "Forget";
 "mail.forget.title" = "Forget this mailbox?";
-"mail.forget.message" = "What Maurice read from %@, and from nowhere else, leaves your household's server, and the lines drawn from it leave your notes. What you corrected yourself is trimmed, never removed. Also erasing the history rewrites your notes' history: a copy already fetched elsewhere keeps the old one.";
+"mail.forget.message" = "What Maurice read from %@, and from nowhere else, leaves your Maurice’s server, and the lines drawn from it leave your notes. What you corrected yourself is trimmed, never removed. Also erasing the history rewrites your notes' history: a copy already fetched elsewhere keeps the old one.";
 "mail.forget.history" = "Forget and erase the history";
 "mail.forget.done" = "Forgotten: %d messages, %d files trimmed, %d removed.";
 "mail.add" = "Add a mailbox";
@@ -701,14 +701,14 @@
 "mail.help.yahoo.open" = "Open Yahoo Account Security";
 "mail.help.fastmail" = "Fastmail wants an app password with IMAP access: Settings → Privacy & Security → App passwords.";
 "mail.help.outlook" = "Outlook and Hotmail only accept a kind of sign-in Maurice can't do yet. This one isn't possible for now.";
-"mail.help.proton" = "Proton works only through Proton Bridge on your household's Mac, with the password Bridge shows. Ask whoever runs your Maurice.";
+"mail.help.proton" = "Proton works only through Proton Bridge on the Mac your Maurice runs on, with the password Bridge shows. Ask whoever runs your Maurice.";
 "mail.help.isp" = "Usually your mailbox's own password.";
 "mail.help.unknown" = "Maurice doesn't know this provider. Give him its mail server — your provider's help pages name it, often imap.<your domain>.";
 "mail.workspace" = "It's a Gmail address at work or school";
 "mail.server" = "Mail server (IMAP)";
 "mail.port" = "Port";
 "mail.login" = "Login, if not the address";
-"mail.privacy" = "The password is kept encrypted on your household's server and never shown again. Don't paste it into a conversation. Revoking it at your provider cuts Maurice off at once.";
+"mail.privacy" = "The password is kept encrypted on your Maurice’s server and never shown again. Don't paste it into a conversation. Revoking it at your provider cuts Maurice off at once.";
 "mail.scan.title" = "The header walk";
 "mail.scan.caption" = "Maurice walks the headers of all your mail — who writes, to whom, when — without reading any message. It is free, runs by itself at night, and is what will let him tell you what your mailbox holds.";
 "mail.scan.loading" = "Reading the state…";
@@ -732,7 +732,7 @@
 "mail.reading.done" = "Reading: done";
 "mail.reading.approve" = "Let Maurice read";
 "mail.reading.withdraw" = "Withdraw the approval";
-"mail.reading.help" = "Maurice reads the real exchanges of the last years, at night, and tells you who matters to you and what is going on. The text of the messages he reads goes to your household’s AI model; nothing is sent from your mailbox and nothing in it is changed.";
+"mail.reading.help" = "Maurice reads the real exchanges of the last years, at night, and tells you who matters to you and what is going on. The text of the messages he reads goes to your Maurice’s AI model; nothing is sent from your mailbox and nothing in it is changed.";
 "mail.reading.caption" = "Reading is a yes you give, here. You can withdraw it at any time. What Maurice writes from it is in your notes, under “My mail”.";
 "mail.box.messages" = "%d messages collected";
 "mail.box.reading" = "Reading: %1$d sorted · %2$d to read · %3$d read";
@@ -788,7 +788,7 @@
 "contacts.intro" = "Maurice reads your address books every night and never writes to them. Someone in your contacts counts as a person: their mail is read even when it comes through a mailing tool, and later their addresses will be joined on one fiche.";
 "contacts.yours" = "Your address books";
 "contacts.add" = "Add an address book";
-"contacts.privacy" = "The password is kept encrypted on your household's server and never shown again. Maurice never changes your address book. Revoking it at your provider cuts access at once.";
+"contacts.privacy" = "The password is kept encrypted on your Maurice’s server and never shown again. Maurice never changes your address book. Revoking it at your provider cuts access at once.";
 "contacts.remove.confirm" = "Maurice will stop reading %@'s address book and forget the contacts he kept from it.";
 "contacts.sync" = "Read again";
 "contacts.state.ok" = "%d contacts";
@@ -849,15 +849,15 @@
 /* My data (settings): export, import, erase — docs/member-data.md */
 "mydata.group" = "Your data";
 "mydata.title" = "My data";
-"mydata.index_caption" = "Take away, bring back or erase everything this household keeps of you.";
-"mydata.caption" = "Everything this household’s server keeps of you is yours: you can take it away, bring it back, erase it, or leave.";
+"mydata.index_caption" = "Take away, bring back or erase everything this Maurice keeps of you.";
+"mydata.caption" = "Everything this Maurice’s server keeps of you is yours: you can take it away, bring it back, erase it, or leave.";
 "mydata.export.title" = "Export my data";
 "mydata.export.text" = "One file with your conversations, your notes and their history, your files, your images, the mail that was read and the rest, in a readable format. It holds no password and none of other people’s messages.";
 "mydata.export.button" = "Export…";
 "mydata.export.preparing" = "Preparing the archive…";
 "mydata.export.done" = "Archive saved.";
 "mydata.import.title" = "Import an archive";
-"mydata.import.text" = "Bring back an archive exported from here or from another household. It is added to your account; nothing already there is replaced.";
+"mydata.import.text" = "Bring back an archive exported from here or from another Maurice. It is added to your account; nothing already there is replaced.";
 "mydata.import.button" = "Choose the archive…";
 "mydata.import.uploading" = "Uploading and importing…";
 "mydata.import.done" = "Imported: %d conversations, %d files, %d notes.";
@@ -869,13 +869,13 @@
 "mydata.delete.title" = "Delete my account";
 "mydata.delete.text" = "Everything is erased, then the account itself. The rooms you shared stay with the others, without your messages. This cannot be undone.";
 "mydata.delete.button" = "Delete my account…";
-"mydata.backups" = "The night’s local backups are rewritten without you when you erase. If this household is hosted, the host’s off-site backups expire on their own, on the host’s schedule.";
+"mydata.backups" = "The night’s local backups are rewritten without you when you erase. If this Maurice is hosted, the host’s off-site backups expire on their own, on the host’s schedule.";
 "account_events.title" = "What the admin did in your account";
-"account_events.text" = "Your household’s admin manages the accounts. A code the admin makes can bring a device into yours, and the admin can export the whole household, your notes and conversations included. Each time, it is written here.";
+"account_events.text" = "Your Maurice’s admin manages the accounts. A code the admin makes can bring a device into yours, and the admin can export the whole Maurice, your notes and conversations included. Each time, it is written here.";
 "account_events.none" = "Nothing in the last 90 days.";
 "account_events.device" = "%@ — a new device came into your account with a code made by the admin.";
-"account_events.export" = "%@ — the admin exported the whole household.";
-"account_events.alert" = "Your household’s admin reached into your account";
+"account_events.export" = "%@ — the admin exported the whole Maurice.";
+"account_events.alert" = "Your Maurice’s admin reached into your account";
 "account_events.ok" = "Understood";
 "account_events.hint" = "If it was not you or not expected, talk to the admin. You can also see this under Settings → My data.";
 "mydata.clone.title" = "Clone my notes";
@@ -892,21 +892,21 @@
 "mydata.clone.warning" = "The copy is not encrypted: notes marked private are in clear text there. Protect the device that holds it. It contains your notes, your fiches and their history and, rewritten every night in the _maurice folder, your highlights, reading positions, archived entries and domains. Not your mail, nor the search index.";
 "mydata.clone.conversations" = "Include my conversations";
 "mydata.clone.conversations_note" = "Every night your conversations are written into your notes, one per file, under _maurice/conversations. In a shared room, only your own messages.";
-"mydata.clone.no_garden" = "You have no notes on this household yet.";
+"mydata.clone.no_garden" = "You have no notes on this Maurice yet.";
 "mydata.failed" = "Failed: %@";
 "mydata.residual.corpus" = "The search index could not be reached; it will be emptied the next time the server starts.";
 "mydata.residual.remote" = "A copy of your notes exists elsewhere, out of this server’s reach: %@";
 "mydata.residual.site" = "A site published from your notes may still be online: remove it at its host.";
-"mydata.residual.archives" = "%d household archive(s) exported by an administrator still hold your data: ask them to delete those.";
-"mydata.confirm.data" = "Everything this household keeps of you is about to be erased, for good. Your account stays.";
-"mydata.confirm.account" = "Everything this household keeps of you is about to be erased, then your account, for good.";
+"mydata.residual.archives" = "%d archive(s) of this Maurice, exported by an administrator, still hold your data: ask them to delete those.";
+"mydata.confirm.data" = "Everything this Maurice keeps of you is about to be erased, for good. Your account stays.";
+"mydata.confirm.account" = "Everything this Maurice keeps of you is about to be erased, then your account, for good.";
 "mydata.confirm.type" = "To confirm, type your username: %@";
 "mydata.confirm.secret" = "Password or PIN";
 "mydata.confirm.cancel" = "Cancel";
 "mydata.error.confirm_mismatch" = "The username does not match.";
 "mydata.error.bad_password" = "Wrong password.";
 "mydata.error.bad_pin" = "Wrong PIN.";
-"mydata.error.last_admin" = "You are this household’s only administrator and other people live here: name another administrator first.";
+"mydata.error.last_admin" = "You are this Maurice’s only administrator and other people use it: name another administrator first.";
 "mydata.error.too_many_attempts" = "Too many attempts. Try again in a quarter of an hour.";
 "mydata.error.session_required" = "This needs a session opened in the app.";
 
@@ -967,17 +967,17 @@
 "budget.group" = "BUDGET";
 "budget.value.unlimited" = "No limit";
 "budget.value.left" = "%d %% left";
-"budget.pane.unlimited" = "This household has set no budget: nothing limits you.";
-"budget.pane.left" = "%d %% of the household's budget is left.";
+"budget.pane.unlimited" = "This Maurice has no budget set: nothing limits you.";
+"budget.pane.left" = "%d %% of your Maurice’s budget is left.";
 "budget.pane.resets" = "It starts afresh on %@.";
 "budget.pane.admin_left" = "Left: %@";
-"budget.pane.balance" = "Whoever runs the household looks after it.";
-"budget.caption" = "This is the whole household's budget, the same for each of its members. The ring beside your name shows what is left of it; you are told at 20, 10 and 5 %.";
-"budget.toast.title" = "Only %d %% of the household's budget left";
+"budget.pane.balance" = "Whoever runs your Maurice looks after it.";
+"budget.caption" = "This is your Maurice’s whole budget, the same for each of its members. The ring beside your name shows what is left of it; you are told at 20, 10 and 5 %.";
+"budget.toast.title" = "Only %d %% of your Maurice’s budget left";
 
 /* AI consent — which providers a member's data reaches, and their answer (AIConsentView, MyDataView) */
 "ai.consent.title" = "Before you talk to Maurice";
-"ai.consent.intro" = "Maurice is an AI. To answer you, your household’s server sends what you give Maurice to an artificial-intelligence service run by another company:";
+"ai.consent.intro" = "Maurice is an AI. To answer you, your Maurice’s server sends what you give Maurice to an artificial-intelligence service run by another company:";
 "ai.consent.new_provider" = "A provider has been added since you last agreed.";
 "ai.consent.providers.header" = "Where your data goes";
 "ai.consent.providers.none" = "No provider outside your Maurice’s own machine: nothing leaves it.";
@@ -1012,7 +1012,7 @@
 
 /* Reporting a reply of Maurice's (ReportSheet ai_reply, operator queue) */
 "report.ai.title" = "Report this reply";
-"report.ai.disclosure" = "This reply of Maurice’s, and your message just before it, will be sent to the person who runs your household so they can look into it. The rest of the conversation stays private.";
+"report.ai.disclosure" = "This reply of Maurice’s, and your message just before it, will be sent to the person who runs your Maurice so they can look into it. The rest of the conversation stays private.";
 "report.ai.reason" = "Reason";
 "report.ai.reason.harmful_or_misleading" = "Wrong or misleading in a way that can hurt";
 "report.ai.reason.sexual_content" = "Sexual content";
@@ -1024,10 +1024,10 @@
 "report.ai.send" = "Send";
 "report.ai.cancel" = "Cancel";
 "report.ai.done" = "Done";
-"report.ai.sent" = "Thank you: your report was sent to the person who runs your household.";
+"report.ai.sent" = "Thank you: your report was sent to the person who runs your Maurice.";
 "report.ai.publisher" = "About the app itself, you can also write to its publisher: %@";
 "report.ai.authority.header" = "Also report to an authority";
-"report.ai.authority" = "If this involves a minor, please also report it to the proper authority: they can act in ways the household cannot.";
+"report.ai.authority" = "If this involves a minor, please also report it to the proper authority: they can act in ways the person who runs your Maurice cannot.";
 "report.ai.queue.kind" = "A reply of Maurice’s, with the question before it";
 "report.ai.queue.private" = "Private conversation";
 "report.ai.queue.handled" = "Mark as handled";
@@ -1040,7 +1040,7 @@
 "settings.import.ai" = "Imported conversations go to your Maurice’s AI model to be indexed and read at night: %@.";
 "settings.import.ai_local" = "Imported conversations are indexed and read by models on your Maurice’s own machine: nothing leaves it.";
 "settings.import.confirm.title" = "Send these conversations to the AI model?";
-"settings.import.confirm.text" = "Your %@ conversations will be stored on your household’s server and sent to %@ to be indexed and read at night.";
+"settings.import.confirm.text" = "Your %@ conversations will be stored on your Maurice’s server and sent to %@ to be indexed and read at night.";
 "settings.import.confirm.ok" = "Choose the export";
 
 "mydata.privacy" = "Privacy Policy";
@@ -1068,7 +1068,7 @@
 "welcome.paste_link" = "Paste the invitation link";
 "welcome.enter_code" = "Enter a code or an address";
 "welcome.more_options" = "Other options";
-"welcome.address_needed" = "Household address";
+"welcome.address_needed" = "Your Maurice’s address";
 "scanner.hint" = "Point at the invitation’s QR code";
 "scanner.camera_reason" = "The camera is only used to read your invitation’s QR code.";
 "common.close" = "Close";
@@ -1080,7 +1080,7 @@
 "household.forget.pending.one" = "1 item has not been sent yet: it will be lost.";
 "household.forget.pending.other" = "%d items have not been sent yet: they will be lost.";
 "household.forget.confirm" = "Forget";
-"sheet.households" = "Households";
+"sheet.households" = "Your Maurices";
 "sheet.members" = "Members";
 "sheet.pin_required" = "PIN required";
 "sheet.active" = "Active";
@@ -1093,7 +1093,7 @@
 "privacy.section" = "Privacy";
 "privacy.policy" = "Privacy policy";
 "privacy.terms" = "Terms of use";
-"delete.text" = "Everything this household keeps about you will be erased, then your account, for good.";
+"delete.text" = "Everything this Maurice keeps about you will be erased, then your account, for good.";
 "delete.confirm_footer" = "To confirm, type your username: %@";
 "delete.field" = "Password or PIN";
 "delete.confirm" = "Delete my account";
@@ -1103,12 +1103,12 @@
 
 /* A friend from another household, invited as a guest (specs/cross-household-share.md, A). */
 "guest_invite.title" = "Invite a friend as a guest";
-"guest_invite.sees_only_you" = "Your friend will see only you in this household, and only you will be able to share with them.";
-"guest_invite.maurice" = "They will also be able to talk with Maurice in this household, on the household’s budget.";
+"guest_invite.sees_only_you" = "Your friend will see only you in this Maurice, and only you will be able to share with them.";
+"guest_invite.maurice" = "They will also be able to talk with Maurice here, on this Maurice’s budget.";
 
 /* A conversation received read-only with an entry given from another household (E). */
-"chat.received.band" = "Conversation received from the %@ household — read-only";
-"chat.received.band_unnamed" = "Conversation received from another household — read-only";
+"chat.received.band" = "Conversation received from %@ — read-only";
+"chat.received.band_unnamed" = "Conversation received from another Maurice — read-only";
 "chat.received.continue" = "New conversation from this one";
 
 /* In-app purchase (Settings → Abonnement) and sign-up from the app (3 November 2026). */
@@ -1134,7 +1134,7 @@
 "store.restore" = "Restore purchases";
 "store.topup.group" = "TOP UP";
 "store.topup.label" = "Top up the budget";
-"store.topup.caption" = "A top-up is added to the household’s budget straight away.";
+"store.topup.caption" = "A top-up is added to your Maurice’s budget straight away.";
 "store.topup.open" = "Top up the budget";
 "store.pending" = "Your purchase is waiting for approval.";
 "store.terms" = "Terms of Use";

@@ -1,25 +1,25 @@
 /* Dutch — generated */
 "app.tagline" = "Een gezellige plek om te kletsen";
-"pairing.instructions" = "Elk huishouden heeft zijn eigen Maurice. Met je uitnodiging kom je binnen.";
+"pairing.instructions" = "Elke Maurice is een plek op zich. Met je uitnodiging kom je binnen.";
 "pairing.connect" = "Verbinden";
 "pairing.error.status" = "Server gaf een onverwachte status terug";
 "pairing.error.connect" = "Verbinden mislukt: %@";
-"pairing.error.invalid_url" = "Dat lijkt geen geldig adres. Voorbeeld: https://monfoyer.chezmaurice.eu";
+"pairing.error.invalid_url" = "Dat lijkt geen geldig adres. Voorbeeld: https://martin.chezmaurice.eu";
 "pairing.error.unreachable" = "de server reageerde niet";
 "pairing.error.https_hint" = "Maurice-servers gebruiken https — probeer https:// in plaats van http://.";
 "picker.title" = "Wie is er?";
-"picker.empty" = "Om je op dit apparaat bij dit huishouden aan te sluiten, voer je de uitnodigingscode in die je hebt gekregen.";
+"picker.empty" = "Om je op dit apparaat bij deze Maurice aan te sluiten, voer je de uitnodigingscode in die je hebt gekregen.";
 "picker.admin_signin" = "Aanmelden als beheerder";
-"picker.disconnect" = "Dit huishouden vergeten";
+"picker.disconnect" = "Deze Maurice vergeten";
 "picker.pin.title" = "Voer je pincode in";
 "picker.pin.placeholder" = "Pincode";
 "picker.pin.error" = "Ongeldige pincode";
-"picker.session_ended" = "Je sessie in dit huishouden is beëindigd. Meld je opnieuw aan.";
+"picker.session_ended" = "Je sessie bij deze Maurice is beëindigd. Meld je opnieuw aan.";
 "picker.needs_invite" = "%@ heeft geen pincode: voer een uitnodigingscode in om op dit apparaat aan te melden.";
 "picker.pin.cancel" = "Annuleren";
 "picker.pin.submit" = "Bevestigen";
 "picker.admin.title" = "Aanmelding beheerder";
-"picker.admin.subtitle" = "Meld je aan om gezinsleden te laden";
+"picker.admin.subtitle" = "Meld je aan om de leden van deze Maurice te laden";
 "picker.admin.username" = "Gebruikersnaam";
 "picker.admin.password" = "Wachtwoord";
 "picker.admin.cancel" = "Annuleren";
@@ -211,7 +211,7 @@
 "context.section.conversations" = "Gesprekken";
 "context.searchPlaceholder" = "Zoek in notities, boeken, gesprekken…";
 "context.nothingMatches" = "niets komt overeen met “%@”";
-"pairing.url_placeholder" = "XXXX-XXXX of mijnhuis.chezmaurice.eu";
+"pairing.url_placeholder" = "XXXX-XXXX of martin.chezmaurice.eu";
 
 /* Enrollment + PIN setup */
 "enroll.cta" = "Heb je een uitnodigingscode?";
@@ -226,9 +226,9 @@
 "pinsetup.submit" = "Pincode instellen";
 "pinsetup.invalid" = "De pincode moet 4–6 cijfers hebben";
 "pinsetup.mismatch" = "De pincodes komen niet overeen";
-"household.add" = "Huishouden toevoegen";
-"foyer.switch_overline" = "Je huishoudens";
-"foyer.switch_title" = "Huishouden wisselen";
+"household.add" = "Een Maurice toevoegen";
+"foyer.switch_overline" = "Je Maurices";
+"foyer.switch_title" = "Van Maurice wisselen";
 "common.cancel" = "Annuleren";
 "common.save" = "Opslaan";
 "common.create" = "Aanmaken";
@@ -340,7 +340,7 @@
 "dictation.error.audio_session" = "De microfoon kon niet worden overgenomen.";
 "dictation.error.interrupted" = "Dictaat onderbroken — de microfoon ging naar iets anders. Wat gehoord is, blijft bewaard.";
 "dictation.error.audio_engine" = "De opname kon niet worden gestart.";
-"dictation.error.transcription_failed" = "Het dicteren is gestopt, maar de opname kon niet worden uitgeschreven — niet door de server van je huishouden en niet op dit apparaat.";
+"dictation.error.transcription_failed" = "Het dicteren is gestopt, maar de opname kon niet worden uitgeschreven — niet door de server van je Maurice en niet op dit apparaat.";
 "dictation.downloading_model" = "Apple downloadt het dicteermodel — %d %%. Alleen de eerste keer; het gaat door als je de app verlaat.";
 
 /* Dictation consent */
@@ -355,9 +355,9 @@
 "settings.pulse.caption" = "Het teken dat Maurice aan het werk toont, op de regel die verzamelt wat een antwoord al gedaan heeft. Probeer ze in een gesprek.";
 "settings.dictation.group" = "DICTEREN";
 "settings.dictation.allow_server" = "Transcriptie door Apple toestaan";
-"settings.dictation.caption" = "Dicteren gebruikt de spraakherkenning van dit apparaat of de server van je huishouden. Kan geen van beide het en heeft de taal hier geen offline model, dan laat deze optie Apple het uitschrijven — het geluid verlaat dan je apparaat. De microfoon toont intussen een wolk.";
-"settings.dictation.prefer_household" = "Uitschrijven op de server van het huishouden";
-"settings.dictation.household_caption" = "Standaard uit: dicteren blijft op dit apparaat. Staat het aan, dan luistert de server van je huishouden naar de hele opname (Whisper), en interpunctie en namen kloppen veel vaker. Op een server thuis verlaat het geluid het huis nooit; bij een gehoste Maurice wordt het uitgeschreven door de AI-aanbieder van je huishouden (Scaleway, Parijs), en alleen als je die aanbieder hebt geaccepteerd. Het apparaat schrijft de woorden toch al mee terwijl je spreekt; de tekst van de server vervangt ze als je stopt.";
+"settings.dictation.caption" = "Dicteren gebruikt de spraakherkenning van dit apparaat of de server van je Maurice. Kan geen van beide het en heeft de taal hier geen offline model, dan laat deze optie Apple het uitschrijven — het geluid verlaat dan je apparaat. De microfoon toont intussen een wolk.";
+"settings.dictation.prefer_household" = "Uitschrijven op de server van je Maurice";
+"settings.dictation.household_caption" = "Standaard uit: dicteren blijft op dit apparaat. Staat het aan, dan luistert de server van je Maurice naar de hele opname (Whisper), en interpunctie en namen kloppen veel vaker. Op een server thuis verlaat het geluid het huis nooit; bij een gehoste Maurice wordt het uitgeschreven door de AI-aanbieder van je Maurice (Scaleway, Parijs), en alleen als je die aanbieder hebt geaccepteerd. Het apparaat schrijft de woorden toch al mee terwijl je spreekt; de tekst van de server vervangt ze als je stopt.";
 
 /* App Shortcut (Action Button / Shortcuts list) */
 "Dictate to Maurice" = "Dicteren aan Maurice";
@@ -643,14 +643,14 @@
 "invite.scan" = "Uitnodiging scannen";
 "invite.scan.not_invitation" = "Die QR-code is geen Maurice-uitnodiging.";
 "enroll.profile.title" = "Wie komt erbij?";
-"enroll.profile.subtitle" = "Je naam, zoals het huishouden die ziet, en een kleur.";
+"enroll.profile.subtitle" = "Je naam, zoals de anderen hier die zien, en een kleur.";
 "enroll.profile.name" = "Je voornaam";
 "enroll.failed" = "De uitnodiging kon niet worden gebruikt. Vraag een nieuwe.";
 "members.title" = "Leden";
 "members.invite_someone" = "Iemand uitnodigen";
 "members.invite_someone.hint" = "Een QR-code voor één persoon, zeven dagen geldig. Die kiest bij aankomst een naam.";
 "members.pending" = "Openstaande uitnodigingen";
-"members.list" = "In dit huishouden";
+"members.list" = "In deze Maurice";
 "members.new_device" = "Nieuw apparaat";
 "members.new_device.hint" = "Tik op iemand om een code te tonen die de app op een ander apparaat van die persoon installeert.";
 "members.new_device.for" = "Een nieuw apparaat voor %@";
@@ -680,7 +680,7 @@
 "mail.remove.confirm" = "Maurice leest %@ niet meer. Je kunt het wachtwoord ook bij je provider intrekken.";
 "mail.forget" = "Vergeten";
 "mail.forget.title" = "Deze mailbox vergeten?";
-"mail.forget.message" = "Wat Maurice uit %@ las, en nergens anders vandaan, verlaat de server van je huishouden, en de regels die eruit komen verlaten je notities. Wat je zelf verbeterde wordt ingekort, nooit verwijderd. Ook de geschiedenis wissen herschrijft de geschiedenis van je notities: een kopie die elders al is opgehaald houdt de oude.";
+"mail.forget.message" = "Wat Maurice uit %@ las, en nergens anders vandaan, verlaat de server van je Maurice, en de regels die eruit komen verlaten je notities. Wat je zelf verbeterde wordt ingekort, nooit verwijderd. Ook de geschiedenis wissen herschrijft de geschiedenis van je notities: een kopie die elders al is opgehaald houdt de oude.";
 "mail.forget.history" = "Vergeten en geschiedenis wissen";
 "mail.forget.done" = "Vergeten: %d berichten, %d bestanden ingekort, %d verwijderd.";
 "mail.add" = "Mailbox toevoegen";
@@ -701,14 +701,14 @@
 "mail.help.yahoo.open" = "Open Yahoo-accountbeveiliging";
 "mail.help.fastmail" = "Fastmail wil een app-wachtwoord met IMAP-toegang: Instellingen → Privacy en beveiliging → App-wachtwoorden.";
 "mail.help.outlook" = "Outlook en Hotmail accepteren alleen een manier van inloggen die Maurice nog niet kan. Dit kan voorlopig niet.";
-"mail.help.proton" = "Proton werkt alleen via Proton Bridge op de Mac van je huishouden, met het wachtwoord dat Bridge toont. Vraag het aan wie je Maurice beheert.";
+"mail.help.proton" = "Proton werkt alleen via Proton Bridge op de Mac waarop je Maurice draait, met het wachtwoord dat Bridge toont. Vraag het aan wie je Maurice beheert.";
 "mail.help.isp" = "Meestal het wachtwoord van je mailbox.";
 "mail.help.unknown" = "Maurice kent deze provider niet. Geef hem de mailserver — de hulppagina's van je provider noemen hem, vaak imap.<jouw domein>.";
 "mail.workspace" = "Het is een Gmail-adres van werk of school";
 "mail.server" = "Mailserver (IMAP)";
 "mail.port" = "Poort";
 "mail.login" = "Gebruikersnaam, als het niet het adres is";
-"mail.privacy" = "Het wachtwoord wordt versleuteld bewaard op de server van je huishouden en nooit meer getoond. Plak het niet in een gesprek. Trek je het in bij je provider, dan is Maurice meteen afgesneden.";
+"mail.privacy" = "Het wachtwoord wordt versleuteld bewaard op de server van je Maurice en nooit meer getoond. Plak het niet in een gesprek. Trek je het in bij je provider, dan is Maurice meteen afgesneden.";
 "mail.scan.title" = "Het doorlopen van de koppen";
 "mail.scan.caption" = "Maurice loopt de koppen van al je post door — wie schrijft, aan wie, wanneer — zonder één bericht te lezen. Het is gratis, gebeurt 's nachts vanzelf, en het is wat hem straks laat zeggen wat je mailbox bevat.";
 "mail.scan.loading" = "Stand wordt gelezen…";
@@ -732,7 +732,7 @@
 "mail.reading.done" = "Lezen: klaar";
 "mail.reading.approve" = "Maurice laten lezen";
 "mail.reading.withdraw" = "Goedkeuring intrekken";
-"mail.reading.help" = "Maurice leest ’s nachts de echte uitwisselingen van de afgelopen jaren en vertelt je wie belangrijk voor je is en wat er speelt. De tekst van de berichten die hij leest gaat naar het AI-model van je huishouden; vanuit je mailbox wordt niets verstuurd en er wordt niets in veranderd.";
+"mail.reading.help" = "Maurice leest ’s nachts de echte uitwisselingen van de afgelopen jaren en vertelt je wie belangrijk voor je is en wat er speelt. De tekst van de berichten die hij leest gaat naar het AI-model van je Maurice; vanuit je mailbox wordt niets verstuurd en er wordt niets in veranderd.";
 "mail.reading.caption" = "Het lezen is een ja dat jij geeft, hier. Je kunt het altijd intrekken. Wat Maurice eruit schrijft staat in je notities, onder “Mijn mail”.";
 "mail.box.messages" = "%d berichten verzameld";
 "mail.box.reading" = "Lezen: %1$d gesorteerd · %2$d te lezen · %3$d gelezen";
@@ -788,7 +788,7 @@
 "contacts.intro" = "Maurice leest je adresboeken elke nacht en schrijft er nooit in. Wie in je contacten staat, telt als persoon: diens post wordt gelezen, ook als die via een verzendtool komt, en later worden diens adressen op één kaart samengebracht.";
 "contacts.yours" = "Je adresboeken";
 "contacts.add" = "Adresboek toevoegen";
-"contacts.privacy" = "Het wachtwoord wordt versleuteld bewaard op de server van je huishouden en nooit meer getoond. Maurice wijzigt je adresboek nooit. Intrekken bij je provider stopt de toegang meteen.";
+"contacts.privacy" = "Het wachtwoord wordt versleuteld bewaard op de server van je Maurice en nooit meer getoond. Maurice wijzigt je adresboek nooit. Intrekken bij je provider stopt de toegang meteen.";
 "contacts.remove.confirm" = "Maurice leest het adresboek van %@ niet meer en vergeet de contacten die hij eruit bewaarde.";
 "contacts.sync" = "Opnieuw lezen";
 "contacts.state.ok" = "%d contacten";
@@ -849,15 +849,15 @@
 /* My data (settings): export, import, erase — docs/member-data.md */
 "mydata.group" = "Je gegevens";
 "mydata.title" = "Mijn gegevens";
-"mydata.index_caption" = "Alles wat dit huishouden van je bewaart meenemen, terugbrengen of wissen.";
-"mydata.caption" = "Alles wat de server van dit huishouden van je bewaart is van jou: je kunt het meenemen, terugbrengen, wissen of vertrekken.";
+"mydata.index_caption" = "Alles wat deze Maurice van je bewaart meenemen, terugbrengen of wissen.";
+"mydata.caption" = "Alles wat de server van deze Maurice van je bewaart is van jou: je kunt het meenemen, terugbrengen, wissen of vertrekken.";
 "mydata.export.title" = "Mijn gegevens exporteren";
 "mydata.export.text" = "Eén bestand met je gesprekken, je notities en hun geschiedenis, je bestanden, je afbeeldingen, de gelezen post en de rest, in een leesbaar formaat. Het bevat geen wachtwoord en geen berichten van anderen.";
 "mydata.export.button" = "Exporteren…";
 "mydata.export.preparing" = "Archief voorbereiden…";
 "mydata.export.done" = "Archief opgeslagen.";
 "mydata.import.title" = "Een archief importeren";
-"mydata.import.text" = "Breng een archief terug dat hier of in een ander huishouden is geëxporteerd. Het wordt aan je account toegevoegd; niets wat er al staat wordt vervangen.";
+"mydata.import.text" = "Breng een archief terug dat hier of in een andere Maurice is geëxporteerd. Het wordt aan je account toegevoegd; niets wat er al staat wordt vervangen.";
 "mydata.import.button" = "Archief kiezen…";
 "mydata.import.uploading" = "Uploaden en importeren…";
 "mydata.import.done" = "Geïmporteerd: %d gesprekken, %d bestanden, %d notities.";
@@ -869,13 +869,13 @@
 "mydata.delete.title" = "Mijn account verwijderen";
 "mydata.delete.text" = "Alles wordt gewist, daarna het account zelf. De kamers die je deelde blijven bij de anderen, zonder je berichten. Dit is definitief.";
 "mydata.delete.button" = "Mijn account verwijderen…";
-"mydata.backups" = "De lokale back-ups van de nacht worden bij het wissen zonder jou herschreven. Als dit huishouden gehost wordt, verlopen de externe back-ups van de host vanzelf, volgens diens schema.";
+"mydata.backups" = "De lokale back-ups van de nacht worden bij het wissen zonder jou herschreven. Als deze Maurice gehost wordt, verlopen de externe back-ups van de host vanzelf, volgens diens schema.";
 "account_events.title" = "Wat de admin in je account deed";
-"account_events.text" = "De admin van je huishouden beheert de accounts. Een code van de admin kan een apparaat in het jouwe brengen, en de admin kan het hele huishouden exporteren, je notities en gesprekken inbegrepen. Elke keer staat het hier.";
+"account_events.text" = "De admin van je Maurice beheert de accounts. Een code van de admin kan een apparaat in het jouwe brengen, en de admin kan de hele Maurice exporteren, je notities en gesprekken inbegrepen. Elke keer staat het hier.";
 "account_events.none" = "Niets in de laatste 90 dagen.";
 "account_events.device" = "%@ — een nieuw apparaat kwam in je account met een code van de admin.";
-"account_events.export" = "%@ — de admin heeft het hele huishouden geëxporteerd.";
-"account_events.alert" = "De admin van je huishouden kwam in je account";
+"account_events.export" = "%@ — de admin heeft de hele Maurice geëxporteerd.";
+"account_events.alert" = "De admin van je Maurice kwam in je account";
 "account_events.ok" = "Begrepen";
 "account_events.hint" = "Was jij het niet, of was het niet verwacht, praat dan met de admin. Je ziet dit ook onder Instellingen → Mijn gegevens.";
 "mydata.clone.title" = "Mijn notities klonen";
@@ -892,21 +892,21 @@
 "mydata.clone.warning" = "De kopie is niet versleuteld: als privé gemarkeerde notities staan er leesbaar in. Bescherm het apparaat dat hem bewaart. Hij bevat je notities, je fiches en hun geschiedenis en, elke nacht opnieuw geschreven in de map _maurice, je markeringen, leesposities, gearchiveerde items en domeinen. Niet je post, en niet de zoekindex.";
 "mydata.clone.conversations" = "Mijn gesprekken opnemen";
 "mydata.clone.conversations_note" = "Elke nacht worden je gesprekken in je notities geschreven, één per bestand, onder _maurice/conversations. In een gedeelde ruimte alleen je eigen berichten.";
-"mydata.clone.no_garden" = "Je hebt nog geen notities in dit huishouden.";
+"mydata.clone.no_garden" = "Je hebt nog geen notities in deze Maurice.";
 "mydata.failed" = "Mislukt: %@";
 "mydata.residual.corpus" = "De zoekindex was niet bereikbaar; hij wordt geleegd bij de volgende start van de server.";
 "mydata.residual.remote" = "Een kopie van je notities bestaat elders, buiten het bereik van deze server: %@";
 "mydata.residual.site" = "Een site die vanuit je notities is gepubliceerd staat mogelijk nog online: verwijder die bij de host ervan.";
-"mydata.residual.archives" = "%d huishoudarchief/-archieven, geëxporteerd door een beheerder, bevatten je gegevens nog: vraag hem die te verwijderen.";
-"mydata.confirm.data" = "Alles wat dit huishouden van je bewaart wordt voorgoed gewist. Je account blijft.";
-"mydata.confirm.account" = "Alles wat dit huishouden van je bewaart wordt voorgoed gewist, daarna je account.";
+"mydata.residual.archives" = "%d archief/archieven van deze Maurice, geëxporteerd door een beheerder, bevatten je gegevens nog: vraag hem die te verwijderen.";
+"mydata.confirm.data" = "Alles wat deze Maurice van je bewaart wordt voorgoed gewist. Je account blijft.";
+"mydata.confirm.account" = "Alles wat deze Maurice van je bewaart wordt voorgoed gewist, daarna je account.";
 "mydata.confirm.type" = "Typ ter bevestiging je gebruikersnaam: %@";
 "mydata.confirm.secret" = "Wachtwoord of pincode";
 "mydata.confirm.cancel" = "Annuleren";
 "mydata.error.confirm_mismatch" = "De gebruikersnaam komt niet overeen.";
 "mydata.error.bad_password" = "Onjuist wachtwoord.";
 "mydata.error.bad_pin" = "Onjuiste pincode.";
-"mydata.error.last_admin" = "Je bent de enige beheerder van dit huishouden en er wonen anderen: wijs eerst een andere beheerder aan.";
+"mydata.error.last_admin" = "Je bent de enige beheerder van deze Maurice en er zijn anderen die hem gebruiken: wijs eerst een andere beheerder aan.";
 "mydata.error.too_many_attempts" = "Te veel pogingen. Probeer het over een kwartier opnieuw.";
 "mydata.error.session_required" = "Hiervoor is een in de app geopende sessie nodig.";
 
@@ -954,17 +954,17 @@
 "budget.group" = "BUDGET";
 "budget.value.unlimited" = "Onbeperkt";
 "budget.value.left" = "%d %% over";
-"budget.pane.unlimited" = "Dit huishouden heeft geen budget ingesteld: niets beperkt je.";
-"budget.pane.left" = "Er is nog %d %% van het budget van het huishouden over.";
+"budget.pane.unlimited" = "Deze Maurice heeft geen budget ingesteld: niets beperkt je.";
+"budget.pane.left" = "Er is nog %d %% van het budget van je Maurice over.";
 "budget.pane.resets" = "Het begint opnieuw op %@.";
 "budget.pane.admin_left" = "Over: %@";
-"budget.pane.balance" = "Wie het huishouden beheert, zorgt ervoor.";
-"budget.caption" = "Dit is het budget van het hele huishouden, voor elk lid hetzelfde. De ring naast je naam toont wat er nog over is; je krijgt een melding bij 20, 10 en 5 %.";
-"budget.toast.title" = "Nog maar %d %% van het budget van het huishouden";
+"budget.pane.balance" = "Wie je Maurice beheert, zorgt ervoor.";
+"budget.caption" = "Dit is het budget van je hele Maurice, voor elk lid hetzelfde. De ring naast je naam toont wat er nog over is; je krijgt een melding bij 20, 10 en 5 %.";
+"budget.toast.title" = "Nog maar %d %% van het budget van je Maurice";
 
 /* AI consent — which providers a member's data reaches, and their answer (AIConsentView, MyDataView) */
 "ai.consent.title" = "Voordat je met Maurice praat";
-"ai.consent.intro" = "Maurice is een AI. Om je te antwoorden stuurt de server van je huishouden wat je hem toevertrouwt naar een AI-dienst van een ander bedrijf:";
+"ai.consent.intro" = "Maurice is een AI. Om je te antwoorden stuurt de server van je Maurice wat je hem toevertrouwt naar een AI-dienst van een ander bedrijf:";
 "ai.consent.new_provider" = "Sinds je laatste toestemming is er een aanbieder bijgekomen.";
 "ai.consent.providers.header" = "Waar je gegevens naartoe gaan";
 "ai.consent.providers.none" = "Geen aanbieder buiten de computer van je Maurice: er gaat niets naar buiten.";
@@ -999,7 +999,7 @@
 
 /* Reporting a reply of Maurice's (ReportSheet ai_reply, operator queue) */
 "report.ai.title" = "Dit antwoord melden";
-"report.ai.disclosure" = "Dit antwoord van Maurice, en je bericht vlak ervoor, worden gestuurd naar de persoon die je huishouden beheert, zodat die ernaar kan kijken. De rest van het gesprek blijft privé.";
+"report.ai.disclosure" = "Dit antwoord van Maurice, en je bericht vlak ervoor, worden gestuurd naar de persoon die je Maurice beheert, zodat die ernaar kan kijken. De rest van het gesprek blijft privé.";
 "report.ai.reason" = "Reden";
 "report.ai.reason.harmful_or_misleading" = "Onjuist of misleidend, zodat het schade kan doen";
 "report.ai.reason.sexual_content" = "Seksuele inhoud";
@@ -1011,10 +1011,10 @@
 "report.ai.send" = "Versturen";
 "report.ai.cancel" = "Annuleren";
 "report.ai.done" = "Klaar";
-"report.ai.sent" = "Bedankt: je melding is gestuurd naar de persoon die je huishouden beheert.";
+"report.ai.sent" = "Bedankt: je melding is gestuurd naar de persoon die je Maurice beheert.";
 "report.ai.publisher" = "Over de app zelf kun je ook de uitgever schrijven: %@";
 "report.ai.authority.header" = "Meld het ook bij een instantie";
-"report.ai.authority" = "Gaat het om een minderjarige, meld het dan ook bij de bevoegde instantie: die kan optreden waar het huishouden dat niet kan.";
+"report.ai.authority" = "Gaat het om een minderjarige, meld het dan ook bij de bevoegde instantie: die kan optreden waar de persoon die je Maurice beheert dat niet kan.";
 "report.ai.queue.kind" = "Een antwoord van Maurice, met de vraag ervoor";
 "report.ai.queue.private" = "Privégesprek";
 "report.ai.queue.handled" = "Als afgehandeld markeren";
@@ -1027,7 +1027,7 @@
 "settings.import.ai" = "Geïmporteerde gesprekken gaan naar het AI-model van je Maurice om te worden geïndexeerd en ’s nachts gelezen: %@.";
 "settings.import.ai_local" = "Geïmporteerde gesprekken worden geïndexeerd en gelezen door modellen op de computer van je Maurice: er gaat niets naar buiten.";
 "settings.import.confirm.title" = "Deze gesprekken naar het AI-model sturen?";
-"settings.import.confirm.text" = "Je %@-gesprekken worden op de server van je huishouden bewaard en naar %@ gestuurd om te worden geïndexeerd en ’s nachts gelezen.";
+"settings.import.confirm.text" = "Je %@-gesprekken worden op de server van je Maurice bewaard en naar %@ gestuurd om te worden geïndexeerd en ’s nachts gelezen.";
 "settings.import.confirm.ok" = "Export kiezen";
 
 "mydata.privacy" = "Privacybeleid";
@@ -1055,7 +1055,7 @@
 "welcome.paste_link" = "Uitnodigingslink plakken";
 "welcome.enter_code" = "Code of adres invoeren";
 "welcome.more_options" = "Andere opties";
-"welcome.address_needed" = "Adres van je huishouden";
+"welcome.address_needed" = "Adres van je Maurice";
 "scanner.hint" = "Richt op de QR-code van de uitnodiging";
 "scanner.camera_reason" = "De camera dient alleen om de QR-code van je uitnodiging te lezen.";
 "common.close" = "Sluiten";
@@ -1067,7 +1067,7 @@
 "household.forget.pending.one" = "1 verzending is nog niet verstuurd: die gaat verloren.";
 "household.forget.pending.other" = "%d verzendingen zijn nog niet verstuurd: ze gaan verloren.";
 "household.forget.confirm" = "Vergeten";
-"sheet.households" = "Huishoudens";
+"sheet.households" = "Je Maurices";
 "sheet.members" = "Leden";
 "sheet.pin_required" = "Pincode vereist";
 "sheet.active" = "Actief";
@@ -1080,7 +1080,7 @@
 "privacy.section" = "Privacy";
 "privacy.policy" = "Privacybeleid";
 "privacy.terms" = "Gebruiksvoorwaarden";
-"delete.text" = "Alles wat dit huishouden over je bewaart, wordt gewist, daarna je account, voorgoed.";
+"delete.text" = "Alles wat deze Maurice over je bewaart, wordt gewist, daarna je account, voorgoed.";
 "delete.confirm_footer" = "Typ ter bevestiging je gebruikersnaam: %@";
 "delete.field" = "Wachtwoord of pincode";
 "delete.confirm" = "Mijn account verwijderen";
@@ -1090,12 +1090,12 @@
 
 /* A friend from another household, invited as a guest (specs/cross-household-share.md, A). */
 "guest_invite.title" = "Een vriend als gast uitnodigen";
-"guest_invite.sees_only_you" = "Je vriend ziet in dit huishouden alleen jou, en alleen jij kunt met hem delen.";
-"guest_invite.maurice" = "Hij kan in dit huishouden ook met Maurice praten, op het budget van het huishouden.";
+"guest_invite.sees_only_you" = "Je vriend ziet in deze Maurice alleen jou, en alleen jij kunt met hem delen.";
+"guest_invite.maurice" = "Hij kan hier ook met Maurice praten, op het budget van deze Maurice.";
 
 /* A conversation received read-only with an entry given from another household (E). */
-"chat.received.band" = "Gesprek ontvangen van huishouden %@ — alleen lezen";
-"chat.received.band_unnamed" = "Gesprek ontvangen van een ander huishouden — alleen lezen";
+"chat.received.band" = "Gesprek ontvangen van %@ — alleen lezen";
+"chat.received.band_unnamed" = "Gesprek ontvangen van een andere Maurice — alleen lezen";
 "chat.received.continue" = "Nieuw gesprek op basis van dit gesprek";
 
 "suggest.search_again" = "Opnieuw zoeken";
@@ -1135,7 +1135,7 @@
 "store.restore" = "Aankopen herstellen";
 "store.topup.group" = "OPWAARDEREN";
 "store.topup.label" = "Budget opwaarderen";
-"store.topup.caption" = "Een opwaardering komt meteen bij het budget van het huishouden.";
+"store.topup.caption" = "Een opwaardering komt meteen bij het budget van je Maurice.";
 "store.topup.open" = "Budget opwaarderen";
 "store.pending" = "Je aankoop wacht op goedkeuring.";
 "store.terms" = "Gebruiksvoorwaarden";
