@@ -75,3 +75,29 @@ test("no upload right is a 403; a Calibre-Web that does not answer is a 503", as
   const broken = () => { throw new Error("no app.db"); };
   expect(await addThroughCalibreWeb(book(), { username: "anna", isAdmin: false }, base, broken)).toMatchObject({ ok: false, status: 503 });
 });
+
+test("the same file again is the book it already is; another file of the same size is not", async () => {
+  const { findSameFile } = await import("../data-api/services/calibreWebUpload");
+  const { mkdtempSync, mkdirSync, writeFileSync, rmSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const { Database } = await import("bun:sqlite");
+  const root = mkdtempSync(join(tmpdir(), "cw-dup-"));
+  try {
+    const db = new Database(join(root, "metadata.db"));
+    db.run("CREATE TABLE books (id INTEGER PRIMARY KEY, path TEXT)");
+    db.run("CREATE TABLE data (id INTEGER PRIMARY KEY, book INTEGER, format TEXT, uncompressed_size INTEGER, name TEXT)");
+    db.run("INSERT INTO books VALUES (5, 'George Eliot/Middlemarch (5)')");
+    db.run("INSERT INTO data VALUES (1, 5, 'EPUB', 4, 'Middlemarch')");
+    db.close();
+    mkdirSync(join(root, "George Eliot/Middlemarch (5)"), { recursive: true });
+    writeFileSync(join(root, "George Eliot/Middlemarch (5)/Middlemarch.epub"), "EPUB");
+
+    expect(await findSameFile(book(), root)).toBe(5);
+    expect(await findSameFile(new File(["EPUX"], "Middlemarch.epub"), root)).toBeNull();
+    expect(await findSameFile(new File(["EPUB"], "Middlemarch.pdf"), root)).toBeNull();
+    expect(await findSameFile(book(), join(root, "nowhere"))).toBeNull();
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});

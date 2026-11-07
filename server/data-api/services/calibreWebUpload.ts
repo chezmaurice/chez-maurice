@@ -14,11 +14,15 @@
  * (`…/admin/book/<id>` for a member who may edit, `…/book/<id>` otherwise),
  * or the index when it refused the file, the reason left in a flash message
  * nobody here reads. It does not refuse a duplicate the way `calibredb add`
- * does: the same file twice is two books.
+ * does: the same file twice would be two books, so findSameFile looks first.
  */
 
+import { Database } from "bun:sqlite";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { ensureCalibreWebMember, MEMBER_HEADER } from "../../scripts/configure-calibre-web";
 import { getPort } from "../lib/config";
+import { getLibraryRoot } from "./calibre";
 
 export type CalibreWebAdd = { ok: true; bookId: number | null } | { ok: false; status: number; error: string };
 
@@ -71,4 +75,34 @@ export async function addThroughCalibreWeb(
   const id = location.match(BOOK_LOCATION)?.[1];
   if (!id) return { ok: false, status: 422, error: "The library could not read this file as a book." };
   return { ok: true, bookId: Number(id) };
+}
+
+/** The book that already holds this very file, or null. Calibre-Web keeps an
+ *  upload's bytes as they came (the file is moved, not rewritten) and records
+ *  their size in `data`, so a file of the same format and size is read and
+ *  compared whole. Another edition of the same title is a different file, and
+ *  stays a book of its own. */
+export async function findSameFile(file: File, root = getLibraryRoot()): Promise<number | null> {
+  const format = path.extname(file.name).slice(1).toUpperCase();
+  let db: Database;
+  try {
+    db = new Database(path.join(root, "metadata.db"), { readonly: true });
+  } catch {
+    return null;
+  }
+  try {
+    const rows = db
+      .query("SELECT d.book AS id, b.path AS dir, d.name AS name FROM data d JOIN books b ON b.id = d.book WHERE d.format = ? AND d.uncompressed_size = ?")
+      .all(format, file.size) as { id: number; dir: string; name: string }[];
+    if (!rows.length) return null;
+    const bytes = Buffer.from(await file.arrayBuffer());
+    for (const r of rows) {
+      try {
+        if (bytes.equals(readFileSync(path.join(root, r.dir, `${r.name}.${format.toLowerCase()}`)))) return r.id;
+      } catch {}
+    }
+    return null;
+  } finally {
+    db.close();
+  }
 }

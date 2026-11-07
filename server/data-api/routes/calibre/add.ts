@@ -12,7 +12,7 @@ import { mkdirSync, writeFileSync, unlinkSync } from "node:fs";
 import { resolve, extname } from "node:path";
 import { spawnSync } from "node:child_process";
 import { getLibraryRoot } from "../../services/calibre";
-import { addThroughCalibreWeb } from "../../services/calibreWebUpload";
+import { addThroughCalibreWeb, findSameFile } from "../../services/calibreWebUpload";
 import { getUser } from "../../../src/services/users";
 
 const app = new Hono();
@@ -55,6 +55,11 @@ app.post("/", async (c) => {
   if (process.env.MAURICE_CALIBRE_DISABLED) {
     const me = c.get("userId") ? getUser(c.get("userId")) : null;
     if (!me?.username) return c.json({ error: "Authentication required" }, 401);
+    // The same file again opens the book it already is, as `calibredb add` refuses it.
+    const existing = await findSameFile(file);
+    if (existing !== null) {
+      return c.json({ ok: true, bookId: existing, duplicate: true, filename, output: "Already in the library" }, 200);
+    }
     const added = await addThroughCalibreWeb(file, { username: me.username, isAdmin: me.role === "admin" });
     if (!added.ok) return c.json({ error: added.error }, added.status as 401);
     return c.json({ ok: true, bookId: added.bookId, filename, output: "Added through Calibre-Web" }, 201);
