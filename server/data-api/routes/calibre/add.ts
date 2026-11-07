@@ -2,7 +2,9 @@
  * POST /add — upload a PDF or EPUB and add it to the Calibre library.
  *
  * Accepts multipart form data with a `file` field.
- * Writes to a temp file, runs `calibredb add`, then cleans up.
+ * Writes to a temp file, runs `calibredb add`, then cleans up. Without
+ * `calibredb` (MAURICE_CALIBRE_DISABLED, the container) the household's
+ * Calibre-Web adds it instead (services/calibreWebUpload.ts).
  */
 
 import { Hono } from "hono";
@@ -10,6 +12,8 @@ import { mkdirSync, writeFileSync, unlinkSync } from "node:fs";
 import { resolve, extname } from "node:path";
 import { spawnSync } from "node:child_process";
 import { getLibraryRoot } from "../../services/calibre";
+import { addThroughCalibreWeb } from "../../services/calibreWebUpload";
+import { getUser } from "../../../src/services/users";
 
 const app = new Hono();
 
@@ -45,6 +49,15 @@ app.post("/", async (c) => {
 
   if (!ALLOWED_EXTENSIONS.has(ext)) {
     return c.json({ error: `Unsupported format: ${ext}. Use .pdf or .epub` }, 400);
+  }
+
+  // No `calibredb` here (the container): Calibre-Web adds it, as the member.
+  if (process.env.MAURICE_CALIBRE_DISABLED) {
+    const me = c.get("userId") ? getUser(c.get("userId")) : null;
+    if (!me?.username) return c.json({ error: "Authentication required" }, 401);
+    const added = await addThroughCalibreWeb(file, { username: me.username, isAdmin: me.role === "admin" });
+    if (!added.ok) return c.json({ error: added.error }, added.status as 401);
+    return c.json({ ok: true, bookId: added.bookId, filename, output: "Added through Calibre-Web" }, 201);
   }
 
   // Write to temp file

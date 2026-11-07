@@ -105,48 +105,69 @@ export function configureCalibreWeb(
     );
 
     for (const member of members) {
-      const role = member.isAdmin ? ROLE_OWNER : ROLE_MEMBER;
-      const existing = db
-        .query(`SELECT id FROM user WHERE LOWER(name) = LOWER(?)`)
-        .get(member.username) as { id: number } | undefined;
-
-      if (existing) {
-        // Role only: never touch a user's own preferences (locale, sidebar,
-        // shelves, and the Kindle address they set themselves) — they are
-        // theirs, and this runs on every start.
-        db.run(`UPDATE user SET role = ? WHERE id = ?`, [role, existing.id]);
-        updated.push(member.username);
-      } else {
-        // Every column SQLAlchemy gives a default must be spelled out here: a
-        // row inserted in raw SQL gets NULL where the ORM would have put "",
-        // {} or 0, and Calibre-Web then dies rendering the book list on
-        // `view_settings.get(...)` — a 500 with the member correctly
-        // identified, which reads like an auth bug and is not one.
-        db.run(
-          `INSERT INTO user (
-             name, email, role, password, kindle_mail, locale, sidebar_view,
-             default_language, denied_tags, allowed_tags, denied_column_value,
-             allowed_column_value, view_settings, kobo_only_shelves_sync
-           ) VALUES (?, ?, ?, ?, '', 'fr', 1, 'all', '', '', '', '', '{}', 0)`,
-          [
-            member.username,
-            // Calibre-Web wants an address per user; Maurice has none to give
-            // (no email column), and this one is only a placeholder the member
-            // replaces if they ever send a book to a Kindle.
-            `${member.username}@localhost`,
-            role,
-            // Unusable by design: the proxy is the way in.
-            `maurice-proxy-only-${crypto.randomUUID()}`,
-          ],
-        );
-        added.push(member.username);
-      }
+      (provisionMember(db, member) === "added" ? added : updated).push(member.username);
     }
   } finally {
     db.close();
   }
 
   return { libraryRoot, added, updated };
+}
+
+/** One member, made known to Calibre-Web now rather than at its next start:
+ *  someone who joined since then would otherwise meet its login form — the
+ *  upload from the apps (data-api/services/calibreWebUpload.ts) calls this
+ *  first. Calibre-Web reads its users from app.db on every request. */
+export function ensureCalibreWebMember(
+  member: Member,
+  appDbPath = path.join(calibreWebDataDir(), "app.db"),
+): void {
+  if (!existsSync(appDbPath)) throw new Error(`Calibre-Web's app.db is not at ${appDbPath}`);
+  const db = new Database(appDbPath);
+  try {
+    provisionMember(db, member);
+  } finally {
+    db.close();
+  }
+}
+
+function provisionMember(db: Database, member: Member): "added" | "updated" {
+  const role = member.isAdmin ? ROLE_OWNER : ROLE_MEMBER;
+  const existing = db
+    .query(`SELECT id FROM user WHERE LOWER(name) = LOWER(?)`)
+    .get(member.username) as { id: number } | undefined;
+
+  if (existing) {
+    // Role only: never touch a user's own preferences (locale, sidebar,
+    // shelves, and the Kindle address they set themselves) — they are
+    // theirs, and this runs on every start.
+    db.run(`UPDATE user SET role = ? WHERE id = ?`, [role, existing.id]);
+    return "updated";
+  } else {
+    // Every column SQLAlchemy gives a default must be spelled out here: a
+    // row inserted in raw SQL gets NULL where the ORM would have put "",
+    // {} or 0, and Calibre-Web then dies rendering the book list on
+    // `view_settings.get(...)` — a 500 with the member correctly
+    // identified, which reads like an auth bug and is not one.
+    db.run(
+      `INSERT INTO user (
+         name, email, role, password, kindle_mail, locale, sidebar_view,
+         default_language, denied_tags, allowed_tags, denied_column_value,
+         allowed_column_value, view_settings, kobo_only_shelves_sync
+       ) VALUES (?, ?, ?, ?, '', 'fr', 1, 'all', '', '', '', '', '{}', 0)`,
+      [
+        member.username,
+        // Calibre-Web wants an address per user; Maurice has none to give
+        // (no email column), and this one is only a placeholder the member
+        // replaces if they ever send a book to a Kindle.
+        `${member.username}@localhost`,
+        role,
+        // Unusable by design: the proxy is the way in.
+        `maurice-proxy-only-${crypto.randomUUID()}`,
+      ],
+    );
+    return "added";
+  }
 }
 
 if (import.meta.main) {

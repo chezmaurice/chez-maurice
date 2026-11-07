@@ -53,7 +53,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       git ca-certificates curl \
       lsof procps \
       tini supervisor \
+      libmagic1 \
     && rm -rf /var/lib/apt/lists/*
+# libmagic1: Calibre-Web checks what an uploaded file is with python-magic and,
+# when the library is missing, refuses every upload as the wrong type — every
+# book added through /calibre or the apps on a hosted household, until
+# 7 November 2026.
 
 # ── Python ───────────────────────────────────────────────────────────────────
 # A venv rather than dist-packages: Ubuntu's python3 is externally managed, and
