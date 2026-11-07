@@ -1,6 +1,6 @@
 ---
 title: Maurice — architecture overview
-date: '2026-10-26'
+date: '2026-11-07'
 flags: []
 locale: en
 description: The five cooperating parts of Maurice, how a message flows end-to-end,
@@ -212,8 +212,19 @@ unless the admin pins another, under the member's budget, on the ledger with
 the job id `chapter-summary:<book>`; a call the provider drops is asked again twice (after 2 and 8 s) before the run stops, and asking again resumes where it stopped. On the nine Gutenberg classics the cut
 gives the Python tool's chapters and word counts; on the App Review household
 *Metamorphosis* was extracted and summarized on DeepSeek V4 Flash for 0.016 €.
-The flag now closes `/calibre/add` alone, the one route that spawns
-`calibredb`; books reach a hosted library through Calibre-Web. The Python tool
+The flag now touches `/calibre/add` alone, the one route that spawns
+`calibredb`. **Since 7 November 2026 it no longer closes it**: without
+`calibredb` the route hands the file to the household's Calibre-Web, as the
+member (`data-api/services/calibreWebUpload.ts`): on loopback, the member in
+the header Calibre-Web trusts from 127.0.0.1, the CSRF token and session cookie
+read from its index first, then `POST /upload` with the file as `btn-upload`;
+the book's id comes back from the `location` it answers. A member who joined
+after Calibre-Web started is added to its users first
+(`ensureCalibreWebMember`), so neither this nor `/calibre` meets them with a
+login form. The same day the image gained `libmagic1`: Calibre-Web checks an
+upload's type with python-magic and, without the library, had refused every
+book sent to a hosted household — through `/calibre` too. Unlike `calibredb
+add`, Calibre-Web does not refuse a duplicate. The Python tool
 is still called where it exists for a PDF's chapters and for indexing summaries
 into the corpus, and an instance without it says so. With no library declared
 in `calibre_libraries`, the API now reads the one Calibre-Web serves
