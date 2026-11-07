@@ -24,7 +24,7 @@ covers:
   maurice-docs: '2026-10-20'
   maurice-domains: '2026-10-20'
   maurice-files: '2026-06-19'
-  maurice-households-rooms: '2026-11-05'
+  maurice-households-rooms: '2026-11-07'
   maurice-knowledge: '2026-11-02'
   maurice-life: '2026-10-20'
   maurice-personas-hats: '2026-09-19'
@@ -90,6 +90,7 @@ There is also a **browser clipper** that saves the page being read into the memb
 
 - **One server is one household**; a device can hold several households, each with its own session, switched from a pill with an unread badge.
 - **Joining:** scan the invitation (paste its link on a computer), or enter a code or the household's address; the app shows the household's name, icon and colour. A **fresh device joins with an invite code** given by an admin (8 characters, about 7 days, reusable within that window, rate-limited), then the member sets a PIN. An admin can also issue an **open invitation** — QR code, typed code or link, single use, 7 days — with which a newcomer gives a first name and colour and becomes a standard member. The invitation's link opens the app when it is installed; otherwise a page offers Maurice and Carnet for your device, then opens the invitation in either. A member already signed in on one device adds another **without the admin**: Settings → *Add a device* shows a QR code that works once, for ten minutes. Once a member is signed in on a device, the device shows the household's members, and switching is a tap plus a PIN. *Sign out* ends your session and keeps the household; *Forget this household* removes it from the device; a member without a PIN comes back on a device only with an invite code. The admin signs in with a username and password (at least 12 characters, not containing the username), and changes it in Settings → *Administrator password*, which signs out the admin's other devices. A PIN that everybody tries first (1111, 1234, 2580, 1212…) is refused. A code the admin makes for someone who already uses their account is **told to that member** (an alert in the app, a line under *My data*, a push).
+- **Managing members from the app:** an admin taps someone in Settings → Members to change their name or colour, give them a new device, or delete them (with a confirmation: everything of theirs is erased); the same pane renames the household. The app never sets someone else's PIN — that would let the admin sign in as them untold: a **forgotten PIN** is a new device code, after which the member chooses a new PIN. Keys, models, caps and the reply length are never set from the app either; they belong to whoever runs the machine. On Android and the desktop this arrives later.
 - **Roles:**
   - **admin** — manages members, keys, models, budgets and the household's identity;
   - **standard** — a full member with a mandatory PIN;
@@ -99,7 +100,7 @@ There is also a **browser clipper** that saves the page being read into the memb
 - **Push notifications** reach the Maurice app and Carnet when someone writes to you, including as a guest in another household: through Apple's service for the Apple apps, and through Web Push for a device that registers a subscription — the Android app, in private testing, via UnifiedPush and a relay such as ntfy. The payload is encrypted to the device: the relay sees that a message passed, not what it says. On an iPhone, iPad or Mac the same holds for Apple: it carries "New message" and a sealed block that the app opens on the device to show the room, who wrote and the text. A household run on your own machine notifies Apple devices through Chez Maurice's push relay, which receives only the device's token and that sealed block; it can be turned off (`MAURICE_PUSH_RELAY_URL=off`), and Apple devices are then not notified.
 - **Personal tokens** (`maur_…`) let a member connect other clients (see §18).
 
-*Gaps:* sessions do not expire (they end only when revoked); a household cannot be renamed in the app; an admin's open invitation still makes a standard member, and a guest's reach beyond the member who invited them is set in the console; `maurice://` invitation links open only on iOS.
+*Gaps:* sessions do not expire (they end only when revoked); roles, a guest's reach beyond the member who invited them, the *child* and *may publish* flags and the access grid are set only in the console, which a hosted household's owner cannot reach; an admin's open invitation still makes a standard member; `maurice://` invitation links open only on iOS.
 
 *Detail:* `households-rooms`, `server`.
 
@@ -346,6 +347,7 @@ Each member has folders and files (5 GB each), in **Settings**: text, images, PD
 - **…come into a hosted Maurice the first time?** On your account page (the link in the *Your Maurice is ready* mail), install the app it names for your device — Maurice or Carnet, through TestFlight on Apple, Obtainium or the APK on Android — then scan the invitation's QR code with the phone's camera. On a computer, *Another way in* gives the household address and the invite code to type.
 - **…change the administrator password?** Settings → *Administrator password*: the current one, then the new one twice. Your other devices signed in as administrator must sign in again.
 - **…invite someone who is not a member yet?** As an admin: Settings → Members → invitation (QR code, code or link, single use, 7 days). The person picks a first name and colour and becomes a standard member. To have a friend in as **your guest**, who sees only you: Settings → *Invite a friend as a guest* (any member; also in Carnet's member sheet). Other guests are set up in the admin console.
+- **…help someone who forgot their PIN?** As an admin: Settings → Members → tap them → *New device*. They enter the code on their device, then choose a new PIN; they are told a code let a device in.
 - **…give something from my Carnet to a friend who has their own Maurice?** Ask them to invite you into their household as a guest and join it on your phone. Then, on your entry, *Share* → their name under their household → tick what you give → *Voir ce qui part* → *Send*. You go on writing about it together in their household. The same sheet offers *Moi — dans mes notes*, to copy an entry into your own notes in another household of yours.
 - **…choose which model answers?** The model pill above the message field; the choice becomes your everyday model, or the model of the domain the conversation is bound to. Only models your household has a key for, and that the admin allowed you, are listed.
 - **…add a provider key or change the household's default model?** In the admin console, on the server's machine (the operator does it for a hosted household).
