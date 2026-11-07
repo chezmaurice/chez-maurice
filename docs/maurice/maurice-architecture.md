@@ -224,7 +224,11 @@ after Calibre-Web started is added to its users first
 login form. The same day the image gained `libmagic1`: Calibre-Web checks an
 upload's type with python-magic and, without the library, had refused every
 book sent to a hosted household — through `/calibre` too. Unlike `calibredb
-add`, Calibre-Web does not refuse a duplicate. The Python tool
+add`, Calibre-Web does not refuse a duplicate, so the route looks first
+(`findSameFile`): a file of the same format and size in `data` is read and
+compared whole — Calibre-Web stores an upload's bytes as they came — and the
+same file again answers 200 with the existing `bookId` and `duplicate: true`,
+which the apps open. Another edition of the same title is another book. The Python tool
 is still called where it exists for a PDF's chapters and for indexing summaries
 into the corpus, and an instance without it says so. With no library declared
 in `calibre_libraries`, the API now reads the one Calibre-Web serves

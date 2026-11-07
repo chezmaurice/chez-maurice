@@ -288,12 +288,12 @@ Each member has folders and files (5 GB each), in **Settings**: text, images, PD
 
 ## 19. Books and the library
 
-- A household's library is a genuine **Calibre library**, managed in the browser with **Calibre-Web** at `/calibre` (upload, metadata, shelves, OPDS for e-readers, a reader, send to Kindle) behind Maurice's login — nobody signs in twice. Desktop Calibre can still open it. An EPUB or PDF sent through the server's own upload route (what the apps use) lands in the same library, at home through Calibre and on a hosted household through its Calibre-Web.
+- A household's library is a genuine **Calibre library**, managed in the browser with **Calibre-Web** at `/calibre` (upload, metadata, shelves, OPDS for e-readers, a reader, send to Kindle) behind Maurice's login — nobody signs in twice. Desktop Calibre can still open it. An EPUB or PDF sent through the server's own upload route (what the apps use) lands in the same library, at home through Calibre and on a hosted household through its Calibre-Web. The same file sent again opens the book already there instead of making a second one.
 - **Chapters and summaries are made by the server** (since 15 October 2026, so on hosted households too): an EPUB is cut at its table of contents; each chapter is summarized with the summaries before it as context, in the voice of the book, by the household's default model, charged to the member who asks. A call the provider drops is retried twice; if the run still stops, asking again resumes where it stopped. Front and back matter (cover, contents, a Project Gutenberg licence…) is left out.
 - Books feed Carnet's reader (§20), the composer (§12), reading companions (§14), flashcards and the corpus.
 - The App Review household carries nine public-domain classics from Project Gutenberg.
 
-*Gaps:* on a hosted household a book added twice becomes two books (the library page does not refuse duplicates); a PDF's chapters and indexing summaries into the corpus still need the private tool.
+*Gaps:* on a hosted household, another edition of a book already there, or a file uploaded twice on the library page itself, still makes a second book; a PDF's chapters and indexing summaries into the corpus still need the private tool.
 
 *Detail:* `architecture`, `carnet`.
 
