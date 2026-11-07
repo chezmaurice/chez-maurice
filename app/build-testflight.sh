@@ -20,6 +20,9 @@
 # build to every external group (internal groups get it on their own). Set
 # SKIP_RELEASE=1 to stop at the upload.
 #
+# Each upload is tagged app-v<version>-<build> on the commit it was built
+# from, and the tag is pushed.
+#
 # Per machine: a Mac App Store profile carries ONE certificate, so each Mac
 # that ships macOS has its own — PROVISIONING_PROFILE_MACOS="Maurice macOS App
 # Store" on the mini, "… laptop" on the laptop — plus its own "3rd Party Mac
@@ -85,6 +88,18 @@ if [[ -z "${BUILD:-}" ]]; then
     exit 1
   fi
 fi
+
+# ── Source tag ──────────────────────────────────────────────────────────────
+# Every upload is tagged app-v<version>-<build> on the commit it was built
+# from, so the build Apple reviews can be found in git later. The commit is
+# read now, before the archive, in case the checkout moves while it builds.
+SOURCE_COMMIT="$(git -C "$SCRIPT_DIR" rev-parse HEAD)"
+SOURCE_DIRTY=""
+if [[ -n "$(git -C "$SCRIPT_DIR" status --porcelain --untracked-files=no -- .)" ]]; then
+  SOURCE_DIRTY=1
+  echo "WARNING: app/ has uncommitted changes; the tag will say so."
+fi
+TAG="app-v$VERSION-$BUILD"
 
 mkdir -p "$BUILD_DIR"
 
@@ -178,6 +193,17 @@ PLIST
 }
 
 for p in $PLATFORMS; do archive_and_upload "$p"; done
+
+# Tag the uploaded build and push the tag. A failure here is reported but does
+# not fail the run: the build is already on App Store Connect.
+tag_msg="Maurice $VERSION (build $BUILD), $PLATFORMS, uploaded $(date +%F)"
+[[ -n "$SOURCE_DIRTY" ]] && tag_msg+=$'\n\nBuilt with uncommitted changes in app/: this commit is close to, not exactly, the upload.'
+if git -C "$SCRIPT_DIR" tag -a "$TAG" "$SOURCE_COMMIT" -m "$tag_msg" \
+   && git -C "$SCRIPT_DIR" push -q origin "$TAG"; then
+  echo "==> Tagged $SOURCE_COMMIT as $TAG and pushed the tag."
+else
+  echo "WARNING: could not tag or push $TAG; tag $SOURCE_COMMIT by hand."
+fi
 
 # Internal groups see the build as soon as Apple has processed it. External
 # groups need it added and a beta review submission made — automatic for a
