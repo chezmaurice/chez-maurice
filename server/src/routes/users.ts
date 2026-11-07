@@ -282,13 +282,31 @@ users.delete("/:id/invite", requireAdmin, (c) => {
 });
 
 // PATCH /api/users/:id (admin edits a user)
+// What the app's member sheet changes: the name and colour others see, and
+// what Maurice knows of them. Never the PIN: an admin who sets someone's PIN
+// can sign in as them, untold — the way in for a forgotten PIN is a device
+// code (POST /:id/invite), which the member is told about. The console, on the
+// machine itself, still sets one.
 users.patch("/:id", requireAdmin, async (c) => {
   const id = c.req.param("id");
-  const body = await c.req.json();
-  if (typeof body.pin === "string" && pinProblem(body.pin)) {
-    return c.json({ error: pinProblem(body.pin) === "format" ? "PIN must be 4–6 digits" : "This PIN is too easy to guess", code: `pin_${pinProblem(body.pin)}` }, 400);
+  const body = await c.req.json().catch(() => null);
+  if (!body || typeof body !== "object") return c.json({ error: "invalid body" }, 400);
+  if (body.pin !== undefined) return c.json({ error: "a member sets their own PIN; give them a device code" }, 403);
+  const updates: { display_name?: string; avatar_color?: string; profile_text?: string } = {};
+  if (body.display_name !== undefined) {
+    const name = typeof body.display_name === "string" ? body.display_name.trim() : "";
+    if (!name || name.length > 60) return c.json({ error: "invalid display_name" }, 400);
+    updates.display_name = name;
   }
-  const user = await updateUser(id, body);
+  if (body.avatar_color !== undefined) {
+    if (typeof body.avatar_color !== "string" || !/^#[0-9a-fA-F]{6}$/.test(body.avatar_color)) return c.json({ error: "invalid avatar_color" }, 400);
+    updates.avatar_color = body.avatar_color;
+  }
+  if (body.profile_text !== undefined) {
+    if (typeof body.profile_text !== "string") return c.json({ error: "invalid profile_text" }, 400);
+    updates.profile_text = body.profile_text;
+  }
+  const user = await updateUser(id, updates);
   if (!user) return c.json({ error: "User not found" }, 404);
   return c.json(user);
 });

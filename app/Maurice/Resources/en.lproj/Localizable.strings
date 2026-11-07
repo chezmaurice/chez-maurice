@@ -661,6 +661,14 @@
 "members.share" = "Send the link";
 "members.revoke" = "Withdraw";
 "members.valid_until" = "Valid until %@";
+"members.household_name" = "Name of this Maurice";
+"members.household_name.hint" = "What everyone sees in their list of Maurices.";
+"members.list.hint" = "Tap someone to change their name or colour, or to give them a new device.";
+"member.name" = "Name";
+"member.new_device.hint" = "A forgotten PIN? Give them a new device: they enter the code, then choose a new PIN.";
+"member.delete" = "Delete this member";
+"member.delete.confirm" = "Delete %@?";
+"member.delete.hint" = "Their account and everything that was theirs — conversations, notes, mail — is erased. This cannot be undone.";
 
 /* Mailboxes (Settings → Mail) */
 "mail.group" = "Mail";

@@ -661,6 +661,14 @@
 "members.share" = "Link senden";
 "members.revoke" = "Zurückziehen";
 "members.valid_until" = "Gültig bis %@";
+"members.household_name" = "Name dieses Maurice";
+"members.household_name.hint" = "Was alle in ihrer Liste der Maurices sehen.";
+"members.list.hint" = "Tippe auf jemanden, um Namen oder Farbe zu ändern oder ein neues Gerät hinzuzufügen.";
+"member.name" = "Name";
+"member.new_device.hint" = "PIN vergessen? Gib ein neues Gerät frei: Die Person gibt den Code ein und wählt dann eine neue PIN.";
+"member.delete" = "Mitglied löschen";
+"member.delete.confirm" = "%@ löschen?";
+"member.delete.hint" = "Das Konto und alles, was dazugehörte — Gespräche, Notizen, Mails — wird gelöscht. Das lässt sich nicht rückgängig machen.";
 
 /* Mailboxes (Settings → Mail) */
 "mail.group" = "E-Mail";

@@ -892,6 +892,9 @@ private struct MembersPane: View {
     @State private var members: [ServerUser] = []
     @State private var invites: [OpenInvite] = []
     @State private var shown: ShownInvite?
+    @State private var editing: ServerUser?
+    @State private var householdName = ""
+    @State private var savedName = ""
     @State private var busy = false
     @State private var error: String?
 
@@ -909,6 +912,24 @@ private struct MembersPane: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
+            // The household's name, as everyone's switcher shows it.
+            SetGroup(session.localized("members.household_name")) {
+                SetCard {
+                    HStack(spacing: 10) {
+                        TextField(session.localized("members.household_name"), text: $householdName)
+                            .textFieldStyle(.plain)
+                            .onSubmit { Task { await saveHouseholdName() } }
+                        if trimmedName != savedName && !trimmedName.isEmpty {
+                            Button(session.localized("common.save")) { Task { await saveHouseholdName() } }
+                                .glassProminentButton()
+                                .disabled(busy)
+                        }
+                    }
+                    .padding(.horizontal, 16).padding(.vertical, 12)
+                }
+                SetCaption(session.localized("members.household_name.hint"))
+            }
+
             VStack(alignment: .leading, spacing: 9) {
                 Button { Task { await inviteSomeone() } } label: {
                     Label(session.localized("members.invite_someone"), systemImage: "qrcode")
@@ -945,20 +966,43 @@ private struct MembersPane: View {
                         if i > 0 { SetDivider() }
                         IndexRow(icon: member.role == "admin" ? "crown" : member.role == "guest" ? "person.crop.circle.badge.questionmark" : "person",
                                  label: member.display_name,
-                                 value: session.localized("members.new_device"),
                                  accent: Color(hex: member.avatar_color)) {
-                            Task { await showDeviceCode(for: member) }
+                            editing = member
                         }
                     }
                 }
-                SetCaption(session.localized("members.new_device.hint"))
+                SetCaption(session.localized("members.list.hint"))
             }
 
             if let error {
                 Text(error).font(.caption).foregroundStyle(.red)
             }
         }
-        .task { await load() }
+        .task {
+            householdName = session.currentHousehold?.name ?? ""
+            savedName = householdName
+            await load()
+        }
+        .sheet(item: $editing) { member in
+            MemberSheet(member: member,
+                        isSelf: member.id == session.activeDeviceUser?.id,
+                        onSaved: { updated in
+                            if let i = members.firstIndex(where: { $0.id == updated.id }) { members[i] = updated }
+                        },
+                        onDeviceCode: {
+                            // One sheet at a time: this one goes, the code's comes.
+                            editing = nil
+                            Task {
+                                try? await Task.sleep(for: .milliseconds(450))
+                                await showDeviceCode(for: member)
+                            }
+                        },
+                        onDeleted: {
+                            members.removeAll { $0.id == member.id }
+                            editing = nil
+                        })
+                .environment(session)
+        }
         .sheet(item: $shown) { item in
             InviteQRSheet(invitation: item.invitation, title: item.title, expiresAt: item.expiresAt,
                           onRevoke: { Task { await revoke(item) } })
@@ -968,6 +1012,24 @@ private struct MembersPane: View {
 
     private func invitation(_ code: String) -> Invitation {
         Invitation(server: session.serverURL ?? "", code: code)
+    }
+
+    private var trimmedName: String { householdName.trimmingCharacters(in: .whitespacesAndNewlines) }
+
+    private func saveHouseholdName() async {
+        let name = trimmedName
+        guard let api, let token = session.tokenForActiveUser, !name.isEmpty, name != savedName else { return }
+        struct Face: Decodable { let name: String }
+        busy = true
+        defer { busy = false }
+        do {
+            let face: Face = try await api.patch("/api/admin/settings", body: ["name": name], token: token)
+            householdName = face.name
+            savedName = face.name
+            if let id = session.currentHouseholdId { session.updateHousehold(id: id) { $0.name = face.name } }
+        } catch {
+            self.error = error.localizedDescription
+        }
     }
 
     private func load() async {
@@ -1022,6 +1084,135 @@ private struct MembersPane: View {
             try await api.delete(path, token: token)
             invites.removeAll { $0.code == item.invitation.code }
             shown = nil
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+}
+
+/// One member, as the admin sees them: the name and colour everyone sees, a
+/// new device (the way in after a forgotten PIN — the admin never sets
+/// someone's PIN from here, and the member is told a code let a device in),
+/// and, for anyone but oneself, deleting the account.
+private struct MemberSheet: View {
+    @Environment(SessionStore.self) private var session
+    @Environment(\.mauriceTheme) private var theme
+    @Environment(\.dismiss) private var dismiss
+    let member: ServerUser
+    let isSelf: Bool
+    let onSaved: (ServerUser) -> Void
+    let onDeviceCode: () -> Void
+    let onDeleted: () -> Void
+
+    @State private var name = ""
+    @State private var color = ""
+    @State private var busy = false
+    @State private var error: String?
+    @State private var confirmDelete = false
+
+    /// The member colours on offer, as when they joined — plus theirs, if
+    /// the console gave them another.
+    private var colors: [String] {
+        let base = MemberColors.all
+        return base.contains(where: { $0.caseInsensitiveCompare(member.avatar_color) == .orderedSame }) ? base : [member.avatar_color] + base
+    }
+
+    private var trimmed: String { name.trimmingCharacters(in: .whitespacesAndNewlines) }
+    private var changed: Bool { trimmed != member.display_name || color.lowercased() != member.avatar_color.lowercased() }
+
+    var body: some View {
+        VStack(spacing: 18) {
+            Circle()
+                .fill(Color(hex: color))
+                .frame(width: 56, height: 56)
+                .overlay(Text(String(trimmed.prefix(1)).uppercased())
+                    .font(.system(size: 24, weight: .medium, design: .serif)).foregroundStyle(.white))
+            TextField(session.localized("member.name"), text: $name)
+                .textFieldStyle(.roundedBorder)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 260)
+                #if os(iOS)
+                .textInputAutocapitalization(.words)
+                #endif
+                .onSubmit { Task { await save() } }
+            HStack(spacing: 10) {
+                ForEach(colors, id: \.self) { hex in
+                    Button { color = hex } label: {
+                        Circle()
+                            .fill(Color(hex: hex))
+                            .frame(width: 26, height: 26)
+                            .overlay(Circle().stroke(theme.ink, lineWidth: color.lowercased() == hex.lowercased() ? 2 : 0).padding(-3))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+
+            VStack(spacing: 6) {
+                Button { onDeviceCode() } label: {
+                    Label(session.localized("members.new_device"), systemImage: "qrcode")
+                }
+                .glassBorderedButton()
+                Text(session.localized("member.new_device.hint"))
+                    .font(.system(size: 12)).foregroundStyle(theme.inkMute)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            if let error {
+                Text(error).font(.system(size: 13)).foregroundStyle(.red)
+            }
+
+            HStack(spacing: 12) {
+                Button(session.localized("common.cancel")) { dismiss() }
+                    .glassBorderedButton()
+                Button(session.localized("common.save")) { Task { await save() } }
+                    .glassProminentButton()
+                    .disabled(busy || trimmed.isEmpty || !changed)
+            }
+
+            if !isSelf {
+                Button(session.localized("member.delete"), role: .destructive) { confirmDelete = true }
+                    .font(.system(size: 13))
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.red)
+                    .disabled(busy)
+            }
+        }
+        .padding(28)
+        .frame(minWidth: 320)
+        .background(theme.surface)
+        .presentationBackground(theme.surface)
+        .onAppear { name = member.display_name; color = member.avatar_color }
+        .confirmationDialog(session.localized("member.delete.confirm", member.display_name),
+                            isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button(session.localized("member.delete"), role: .destructive) { Task { await delete() } }
+            Button(session.localized("common.cancel"), role: .cancel) {}
+        } message: {
+            Text(session.localized("member.delete.hint"))
+        }
+    }
+
+    private func save() async {
+        guard changed, !trimmed.isEmpty, let url = session.serverURL, let token = session.tokenForActiveUser else { return }
+        busy = true; error = nil
+        defer { busy = false }
+        do {
+            let updated: ServerUser = try await APIClient(baseURL: url).patch(
+                "/api/users/\(member.id)", body: ["display_name": trimmed, "avatar_color": color], token: token)
+            onSaved(updated)
+            dismiss()
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
+    private func delete() async {
+        guard let url = session.serverURL, let token = session.tokenForActiveUser else { return }
+        busy = true; error = nil
+        defer { busy = false }
+        do {
+            try await APIClient(baseURL: url).delete("/api/users/\(member.id)", token: token)
+            onDeleted()
         } catch {
             self.error = error.localizedDescription
         }

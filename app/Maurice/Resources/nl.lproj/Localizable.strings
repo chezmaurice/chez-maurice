@@ -661,6 +661,14 @@
 "members.share" = "Link versturen";
 "members.revoke" = "Intrekken";
 "members.valid_until" = "Geldig tot %@";
+"members.household_name" = "Naam van deze Maurice";
+"members.household_name.hint" = "Wat iedereen ziet in de eigen lijst van Maurices.";
+"members.list.hint" = "Tik op iemand om naam of kleur te wijzigen, of om een nieuw apparaat toe te voegen.";
+"member.name" = "Naam";
+"member.new_device.hint" = "Pincode vergeten? Geef een nieuw apparaat: de persoon voert de code in en kiest daarna een nieuwe pincode.";
+"member.delete" = "Dit lid verwijderen";
+"member.delete.confirm" = "%@ verwijderen?";
+"member.delete.hint" = "Het account en alles wat erbij hoorde — gesprekken, notities, mail — wordt gewist. Dit kan niet ongedaan worden.";
 
 /* Mailboxes (Settings → Mail) */
 "mail.group" = "E-mail";

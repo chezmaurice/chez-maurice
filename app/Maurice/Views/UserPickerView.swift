@@ -623,6 +623,12 @@ private struct AdminLoginSheet: View {
     }
 }
 
+/// The member colours on offer — the hat palettes' grounds. A newcomer picks
+/// one on joining; the admin's member sheet offers the same.
+enum MemberColors {
+    static let all = ["#2c5aa0", "#7a4f6e", "#b97a1e", "#3d6b4f", "#a6452e", "#e3a7c2", "#44504f", "#9c6b4a"]
+}
+
 private struct InviteEnrollSheet: View {
     @Binding var code: String
     @Binding var error: String?
@@ -634,8 +640,7 @@ private struct InviteEnrollSheet: View {
     let onSubmit: () -> Void
     let onCancel: () -> Void
 
-    /// The member colours on offer — the hat palettes' grounds.
-    static let colors = ["#2c5aa0", "#7a4f6e", "#b97a1e", "#3d6b4f", "#a6452e", "#e3a7c2", "#44504f", "#9c6b4a"]
+    static let colors = MemberColors.all
 
     var body: some View {
         StepSheet(title: L(needsProfile ? "enroll.profile.title" : "invite.code"),

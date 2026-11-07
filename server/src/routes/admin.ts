@@ -10,6 +10,7 @@ import { corpusNightlyStatus, reconcileCorpus } from "../services/corpusNightly"
 import { listProposals, proposalCard, type ProposalState } from "../services/domainProposals";
 import { canUseMaurice } from "../services/maurices";
 import { getUser, getUserByUsername } from "../services/users";
+import { configuredProviders, getModel } from "../services/models";
 import { mailReadingStatus, startMailReading } from "../services/mailReading";
 import { forgetMailbox } from "../services/mailForget";
 import { memberLocale } from "../services/domainBriefs";
@@ -84,31 +85,30 @@ admin.get("/status", (c) => {
 });
 
 // ── PATCH /api/admin/settings ───────────────────────────────────
+// What an admin may set from afar: the household's name and face, and its
+// default model among those it can already call. Keys and the reply length
+// stay with whoever runs the machine (the console, loopback only): on a hosted
+// household the admin is not the operator, and the keys are the operator's.
 
 admin.patch("/settings", async (c) => {
   const body = await c.req.json();
   const sets: string[] = [];
   const params: any[] = [];
 
-  if (body.api_key !== undefined) {
-    sets.push("api_key = ?");
-    params.push(body.api_key || null);
-  }
-  if (body.fal_api_key !== undefined) {
-    sets.push("fal_api_key = ?");
-    params.push(body.fal_api_key || null);
+  for (const key of ["api_key", "fal_api_key", "max_tokens"]) {
+    if (body[key] !== undefined) return c.json({ error: `${key} is set in the admin console` }, 403);
   }
   if (body.default_model !== undefined) {
+    const model = typeof body.default_model === "string" ? getModel(body.default_model) : null;
+    if (!model || !configuredProviders().has(model.provider)) return c.json({ error: "unknown model" }, 400);
     sets.push("default_model = ?");
-    params.push(body.default_model);
-  }
-  if (body.max_tokens !== undefined) {
-    sets.push("max_tokens = ?");
-    params.push(body.max_tokens);
+    params.push(model.id);
   }
   if (body.name !== undefined) {
+    const name = typeof body.name === "string" ? body.name.trim() : "";
+    if (!name || name.length > 80) return c.json({ error: "invalid name" }, 400);
     sets.push("name = ?");
-    params.push(body.name);
+    params.push(name);
   }
   // The foyer's face in the apps' switcher (/api/health): an SF Symbol name and
   // a #rrggbb colour. Anything else is refused rather than stored, since the
@@ -134,15 +134,11 @@ admin.patch("/settings", async (c) => {
     .query(`SELECT * FROM households WHERE id = 'default'`)
     .get() as any;
 
-  // Don't return the raw API key
   return c.json({
     name: updated.name,
     icon: updated.icon,
     color: updated.color,
-    has_api_key: !!updated.api_key,
-    has_fal_api_key: !!updated.fal_api_key,
     default_model: updated.default_model,
-    max_tokens: updated.max_tokens,
   });
 });
 

@@ -661,6 +661,14 @@
 "members.share" = "Enviar el enlace";
 "members.revoke" = "Retirar";
 "members.valid_until" = "Válido hasta el %@";
+"members.household_name" = "Nombre de este Maurice";
+"members.household_name.hint" = "Lo que todos ven en su lista de Maurices.";
+"members.list.hint" = "Toca a alguien para cambiar su nombre o su color, o para darle un dispositivo nuevo.";
+"member.name" = "Nombre";
+"member.new_device.hint" = "¿Un PIN olvidado? Dale un dispositivo nuevo: la persona introduce el código y elige un PIN nuevo.";
+"member.delete" = "Eliminar a este miembro";
+"member.delete.confirm" = "¿Eliminar a %@?";
+"member.delete.hint" = "Su cuenta y todo lo suyo — conversaciones, notas, correo — se borran. No se puede deshacer.";
 
 /* Mailboxes (Settings → Mail) */
 "mail.group" = "Correo";
