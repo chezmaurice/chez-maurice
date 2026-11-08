@@ -932,6 +932,7 @@
 "suggest.empty" = "Rien à garder de cette conversation.";
 "suggest.failed" = "Ça n’a pas abouti.";
 "suggest.state_existing" = "Dans ton carnet";
+"suggest.state_library" = "Dans la bibliothèque";
 "suggest.state_new" = "Nouveau";
 "suggest.state_pick" = "%d possibilités";
 "suggest.keep" = "Garder";

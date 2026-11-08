@@ -932,6 +932,7 @@
 "suggest.empty" = "Nichts aus diesem Gespräch aufzuheben.";
 "suggest.failed" = "Das hat nicht geklappt.";
 "suggest.state_existing" = "In deinem Notizbuch";
+"suggest.state_library" = "In der Bibliothek";
 "suggest.state_new" = "Neu";
 "suggest.state_pick" = "%d Möglichkeiten";
 "suggest.keep" = "Aufheben";

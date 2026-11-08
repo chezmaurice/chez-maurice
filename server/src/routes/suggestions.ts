@@ -49,6 +49,9 @@ const view = (
   state: s.state,
   /** Already an entry of theirs: keeping it adds the note and nothing else. */
   existing: !!s.existing,
+  /** A book of the household's library with no fiche yet: keeping it opens
+   *  one tied to that book. */
+  in_library: s.in_library,
   /** The entry the conversation is held from: the note is its result. */
   bound: !!bound && (s.kept_path ?? s.existing) === bound,
   /** Kept from a conversation held on another entry: keeping links the two. */

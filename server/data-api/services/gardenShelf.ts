@@ -31,6 +31,7 @@ import { countArticleHighlights, listArticleHighlights } from "./articleHighligh
 import { countHighlights, listHighlights } from "./highlights";
 import { fragmentsDir, isOpened, parseFiche, publicUrl, type GardenRef } from "./gardenFiche";
 import { listGardenEntries, type GardenEntry } from "./gardenEntries";
+import { bookKey, sameAuthor } from "./bookTitles";
 import { NEEDS_CAPTURE } from "./gardenArticles";
 import { storedSummaryOf } from "./articleSummary";
 import { userLocale } from "../../src/services/i18n";
@@ -436,7 +437,23 @@ function countFragments(garden: GardenRef, ficheRel: string, collection: string)
 export interface Library {
   books: BookMetadata[];
   byId: Map<number, BookMetadata>;
-  byTitle: Map<string, BookMetadata>;
+  /** Every book under its title's key (bookKey): one key can hold several. */
+  byTitle: Map<string, BookMetadata[]>;
+}
+
+/**
+ * The library's book under a title, and how sure that is. `book` only when
+ * exactly one book answers to the title and its author (when one is said);
+ * `doubtful` lists the books the title found without settling on one — two
+ * editions, or a different author.
+ */
+export function matchBook(
+  lib: Library, title: string, author?: string | null,
+): { book: BookMetadata | null; doubtful: BookMetadata[] } {
+  const titled = lib.byTitle.get(bookKey(title)) ?? [];
+  const sure = titled.filter((b) => sameAuthor(b.authors, author));
+  if (sure.length === 1) return { book: sure[0]!, doubtful: [] };
+  return { book: null, doubtful: sure.length ? sure : titled };
 }
 
 /** The household's books. A server without a library simply has none. */
@@ -449,23 +466,24 @@ export function loadLibrary(given?: BookMetadata[]): Library {
       books = [];
     }
   }
-  return {
-    books,
-    byId: new Map(books.map((b) => [b.id, b])),
-    byTitle: new Map(books.map((b) => [b.title.trim().toLowerCase(), b])),
-  };
+  const byTitle = new Map<string, BookMetadata[]>();
+  for (const b of books) {
+    const key = bookKey(b.title);
+    byTitle.set(key, [...(byTitle.get(key) ?? []), b]);
+  }
+  return { books, byId: new Map(books.map((b) => [b.id, b])), byTitle };
 }
 
 /**
  * The Calibre book behind a garden entry: by the id the fiche carries when it
- * has one, otherwise by exact title — the same guess résonances make, and only
- * ever a first one, since the id is written the first time the server writes
- * on the entry.
+ * has one, otherwise by its title and author when they name one book only —
+ * a first guess, since the id is written the first time the server writes on
+ * the entry (and link-book-fiches.ts writes it on the ones already there).
  */
 export function bookFor(lib: Library, title: string, fiche: Face | null): BookMetadata | null {
   const id = Number(fiche?.meta.calibre_id);
   if (Number.isInteger(id) && lib.byId.has(id)) return lib.byId.get(id)!;
-  return lib.byTitle.get(title.trim().toLowerCase()) ?? null;
+  return matchBook(lib, title, fiche?.meta.author ? String(fiche.meta.author) : null).book;
 }
 
 /** A book's chapters, or none when the library cannot answer (moved, offline). */

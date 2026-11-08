@@ -171,7 +171,8 @@ export function listGardenEntries(garden: GardenRef): GardenEntry[] {
           e.show = { slug: String(show), title: String(meta.show_title ?? (episodeTitle ? fm.title : show)) };
         }
         if (!isFiche || !e.title) {
-          e.title = String(episodeTitle ?? fm.title ?? meta.title ?? slug);
+          // A person's card names them (`name:`), it has no title.
+          e.title = String(episodeTitle ?? fm.title ?? fm.name ?? meta.title ?? slug);
           e.date = String(
             fm.date ?? fm.date_watched ?? fm.date_read ?? fm.date_listened ?? fm.date_played ?? meta.saved_at ?? "",
           );

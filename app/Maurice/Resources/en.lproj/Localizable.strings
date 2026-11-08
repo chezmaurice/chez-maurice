@@ -932,6 +932,7 @@
 "suggest.empty" = "Nothing to keep from this conversation.";
 "suggest.failed" = "That did not go through.";
 "suggest.state_existing" = "In your notebook";
+"suggest.state_library" = "In the library";
 "suggest.state_new" = "New";
 "suggest.state_pick" = "%d possibilities";
 "suggest.keep" = "Keep";

@@ -12,6 +12,8 @@ import path from "node:path";
 
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), "maurice-suggest-"));
 process.env.MAURICE_GARDENS_DIR = TMP;
+// No library: a book named here is the catalogue's (book-fiches.test.ts has one).
+process.env.CALIBRE_DB_PATH = path.join(TMP, "no-library.db");
 
 const { default: db } = await import("../src/db");
 const sug = await import("../src/services/entrySuggestions");

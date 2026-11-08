@@ -27,6 +27,7 @@ import { countParticipants, getConversation } from "./conversations";
 import { McpSession } from "./mcpClient";
 import { publishToUser } from "./roomBus";
 import { getUser, isGuest } from "./users";
+import { companionBookId, getMaurice } from "./maurices";
 import {
   autoCommit, fichePath, gardenFor, markOpened, parseFiche, writeFiche, type GardenRef, type ResourceCollection,
 } from "../../data-api/services/gardenFiche";
@@ -36,11 +37,16 @@ import { noteBlock, withNote } from "../../data-api/services/gardenNote";
 import { appendResonance } from "../../data-api/services/gardenLinks";
 import { t, userLocale } from "./i18n";
 import { entriesOf, linkConversation } from "../../data-api/services/entryConversations";
+import { bookKey } from "../../data-api/services/bookTitles";
 // The articles pipeline (gardenArticles, articleSummary, articleCleanup) is
 // loaded where it is used, not here: through the cleanup it reaches
 // highlights.ts, which fixes life.db's path when first loaded — and this file
 // is loaded by every conversation route, long before.
 const articles = () => import("../../data-api/services/gardenArticles");
+// The library's side of the garden — the shelf, a book's fiche — likewise:
+// the shelf reaches highlights.ts too.
+const shelf = () => import("../../data-api/services/gardenShelf");
+const bookFiches = () => import("../../data-api/services/gardenWrite");
 
 // ── Shapes ───────────────────────────────────────────────────────────────────
 
@@ -81,6 +87,9 @@ export interface EntrySuggestion {
   candidates: Candidate[];
   /** `<collection>/<locale>/<slug>` of the garden entry this is, when there is one. */
   existing: string | null;
+  /** A book of the household's library with no fiche yet: keeping it opens
+   *  one tied to that book (its key is `calibre:<id>`). */
+  in_library: boolean;
   note: string;
   state: "proposed" | "kept" | "dismissed";
   kept_path: string | null;
@@ -114,7 +123,10 @@ function hydrate(row: any): EntrySuggestion {
   try { candidates = row.candidates ? JSON.parse(row.candidates) : []; } catch {}
   try { seen = row.seen ? JSON.parse(row.seen) : []; } catch {}
   // Rows filed before the copies were folded (14 October 2026) fold on read.
-  return { ...row, public: !!row.public, candidates: distinct(candidates), query: row.query ?? null, seen, said: row.said ?? null };
+  return {
+    ...row, public: !!row.public, candidates: distinct(candidates), query: row.query ?? null, seen, said: row.said ?? null,
+    in_library: !row.existing && String(row.key).startsWith(LIBRARY_KEY),
+  };
 }
 
 // ── A batch: what the member typed, with no conversation ─────────────────────
@@ -360,7 +372,10 @@ export function findInGarden(garden: GardenRef, named: Named): GardenEntry | nul
   const entries = listGardenEntries(garden).filter((e) => e.collection === named.kind);
   const hits = named.kind === "people"
     ? entries.filter((e) => sameName(e.title, named.title))
-    : entries.filter((e) => normalise(e.title) === normalise(named.title));
+    // A book is named with its subtitle or without: « The Gene » either way.
+    : named.kind === "books"
+      ? entries.filter((e) => bookKey(e.title) === bookKey(named.title))
+      : entries.filter((e) => normalise(e.title) === normalise(named.title));
   if (hits.length <= 1 || !named.year) return hits[0] ?? null;
   // Two entries under one title (a film and its remake): the year decides.
   return hits.find((e) => entryYear(garden, e) === named.year) ?? hits[0]!;
@@ -552,6 +567,9 @@ export function confident(named: Named, candidates: Candidate[]): boolean {
   return candidates.filter(same).length === 1;
 }
 
+/** The key of a library book no fiche holds yet: `calibre:<id>`. */
+const LIBRARY_KEY = "calibre:";
+
 interface Resolved {
   key: string;
   title: string;
@@ -576,6 +594,12 @@ async function resolve(
       key: ref, title: entry.title, year: entryYear(garden, entry), subtitle: named.creator || null,
       image: openImage(garden, entry.image), existing: ref, candidates: [],
     };
+  }
+  // 1b. A book of the household's library: the member has it, whether or not
+  //     a fiche says so yet. No provider either.
+  if (named.kind === "books") {
+    const held = await libraryBook(garden, named);
+    if (held) return held;
   }
   const plain: Resolved = {
     key: `title:${normalise(named.title)}`, title: named.title, year: named.year ?? null,
@@ -603,6 +627,34 @@ async function resolve(
     };
   }
   return { ...plain, image: candidates[0]!.image || null, candidates };
+}
+
+/**
+ * The library's book a conversation names, when its title and author name
+ * one book only: the fiche already tied to it (under whatever title), or the
+ * book itself, kept as a fiche tied to it.
+ */
+async function libraryBook(garden: GardenRef, named: Named): Promise<Resolved | null> {
+  const { bookFor, loadLibrary, matchBook, readFace } = await shelf();
+  const lib = loadLibrary();
+  const { book } = matchBook(lib, named.title, named.creator);
+  if (!book) return null;
+  const author = book.authors.join(", ") || named.creator || null;
+  const entry = listGardenEntries(garden).find(
+    (e) => e.collection === "books" && bookFor(lib, e.title, readFace(garden, e.fiche?.file))?.id === book.id,
+  );
+  if (entry) {
+    const ref = refOf(entry);
+    return {
+      key: ref, title: entry.title, year: entryYear(garden, entry), subtitle: author,
+      image: openImage(garden, entry.image), existing: ref, candidates: [],
+    };
+  }
+  const id = `${LIBRARY_KEY}${book.id}`;
+  return {
+    key: id, title: book.title, year: named.year ?? null, subtitle: author, image: null, existing: null,
+    candidates: [{ id, title: book.title, year: named.year ?? null, subtitle: author ?? "", image: "" }],
+  };
 }
 
 // ── The store ────────────────────────────────────────────────────────────────
@@ -717,6 +769,7 @@ export async function suggestForTurn(
   memberId: string, conversationId: string, messageId: string | null, question: string, reply: string,
 ): Promise<number> {
   if (!question.trim() || !reply.trim() || !eligible(memberId, conversationId)) return 0;
+  await fileCompanionBook(memberId, conversationId);
   const bound = boundEntry(memberId, conversationId);
   const named = await nameSubjects(memberId, conversationId, question, reply, bound);
   if (!named.length) return 0;
@@ -734,6 +787,31 @@ export async function suggestForTurn(
   }
   if (changed) announce(memberId, conversationId);
   return changed;
+}
+
+/**
+ * A reading companion's conversation is about its book: the book gets its
+ * fiche, tied to it, the first time — and the conversation is held from it,
+ * so that the book is never offered from there, and what was said of it is
+ * filed on that fiche, as for a conversation opened from Carnet's page.
+ */
+async function fileCompanionBook(memberId: string, conversationId: string): Promise<void> {
+  const convo = getConversation(conversationId, memberId);
+  if (!convo?.maurice_id || convo.entry_ref) return;
+  const companion = getMaurice(convo.maurice_id);
+  const bookId = companion ? Number(companionBookId(companion)) : NaN;
+  if (!Number.isInteger(bookId)) return;
+  const garden = gardenFor(memberId);
+  if (!garden) return;
+  try {
+    const { entryForBook } = await bookFiches();
+    const r = await entryForBook(memberId, garden, bookId, gardenLocale(memberId));
+    const ref = `${r.collection}/${r.locale}/${r.slug}`;
+    db.run(`UPDATE conversations SET entry_ref = ? WHERE id = ? AND entry_ref IS NULL`, [ref, conversationId]);
+    linkConversation(memberId, conversationId, ref);
+  } catch (err) {
+    console.warn(`[suggest] the companion's book could not be filed (${(err as Error).message})`);
+  }
 }
 
 /** The entries a conversation is about: the one it is held from, and those
@@ -1175,6 +1253,12 @@ export async function keepSuggestion(
     }
   } else if (s.existing) {
     refs.push({ ref: s.existing, title: s.title, image: null });
+  } else if (picked?.id.startsWith(LIBRARY_KEY)) {
+    // A book of the library: its fiche is tied to it, as a first note on the
+    // book would make it.
+    const { entryForBook } = await bookFiches();
+    const r = await entryForBook(memberId, garden, Number(picked.id.slice(LIBRARY_KEY.length)), locale);
+    refs.push({ ref: `${r.collection}/${r.locale}/${r.slug}`, title: picked.title, image: null });
   } else {
     const args: Record<string, unknown> = { resource_collection: s.kind, title: picked?.title ?? s.title, locale };
     if (s.year) args.year = picked?.year ?? s.year;

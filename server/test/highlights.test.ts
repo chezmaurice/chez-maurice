@@ -43,7 +43,10 @@ beforeAll(() => {
 // The service captures its database path at import time, so the override has to
 // be in place for exactly that moment — and only that moment. `bun test` runs
 // every file in one process, and leaving MAURICE_DATA_DIR set pointed a sibling
-// suite at this temp directory, where its tables do not exist.
+// suite at this temp directory, where its tables do not exist. The same process
+// also keeps one copy of each module: a suite that ran first (the shelf, the
+// suggestions) has already loaded this one against the shared directory, so this
+// file asks for a copy of its own.
 const previousDataDir = process.env.MAURICE_DATA_DIR;
 process.env.MAURICE_DATA_DIR = TMP;
 const {
@@ -52,7 +55,7 @@ const {
   deleteHighlight,
   listHighlights,
   updateHighlight,
-} = await import("../data-api/services/highlights");
+} = (await import("../data-api/services/highlights" + "?own-life-db")) as typeof import("../data-api/services/highlights");
 if (previousDataDir === undefined) delete process.env.MAURICE_DATA_DIR;
 else process.env.MAURICE_DATA_DIR = previousDataDir;
 

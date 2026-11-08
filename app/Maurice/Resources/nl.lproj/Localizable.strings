@@ -932,6 +932,7 @@
 "suggest.empty" = "Niets te bewaren uit dit gesprek.";
 "suggest.failed" = "Dat is niet gelukt.";
 "suggest.state_existing" = "In je notitieboek";
+"suggest.state_library" = "In de bibliotheek";
 "suggest.state_new" = "Nieuw";
 "suggest.state_pick" = "%d mogelijkheden";
 "suggest.keep" = "Bewaren";

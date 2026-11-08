@@ -30,6 +30,9 @@ struct EntrySuggestion: Decodable, Identifiable, Equatable {
     let state: String
     /// Already an entry of yours: keeping it adds the note and nothing else.
     let existing: Bool
+    /// A book of the household's library with no fiche yet: keeping it opens
+    /// one tied to that book. Absent from servers before 8 November 2026.
+    let in_library: Bool?
     /// Several possible identities: one must be picked to keep it.
     let candidates: [Candidate]
     /// The garden entry this is, `<collection>/<locale>/<slug>`, once there
@@ -433,7 +436,7 @@ private struct SuggestionRow: View {
                             .font(.system(size: 12))
                             .foregroundStyle(theme.inkSoft)
                     }
-                    Text(row.existing ? L("suggest.state_existing") : needsPick ? L("suggest.state_pick", row.candidates.count) : L("suggest.state_new"))
+                    Text(row.existing ? L("suggest.state_existing") : row.in_library == true ? L("suggest.state_library") : needsPick ? L("suggest.state_pick", row.candidates.count) : L("suggest.state_new"))
                         .font(.system(size: 11, weight: .medium, design: .monospaced))
                         .foregroundStyle(theme.inkMute)
                         .padding(.top, 1)
