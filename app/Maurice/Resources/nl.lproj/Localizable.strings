@@ -658,6 +658,10 @@
 "devices.add.sheet_title" = "Scan deze code met je andere apparaat, of stuur het de link";
 "devices.add.done" = "Apparaat verbonden ✓";
 "devices.add.expired" = "Deze code is verlopen. Sluit en vraag een nieuwe aan.";
+"browser.connect" = "Een browser koppelen";
+"browser.connect.line" = "Plak deze link in de extensie ‘Opslaan in Maurice’ — of typ het adres en de code. Hij werkt één keer, tien minuten lang.";
+"browser.connect.copy" = "Link kopiëren";
+"browser.connect.copied" = "Gekopieerd";
 "members.share" = "Link versturen";
 "members.revoke" = "Intrekken";
 "members.valid_until" = "Geldig tot %@";

@@ -327,7 +327,9 @@ async function transcribeLocally(input: TranscribeInput): Promise<TranscribeResu
   const dir = mkdtempSync(join(tmpdir(), "maurice-dictation-"));
   try {
     const source = join(dir, `clip.${extensionFor(input.mediaType)}`);
-    const wav = join(dir, "clip.wav");
+    // Not clip.wav: a clip sent as WAV is already called that, and ffmpeg
+    // refuses to write over its own input.
+    const wav = join(dir, "pcm.wav");
     await Bun.write(source, input.audio);
 
     // whisper.cpp reads 16 kHz mono PCM and nothing else.

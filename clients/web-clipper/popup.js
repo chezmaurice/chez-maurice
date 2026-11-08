@@ -1,4 +1,5 @@
-import { api, isConfigured, loadConfig } from "./config.js";
+import { api, connect, ext, forget, isConfigured, isSafari, loadConfig, originPattern, parseConnectInput } from "./ext.js";
+import { lang, t } from "./strings.js";
 
 /**
  * The server accepts 8 MB of HTML. Stay under it with room to spare for the
@@ -8,43 +9,166 @@ import { api, isConfigured, loadConfig } from "./config.js";
 const MAX_HTML = 7_000_000;
 
 const el = (id) => document.getElementById(id);
+const ua = navigator.userAgent;
+const apple = /Macintosh|Mac OS X|iPhone|iPad/.test(ua);
+const phone = /Android|iPhone|iPad|Mobile/.test(ua);
+
 let config = null;
 let captured = null;
+let tags = [];
+let originGranted = true;
+
+document.documentElement.classList.add(apple ? "apple" : "material");
+if (phone) document.documentElement.classList.add("sheet");
+document.documentElement.lang = lang;
+for (const node of document.querySelectorAll("[data-t]")) node.textContent = t(node.dataset.t);
+for (const node of document.querySelectorAll("[data-label]")) {
+  node.setAttribute("aria-label", t(node.dataset.label));
+  node.title = t(node.dataset.label);
+}
+el("shortcut").textContent = `${/Mac/.test(ua) ? "⌘↩" : "Ctrl+↩"} ${t("shortcut")}`;
+el("address").placeholder = t("addressPlaceholder");
+el("tags").setAttribute("aria-label", t("tags"));
 
 init();
 
 async function init() {
-  el("open-options").addEventListener("click", openOptions);
-  el("settings").addEventListener("click", openOptions);
+  // Listeners first, values after: attached behind an await, the buttons
+  // would be drawn but inert for as long as storage takes to answer.
+  el("close").addEventListener("click", () => window.close());
+  el("saved-close").addEventListener("click", () => window.close());
   el("save").addEventListener("click", save);
+  el("save-check").addEventListener("click", save);
+  el("fold").addEventListener("click", () => setFold(el("fold").getAttribute("aria-expanded") !== "true"));
+  el("settings").addEventListener("click", showAccount);
+  el("account-back").addEventListener("click", () => show("main"));
+  el("disconnect").addEventListener("click", disconnect);
+  el("connect-button").addEventListener("click", connectClicked);
+  el("mic").addEventListener("click", toggleDictation);
+  el("comment").addEventListener("input", () => { updateSummary(); keepDraft(); });
   document.addEventListener("keydown", (e) => {
-    // Cmd/Ctrl+Enter saves from inside the comment box.
-    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") save();
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter" && !el("main").hidden) save();
   });
+  renderTags();
 
   config = await loadConfig();
-  if (!isConfigured(config)) {
-    el("setup").hidden = false;
-    return;
+  if (!isConfigured(config)) return showConnect();
+  await showMain();
+}
+
+function show(id) {
+  for (const view of document.querySelectorAll(".view")) view.hidden = view.id !== id;
+}
+
+// ── Connect ──────────────────────────────────────────────────────
+
+function showConnect() {
+  show("connect");
+  el("address").focus();
+  // A link pasted into either field fills both.
+  for (const id of ["address", "code"]) {
+    el(id).addEventListener("input", () => {
+      const parsed = parseConnectInput(el("address").value, el("code").value);
+      if (parsed.serverUrl && /[?&]code=/.test(el(id).value)) {
+        el("address").value = new URL(parsed.serverUrl).host;
+        el("code").value = parsed.code;
+      }
+    });
   }
-  el("main").hidden = false;
+}
+
+function connectClicked() {
+  const { serverUrl, code } = parseConnectInput(el("address").value, el("code").value);
+  if (!serverUrl) return setStatus("connect-status", t("needAddress"), "bad");
+  if (!code) return setStatus("connect-status", t("needCode"), "bad");
+  // Asked for here, synchronously inside the click: browsers grant a host
+  // permission only from a user gesture, and an await before it spends it.
+  const asked = ext.permissions?.request
+    ? ext.permissions.request({ origins: [originPattern(serverUrl)] })
+    : Promise.resolve(true);
+  finishConnect(asked, serverUrl, code);
+}
+
+async function finishConnect(asked, serverUrl, code) {
+  if (!(await asked.catch(() => false))) return setStatus("connect-status", t("permissionDenied"), "bad");
+  el("connect-button").disabled = true;
+  setStatus("connect-status", t("connecting"), "muted");
+  try {
+    config = await connect(serverUrl, code);
+  } catch (err) {
+    el("connect-button").disabled = false;
+    const message =
+      err.message === "not-maurice" ? t("notMaurice")
+      : err.status === 401 || err.status === 400 ? t("badCode")
+      : err.status ? `${t("unreachable")} (${err.status})`
+      : t("unreachable");
+    return setStatus("connect-status", message, "bad");
+  }
+  setStatus("connect-status", "", "");
+  await showMain();
+}
+
+// ── Account ──────────────────────────────────────────────────────
+
+function showAccount() {
+  const name = config.member?.name || "—";
+  el("avatar").textContent = name.slice(0, 1).toUpperCase();
+  if (config.member?.color) el("avatar").style.background = config.member.color;
+  el("who-name").textContent = name;
+  el("who-where").textContent = config.household || new URL(config.serverUrl).host;
+  el("via-app").hidden = !config.fromApp;
+  // The app's session is the app's to end.
+  el("disconnect").hidden = Boolean(config.fromApp);
+  show("account");
+}
+
+async function disconnect() {
+  try { await api(config, "/api/auth/logout", { method: "POST" }); } catch { /* gone already */ }
+  await forget();
+  config = await loadConfig();
+  if (isConfigured(config)) return showMain();
+  showConnect();
+}
+
+// ── Save ─────────────────────────────────────────────────────────
+
+async function showMain() {
+  show("main");
+  if (ext.permissions?.contains) {
+    originGranted = await ext.permissions
+      .contains({ origins: [originPattern(config.serverUrl)] })
+      .catch(() => true);
+  }
 
   try {
     captured = await capture();
   } catch (err) {
-    // chrome:// pages, the Web Store, PDFs — scripting is refused there.
-    el("title").textContent = "This page cannot be read";
+    // Browser pages, the extension stores, PDFs — scripting is refused there.
+    el("title").textContent = t("cannotRead");
     el("host").textContent = String(err.message ?? err);
-    el("save").disabled = true;
+    el("save").disabled = el("save-check").disabled = true;
     return;
   }
 
   el("title").textContent = captured.title || captured.url;
   el("host").textContent = hostOf(captured.url);
-  if (captured.selection) el("comment").value = captured.selection;
-  el("comment").focus();
+  if (captured.image) el("thumb").style.backgroundImage = `url("${captured.image.replace(/"/g, "%22")}")`;
+  el("full-page").hidden = !captured.html;
+  if (captured.html && captured.html.length > MAX_HTML) {
+    el("full-page").hidden = true;
+    el("already").textContent = t("pageTooLarge");
+    el("already").hidden = false;
+  }
+
+  const draft = await restoreDraft(captured.url);
+  if (draft?.comment) el("comment").value = draft.comment;
+  else if (captured.selection) el("comment").value = captured.selection;
+  if (draft?.tags?.length) { tags = draft.tags; renderTags(); }
+  if (el("comment").value || tags.length) setFold(true);
+  updateSummary();
 
   checkAlreadySaved(captured.url);
+  offerDictation();
 }
 
 /**
@@ -52,116 +176,258 @@ async function init() {
  *
  * This is the whole reason the extension exists: the page is already loaded,
  * already past the paywall and the bot check that a server-side fetch would
- * meet. `activeTab` grants this only for the tab whose toolbar button was
- * clicked, and only until it navigates — no standing access to every site.
+ * meet. `activeTab` grants this only for the tab whose button was pressed,
+ * and only until it navigates — no standing access to every site.
  */
 async function capture() {
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  const [tab] = await ext.tabs.query({ active: true, currentWindow: true });
   if (!tab?.id) throw new Error("No active tab");
-
-  const [result] = await chrome.scripting.executeScript({
+  const [result] = await ext.scripting.executeScript({
     target: { tabId: tab.id },
-    func: () => ({
-      url: location.href,
-      title: document.title,
-      html: document.documentElement.outerHTML,
-      selection: (window.getSelection()?.toString() ?? "").trim().slice(0, 2000),
-    }),
+    func: () => {
+      const meta = (sel) => document.querySelector(sel)?.getAttribute("content") || "";
+      let image = meta('meta[property="og:image"]') || meta('meta[name="twitter:image"]');
+      try { image = image ? new URL(image, location.href).href : ""; } catch { image = ""; }
+      return {
+        url: location.href,
+        title: meta('meta[property="og:title"]') || document.title,
+        image,
+        html: document.documentElement.outerHTML,
+        selection: (window.getSelection()?.toString() ?? "").trim().slice(0, 2000),
+      };
+    },
   });
-
   if (!result?.result) throw new Error("Nothing could be read from this tab");
   return result.result;
 }
 
 async function checkAlreadySaved(url) {
+  if (!originGranted) return;
   try {
-    const { saved, article } = await api(
-      config,
-      `/api/v1/garden/articles/lookup?url=${encodeURIComponent(url)}`,
-    );
+    const { saved } = await api(config, `/api/v1/garden/articles/lookup?url=${encodeURIComponent(url)}`);
     if (!saved) return;
-    const when = article.saved_at ? ` on ${article.saved_at}` : "";
-    el("already").textContent = `Already in your garden${when}. Saving again adds your note to it.`;
+    el("already").textContent = t("already");
     el("already").hidden = false;
-    el("save").textContent = "Add note";
+    el("save").textContent = t("addNote");
   } catch {
-    // A lookup failure is not worth interrupting the save for — the server
-    // deduplicates again anyway, and that check is the authoritative one.
+    // Not worth interrupting the save for: the server deduplicates again,
+    // and that check is the authoritative one.
   }
 }
 
-async function save() {
+function save() {
   if (!captured || el("save").disabled) return;
-  el("save").disabled = true;
-  setStatus("Saving…", "muted");
+  // In Safari the connection comes from the app, and the address may not be
+  // allowed yet: asked now, inside the click, like the connect screen does.
+  const asked = !originGranted && ext.permissions?.request
+    ? ext.permissions.request({ origins: [originPattern(config.serverUrl)] })
+    : Promise.resolve(true);
+  finishSave(asked);
+}
+
+async function finishSave(asked) {
+  if (!(await asked.catch(() => false))) return setStatus("status", t("permissionDenied"), "bad");
+  originGranted = true;
+  el("save").disabled = el("save-check").disabled = true;
+  setStatus("status", t("saving"), "muted");
 
   const html = captured.html && captured.html.length <= MAX_HTML ? captured.html : undefined;
-  if (captured.html && !html) {
-    setStatus("Page too large to send — letting the server fetch it…", "muted");
-  }
-
   const comment = el("comment").value.trim() || undefined;
   const payload = {
     url: captured.url,
     html,
     title: captured.title || undefined,
-    // The selection pre-fills the comment box, so sending it as well would
-    // write the same passage into the fiche twice — once as the lead quote,
-    // once as the reader's note.
+    // The selection pre-fills the note, so sending it as well would write the
+    // same passage into the fiche twice.
     selection: captured.selection && captured.selection !== comment ? captured.selection : undefined,
     comment,
-    tags: splitTags(el("tags").value),
-    locale: config.locale,
-    source_client: "chrome",
+    tags: tags.length ? tags : undefined,
+    locale: lang,
+    source_client: isSafari ? "safari" : /Firefox\//.test(ua) ? "firefox" : "chrome",
   };
 
-  // Handed to the service worker so it survives this popup closing.
+  // Handed to the background so it survives this popup closing.
   let reply;
   try {
-    reply = await chrome.runtime.sendMessage({ type: "save-article", payload });
+    reply = await ext.runtime.sendMessage({ type: "save-article", payload });
   } catch (err) {
-    // sendMessage rejects when the service worker cannot start or the channel
-    // closes before it answers — routine after worker eviction. Unhandled, it
-    // left the popup stuck on "Saving…" with the button disabled for good.
-    setStatus(`Could not reach the extension's worker: ${err?.message ?? err}`, "bad");
-    el("save").disabled = false;
-    return;
+    // The background could not start, or closed the channel before answering.
+    reply = { ok: false, error: String(err?.message ?? err) };
   }
 
   if (!reply?.ok) {
-    setStatus(reply?.error ?? "Save failed", "bad");
-    el("save").disabled = false;
+    setStatus("status", `${t("saveFailed")} — ${reply?.error ?? ""}`, "bad");
+    el("save").disabled = el("save-check").disabled = false;
     return;
   }
-
-  const { title, publication, duplicate, needs_capture, completed } = reply.result;
+  await clearDraft();
+  const { duplicate, needs_capture, fiche_web_path } = reply.result;
   if (needs_capture) {
-    // The site refused the server and no DOM got through — the URL and the note
-    // are kept, but the article itself is still missing.
-    setStatus("Kept as a bookmark — the page could not be read. Reload it and clip again.", "bad");
-    el("save").disabled = false;
+    setStatus("status", t("bookmark"), "bad");
+    el("save").disabled = el("save-check").disabled = false;
     return;
   }
-  setStatus(
-    completed
-      ? `Bookmark filled in: ${title}`
-      : duplicate
-        ? "Already saved — your note was added."
-        : `Saved: ${title}${publication ? ` — ${publication}` : ""}`,
-    "good",
-  );
-  setTimeout(() => window.close(), 1200);
+  el("saved-body").textContent = duplicate ? t("savedDuplicate") : t("savedBody");
+  el("open-fiche").hidden = !fiche_web_path;
+  el("open-fiche").onclick = async () => {
+    await ext.tabs.create({ url: `${config.serverUrl}${fiche_web_path}` });
+    window.close();
+  };
+  show("saved");
 }
 
-function splitTags(raw) {
-  const tags = raw.split(",").map((t) => t.trim()).filter(Boolean);
-  return tags.length ? tags : undefined;
+// ── The fold: note and tags ──────────────────────────────────────
+
+function setFold(open) {
+  el("fold").setAttribute("aria-expanded", String(open));
+  el("fold-body").hidden = !open;
+  updateSummary();
+  if (open) el("comment").focus();
 }
 
-function setStatus(text, className) {
-  const node = el("status");
+function updateSummary() {
+  const open = el("fold").getAttribute("aria-expanded") === "true";
+  const parts = [];
+  if (el("comment").value.trim()) parts.push(t("note").toLowerCase());
+  if (tags.length) parts.push(tags.join(", "));
+  el("fold-summary").textContent = open ? "" : `· ${parts.length ? parts.join(" · ") : t("optional")}`;
+}
+
+function renderTags() {
+  const box = el("tags");
+  box.replaceChildren();
+  for (const tag of tags) {
+    const chip = document.createElement("button");
+    chip.className = "chip";
+    chip.setAttribute("role", "listitem");
+    chip.textContent = tag;
+    chip.title = chip.ariaLabel = `${t("removeTag")} ${tag}`;
+    chip.addEventListener("click", () => {
+      tags = tags.filter((x) => x !== tag);
+      renderTags(); updateSummary(); keepDraft();
+    });
+    box.append(chip);
+  }
+  const add = document.createElement("button");
+  add.className = "chip add";
+  add.textContent = `+ ${t("addTag")}`;
+  add.addEventListener("click", () => {
+    const input = document.createElement("input");
+    input.className = "chip-input";
+    input.placeholder = t("tagPlaceholder");
+    input.setAttribute("aria-label", t("addTag"));
+    const commit = () => {
+      for (const tag of input.value.split(",").map((s) => s.trim()).filter(Boolean)) {
+        if (!tags.includes(tag)) tags.push(tag);
+      }
+      renderTags(); updateSummary(); keepDraft();
+    };
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === ",") { e.preventDefault(); e.stopPropagation(); commit(); el("tags").querySelector(".chip.add")?.click(); }
+      if (e.key === "Escape") { e.stopPropagation(); renderTags(); }
+    });
+    input.addEventListener("blur", () => { if (input.isConnected) commit(); });
+    add.replaceWith(input);
+    input.focus();
+  });
+  box.append(add);
+}
+
+// A popup vanishes when it loses focus — to grant the microphone in a tab, to
+// look something up. What was typed is kept for this page until it is saved.
+async function keepDraft() {
+  if (!captured) return;
+  await ext.storage.local.set({ draft: { url: captured.url, comment: el("comment").value, tags } });
+}
+async function restoreDraft(url) {
+  const { draft } = await ext.storage.local.get("draft");
+  return draft?.url === url ? draft : null;
+}
+async function clearDraft() {
+  await ext.storage.local.remove("draft");
+}
+
+// ── Dictation: the household's own (Whisper), as in the apps ─────
+
+let recorder = null;
+let chunks = [];
+let startedAt = 0;
+
+async function offerDictation() {
+  if (!originGranted || !navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") return;
+  try {
+    const { available } = await api(config, "/api/dictation");
+    el("mic").hidden = !available;
+  } catch {
+    el("mic").hidden = true;
+  }
+}
+
+async function toggleDictation() {
+  if (recorder?.state === "recording") return recorder.stop();
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch (err) {
+    // Chrome and Firefox do not ask for the microphone from a popup: the
+    // question is put once in a tab of the extension's own, and holds after.
+    if (!isSafari && err?.name === "NotAllowedError") {
+      await keepDraft();
+      setMicStatus(t("micNeedsTab"), true);
+      await ext.tabs.create({ url: ext.runtime.getURL("mic.html") });
+      return;
+    }
+    return setMicStatus(t("micRefused"), true);
+  }
+  const type = ["audio/webm;codecs=opus", "audio/mp4", "audio/ogg;codecs=opus"].find((m) => MediaRecorder.isTypeSupported?.(m));
+  recorder = new MediaRecorder(stream, type ? { mimeType: type } : undefined);
+  chunks = [];
+  recorder.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+  recorder.onstop = () => {
+    stream.getTracks().forEach((track) => track.stop());
+    el("mic").classList.remove("on");
+    el("mic").title = el("mic").ariaLabel = t("dictate");
+    transcribe(new Blob(chunks, { type: recorder.mimeType || type || "audio/webm" }), (Date.now() - startedAt) / 1000);
+  };
+  recorder.start();
+  startedAt = Date.now();
+  el("mic").classList.add("on");
+  el("mic").title = el("mic").ariaLabel = t("stopDictation");
+  setMicStatus(t("listening"));
+}
+
+async function transcribe(blob, seconds) {
+  setMicStatus(t("transcribing"), true);
+  try {
+    const { text } = await api(config, `/api/dictation?duration=${seconds.toFixed(1)}`, {
+      method: "POST",
+      raw: blob,
+      contentType: blob.type.split(";")[0],
+    });
+    if (text?.trim()) {
+      const box = el("comment");
+      box.value = box.value.trim() ? `${box.value.trim()} ${text.trim()}` : text.trim();
+      updateSummary();
+      keepDraft();
+    }
+    setMicStatus("");
+  } catch (err) {
+    setMicStatus(`${t("dictationFailed")} — ${err.message}`, true);
+  }
+}
+
+function setMicStatus(text, quiet = false) {
+  const node = el("mic-status");
   node.textContent = text;
-  node.className = className ?? "";
+  node.hidden = !text;
+  node.classList.toggle("quiet", quiet);
+}
+
+// ── Helpers ──────────────────────────────────────────────────────
+
+function setStatus(id, text, className) {
+  el(id).textContent = text;
+  el(id).className = `status ${className ?? ""}`;
 }
 
 function hostOf(url) {
@@ -170,9 +436,4 @@ function hostOf(url) {
   } catch {
     return "";
   }
-}
-
-function openOptions() {
-  chrome.runtime.openOptionsPage();
-  window.close();
 }

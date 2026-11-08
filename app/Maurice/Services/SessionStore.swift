@@ -422,9 +422,11 @@ final class SessionStore {
     }
     private func storeToken(_ token: String, for userId: String) {
         if let k = tokenKey(userId) { TokenVault.set(token, k) }
+        publishBrowserSession()
     }
     private func removeToken(for userId: String) {
         if let k = tokenKey(userId) { TokenVault.remove(k) }
+        publishBrowserSession()
     }
 
     private func mcpKey(_ userId: String) -> String? {
@@ -505,6 +507,22 @@ final class SessionStore {
         if let data = try? JSONEncoder().encode(households) {
             UserDefaults.standard.set(data, forKey: "maurice.households")
         }
+        publishBrowserSession()
+    }
+
+    /// On the Mac, the Safari extension saves as whoever is signed in here
+    /// (BrowserSession). Called whenever the household, the member or a token
+    /// changes; nothing is published on iOS, where Carnet carries the extension.
+    func publishBrowserSession() {
+        #if os(macOS)
+        guard let server = serverURL, let token = tokenForActiveUser, let user = activeDeviceUser else {
+            BrowserSession.publish(nil)
+            return
+        }
+        BrowserSession.publish(.init(serverUrl: server, token: token,
+                                     member: .init(name: user.displayName, color: user.avatarColor),
+                                     household: currentHousehold?.name))
+        #endif
     }
     private func loadHouseholds() {
         guard let data = UserDefaults.standard.data(forKey: "maurice.households"),
@@ -543,6 +561,7 @@ final class SessionStore {
     /// SessionStore) can resolve the locale.
     private func syncActiveUserMirror() {
         UserDefaults.standard.set(currentHousehold?.activeUserId, forKey: "maurice.activeUserId")
+        publishBrowserSession()
     }
 
     static func defaultName(_ serverURL: String) -> String {

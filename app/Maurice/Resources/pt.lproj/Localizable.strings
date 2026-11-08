@@ -658,6 +658,10 @@
 "devices.add.sheet_title" = "Digitalize este código com o seu outro dispositivo ou envie-lhe a ligação";
 "devices.add.done" = "Dispositivo ligado ✓";
 "devices.add.expired" = "Este código expirou. Feche e peça um novo.";
+"browser.connect" = "Ligar um navegador";
+"browser.connect.line" = "Na extensão «Guardar no Maurice», cola esta ligação — ou escreve o endereço e o código. Serve uma vez, durante dez minutos.";
+"browser.connect.copy" = "Copiar a ligação";
+"browser.connect.copied" = "Copiado";
 "members.share" = "Enviar a ligação";
 "members.revoke" = "Retirar";
 "members.valid_until" = "Válido até %@";

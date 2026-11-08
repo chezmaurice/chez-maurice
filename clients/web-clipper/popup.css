@@ -1,0 +1,314 @@
+/* Two looks, picked by platform in popup.js: Liquid Glass on Apple devices
+   (`html.apple`), Material 3 elsewhere (`html.material`) — what each system's
+   own sheets look like, nothing of Maurice's own. `html.sheet` is a phone,
+   where the popup fills the width. Light and dark follow the system. */
+
+:root {
+  --tint: #0a66d6;
+  --on-tint: #fff;
+  --ink: #1c1c1e;
+  --ink-2: #6b6b70;
+  --ground: #f2f2f6;
+  --surface: rgba(255, 255, 255, 0.72);
+  --fill: rgba(120, 120, 128, 0.12);
+  --chip: rgba(10, 102, 214, 0.12);
+  --on-chip: #0a57b8;
+  --good: #2b7a3d;
+  --bad: #c0362c;
+  --radius-sheet: 26px;
+  --radius-card: 18px;
+  --radius-field: 14px;
+  --font: -apple-system, "SF Pro Text", BlinkMacSystemFont, system-ui, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --tint: #3b8cff;
+    --ink: #f2f2f7;
+    --ink-2: #a1a1a8;
+    --ground: #1c1c1e;
+    --surface: rgba(58, 58, 60, 0.6);
+    --fill: rgba(120, 120, 128, 0.24);
+    --chip: rgba(59, 140, 255, 0.2);
+    --on-chip: #8fbcff;
+    --good: #5fc073;
+    --bad: #ff6b5e;
+  }
+}
+
+html.material {
+  --tint: #3d5f90;
+  --ink: #1a1c20;
+  --ink-2: #44474e;
+  --ground: #eef0f8;
+  --surface: #ffffff;
+  --fill: transparent;
+  --chip: #d6e3f7;
+  --on-chip: #0f1c2b;
+  --outline: #74777f;
+  --radius-sheet: 28px;
+  --radius-card: 16px;
+  --radius-field: 12px;
+  --font: "Roboto Flex", Roboto, "Segoe UI", system-ui, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  html.material {
+    --tint: #a7c8ff;
+    --on-tint: #0b305f;
+    --ink: #e2e2e9;
+    --ink-2: #c4c6d0;
+    --ground: #1d2024;
+    --surface: #282a2f;
+    --chip: #3b4858;
+    --on-chip: #d6e3f7;
+    --outline: #8e9099;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html { background: var(--ground); }
+
+body {
+  margin: 0;
+  width: 360px;
+  padding: 14px;
+  color: var(--ink);
+  font: 14px/1.4 var(--font);
+  -webkit-font-smoothing: antialiased;
+}
+
+html.sheet body { width: auto; min-width: 0; padding: 16px; }
+
+/* Glass where the popup is a window of its own: a lit edge and a soft sheen
+   stand in for the blur Safari draws around a popover itself. */
+html.apple { background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 40%), var(--ground); }
+@media (prefers-color-scheme: dark) {
+  html.apple { background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0) 40%), var(--ground); }
+}
+
+[hidden] { display: none !important; }
+
+.view { display: flex; flex-direction: column; gap: 12px; }
+
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+.title { margin: 0; font-size: 17px; font-weight: 600; }
+html.material .title { font-size: 22px; font-weight: 500; }
+.body { margin: 0; font-size: 13px; color: var(--ink-2); line-height: 1.45; }
+.body.center { text-align: center; max-width: 300px; }
+.fine { margin: 0; font-size: 11px; color: var(--ink-2); line-height: 1.4; }
+.label { font-size: 12px; color: var(--ink-2); padding-left: 4px; margin-bottom: -6px; }
+
+/* Cards and fields */
+
+.card {
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 0 0 0.5px rgba(0, 0, 0, 0.06);
+}
+html.material .card { box-shadow: none; }
+
+.field {
+  width: 100%;
+  border: none;
+  border-radius: var(--radius-field);
+  background: var(--fill);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  padding: 10px 12px;
+  outline: none;
+}
+.field:focus-visible { box-shadow: 0 0 0 2px var(--tint); }
+html.material .field { background: transparent; border: 1px solid var(--outline); }
+html.material .field:focus-visible { border-color: var(--tint); box-shadow: inset 0 0 0 1px var(--tint); }
+.field.code { font-variant-numeric: tabular-nums; letter-spacing: 0.08em; text-transform: uppercase; }
+
+/* Buttons */
+
+button { font: inherit; cursor: pointer; color: inherit; }
+button:disabled { opacity: 0.5; cursor: default; }
+button:focus-visible { outline: 2px solid var(--tint); outline-offset: 2px; }
+
+.primary, .secondary, .danger {
+  height: 36px;
+  padding: 0 20px;
+  border-radius: 18px;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+}
+.primary { background: var(--tint); color: var(--on-tint); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3); }
+.secondary { background: var(--fill); }
+.danger { background: transparent; color: var(--bad); }
+html.material .primary, html.material .secondary, html.material .danger { height: 40px; border-radius: 20px; box-shadow: none; }
+html.material .secondary { background: transparent; color: var(--tint); }
+html.sheet .primary, html.sheet .secondary, html.sheet .danger { height: 48px; border-radius: 24px; font-size: 16px; }
+.wide { width: 100%; }
+
+.round {
+  width: 36px;
+  height: 36px;
+  border-radius: 18px;
+  border: none;
+  background: var(--fill);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.round.tinted { background: var(--tint); color: var(--on-tint); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3); }
+html.material .round { background: transparent; }
+html.material .round.tinted { background: var(--tint); }
+html.sheet .round { width: 44px; height: 44px; border-radius: 22px; }
+
+/* The top bar is the phone sheet's (close · title · check); on a desktop
+   popover the footer's button does the saving. */
+.bar { display: none; align-items: center; justify-content: space-between; }
+.bar-title { font-size: 17px; font-weight: 600; }
+html.sheet.apple .bar { display: flex; }
+html.sheet.apple .foot { display: none; }
+.sheet-heading { display: none; }
+html.sheet.material .sheet-heading { display: block; }
+
+/* The article */
+
+.article { display: flex; gap: 12px; align-items: center; padding: 10px; }
+.thumb {
+  width: 52px; height: 52px; border-radius: 12px; flex-shrink: 0;
+  background: var(--fill) center / cover no-repeat;
+}
+html.material .thumb { background-color: var(--chip); }
+.article-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.article-title {
+  font-size: 14px; font-weight: 600; line-height: 1.25;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+html.material .article-title { font-weight: 500; }
+.article-host { font-size: 12px; color: var(--ink-2); }
+
+.hint { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-2); padding: 0 4px; }
+.hint.good { color: var(--good); }
+.hint.listening { color: var(--bad); }
+.hint.listening::before { content: ""; width: 8px; height: 8px; border-radius: 4px; background: var(--bad); flex-shrink: 0; }
+.hint.listening.quiet { color: var(--ink-2); }
+.hint.listening.quiet::before { display: none; }
+
+/* The fold: why keep it, the note, the tags */
+
+.fold-head {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  text-align: left;
+}
+.fold-label { display: flex; align-items: center; gap: 8px; }
+.fold-label svg { color: var(--ink-2); }
+.fold-summary { font-size: 12px; color: var(--ink-2); }
+.chevron { color: var(--ink-2); transition: transform 0.2s ease; }
+.fold-head[aria-expanded="true"] .chevron { transform: rotate(90deg); }
+html.material .fold { border: 1px solid var(--outline); background: transparent; }
+
+.fold-body { padding: 0 10px 12px; display: flex; flex-direction: column; gap: 10px; }
+.note-wrap { position: relative; }
+.note { height: 76px; resize: none; padding-right: 50px; line-height: 1.4; }
+html.sheet .note { height: 96px; font-size: 16px; }
+
+.mic {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  width: 36px;
+  height: 36px;
+  border-radius: 18px;
+  border: none;
+  background: var(--chip);
+  color: var(--tint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mic .mic-stop { display: none; }
+.mic.on { background: var(--bad); color: #fff; box-shadow: 0 0 0 5px color-mix(in srgb, var(--bad) 20%, transparent); }
+.mic.on .mic-idle { display: none; }
+.mic.on .mic-stop { display: block; }
+html.sheet .mic { width: 44px; height: 44px; border-radius: 22px; }
+
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 15px;
+  border: none;
+  background: var(--chip);
+  color: var(--on-chip);
+  font-size: 13px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.chip.add { background: var(--fill); color: var(--ink); font-weight: 400; }
+html.material .chip { border-radius: 8px; height: 32px; }
+html.material .chip.add { border: 1px solid var(--outline); background: transparent; }
+.chip-input {
+  height: 30px;
+  width: 110px;
+  border-radius: 15px;
+  border: none;
+  background: var(--fill);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  padding: 0 12px;
+  outline: none;
+}
+html.material .chip-input { border-radius: 8px; border: 1px solid var(--tint); background: transparent; }
+html.sheet .chip, html.sheet .chip-input { height: 36px; font-size: 14px; }
+
+/* Footer */
+
+.foot { display: flex; align-items: center; gap: 8px; }
+.shortcut { flex: 1; font-size: 11px; color: var(--ink-2); }
+html.sheet .foot .shortcut { visibility: hidden; }
+html.material.sheet .foot { justify-content: flex-end; }
+
+.status { font-size: 12px; min-height: 0; padding: 0 4px; }
+.status:empty { display: none; }
+.status.bad { color: var(--bad); }
+.status.muted { color: var(--ink-2); }
+
+/* Saved */
+
+.done { align-items: center; text-align: center; padding: 12px 4px 4px; gap: 10px; }
+.done-mark {
+  width: 60px; height: 60px; border-radius: 30px;
+  background: color-mix(in srgb, var(--good) 15%, transparent);
+  color: var(--good);
+  display: flex; align-items: center; justify-content: center;
+}
+.pair { display: flex; gap: 10px; width: 100%; margin-top: 4px; }
+.pair > button { flex: 1; }
+
+/* Account */
+
+.who { display: flex; align-items: center; gap: 12px; padding: 12px; }
+.avatar {
+  width: 36px; height: 36px; border-radius: 18px; flex-shrink: 0;
+  background: var(--tint); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 600;
+}
+.who-name { font-weight: 600; }
+.who-where { font-size: 12px; color: var(--ink-2); }

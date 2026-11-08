@@ -658,6 +658,10 @@
 "devices.add.sheet_title" = "Scannez ce code avec votre autre appareil, ou envoyez-lui le lien";
 "devices.add.done" = "Appareil connecté ✓";
 "devices.add.expired" = "Ce code a expiré. Fermez et demandez-en un nouveau.";
+"browser.connect" = "Connecter un navigateur";
+"browser.connect.line" = "Dans l’extension « Enregistrer dans Maurice », collez ce lien — ou tapez l’adresse et le code. Il sert une fois, pendant dix minutes.";
+"browser.connect.copy" = "Copier le lien";
+"browser.connect.copied" = "Copié";
 "members.share" = "Envoyer le lien";
 "members.revoke" = "Retirer";
 "members.valid_until" = "Valable jusqu’au %@";

@@ -658,6 +658,10 @@
 "devices.add.sheet_title" = "Scanne diesen Code mit deinem anderen Gerät oder schick ihm den Link";
 "devices.add.done" = "Gerät verbunden ✓";
 "devices.add.expired" = "Dieser Code ist abgelaufen. Schließe und fordere einen neuen an.";
+"browser.connect" = "Browser verbinden";
+"browser.connect.line" = "Füge diesen Link in der Erweiterung „In Maurice speichern“ ein – oder gib die Adresse und den Code ein. Er gilt einmal, zehn Minuten lang.";
+"browser.connect.copy" = "Link kopieren";
+"browser.connect.copied" = "Kopiert";
 "members.share" = "Link senden";
 "members.revoke" = "Zurückziehen";
 "members.valid_until" = "Gültig bis %@";

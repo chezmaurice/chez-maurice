@@ -2,68 +2,110 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <link rel="stylesheet" href="style.css" />
-    <style>
-      body { width: 340px; padding: 14px; }
-      .page-title {
-        margin: 0 0 1px;
-        font-weight: 600;
-        font-size: 13px;
-        line-height: 1.35;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-      }
-      .page-host { font-size: 11px; }
-      .field { margin-top: 12px; }
-      .row { display: flex; gap: 8px; align-items: center; margin-top: 14px; }
-      .row button { flex: 1; }
-      .row button.ghost { flex: 0 0 auto; }
-      #status { margin-top: 10px; font-size: 12px; min-height: 1.5em; }
-      #already {
-        margin-top: 10px;
-        padding: 7px 9px;
-        border: 1px solid var(--rule);
-        border-left: 2px solid var(--ink-soft);
-        border-radius: 4px;
-        font-size: 12px;
-        background: var(--paper-warm);
-      }
-      [hidden] { display: none !important; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
-    <div class="eyebrow">Save to Maurice</div>
-
-    <section id="setup" hidden>
-      <h1>Not connected yet</h1>
-      <p class="muted">Point the clipper at your Maurice server and paste an API token.</p>
-      <div class="row"><button id="open-options">Open settings</button></div>
+    <!-- Connect: a one-time code from the member's app. -->
+    <section id="connect" class="view" hidden>
+      <h1 class="title" data-t="connectTitle"></h1>
+      <p class="body" data-t="connectBody"></p>
+      <label class="label" for="address" data-t="address"></label>
+      <input class="field" id="address" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" />
+      <label class="label" for="code" data-t="code"></label>
+      <input class="field code" id="code" type="text" autocomplete="one-time-code" autocapitalize="characters" spellcheck="false" placeholder="ABCD-EFGH" />
+      <div class="status" id="connect-status" role="status"></div>
+      <button class="primary wide" id="connect-button" data-t="connect"></button>
+      <p class="fine" data-t="connectNote"></p>
     </section>
 
-    <section id="main" hidden>
-      <h1 class="page-title" id="title">…</h1>
-      <div class="page-host muted" id="host"></div>
+    <!-- Save. -->
+    <section id="main" class="view" hidden>
+      <header class="bar">
+        <button class="round" id="close" data-label="close">
+          <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+        <div class="bar-title" data-t="saveTitle"></div>
+        <button class="round tinted" id="save-check" data-label="save">
+          <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M3.5 9.5l3.5 3.5 7.5-8" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </header>
+      <h1 class="title sheet-heading" data-t="saveTitle"></h1>
 
-      <div id="already" hidden></div>
-
-      <div class="field">
-        <label class="eyebrow" for="comment">Why keep this?</label>
-        <textarea id="comment" placeholder="Optional — a note to your future self"></textarea>
+      <div class="card article">
+        <div class="thumb" id="thumb"></div>
+        <div class="article-text">
+          <div class="article-title" id="title">…</div>
+          <div class="article-host" id="host"></div>
+        </div>
       </div>
 
-      <div class="field">
-        <label class="eyebrow" for="tags">Tags</label>
-        <input type="text" id="tags" placeholder="comma-separated, optional" />
+      <div class="hint good" id="full-page" hidden>
+        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5 8.2l2 2 4-4.4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+        <span data-t="fullPage"></span>
+      </div>
+      <div class="hint" id="already" hidden></div>
+
+      <div class="card fold">
+        <button class="fold-head" id="fold" aria-expanded="false" aria-controls="fold-body">
+          <span class="fold-label">
+            <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M3 4.5h12M3 9h12M3 13.5h7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            <span data-t="why"></span>
+            <span class="fold-summary" id="fold-summary"></span>
+          </span>
+          <svg class="chevron" width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M4 2.5L9 7l-5 4.5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="fold-body" id="fold-body" hidden>
+          <div class="note-wrap">
+            <label class="visually-hidden" for="comment" data-t="note"></label>
+            <textarea class="field note" id="comment"></textarea>
+            <button class="mic" id="mic" data-label="dictate" hidden>
+              <svg class="mic-idle" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><rect x="6.5" y="2" width="5" height="9" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M4 8.5a5 5 0 0 0 10 0M9 13.5V16" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round"/></svg>
+              <svg class="mic-stop" width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor"/></svg>
+            </button>
+          </div>
+          <div class="hint listening" id="mic-status" hidden></div>
+          <div class="tags" id="tags" role="list" aria-label=""></div>
+        </div>
       </div>
 
-      <div class="row">
-        <button id="save">Save</button>
-        <button class="ghost" id="settings" title="Settings">⚙</button>
-      </div>
+      <footer class="foot">
+        <button class="round plain" id="settings" data-label="settings">
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2.4" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+        <div class="shortcut" id="shortcut"></div>
+        <button class="primary" id="save" data-t="save"></button>
+      </footer>
+      <div class="status" id="status" role="status"></div>
+    </section>
 
-      <div id="status"></div>
+    <!-- Saved. -->
+    <section id="saved" class="view done" hidden>
+      <div class="done-mark">
+        <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path d="M7 15.5l5.5 5.5L23 9.5" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="title" data-t="saved"></div>
+      <p class="body center" id="saved-body"></p>
+      <div class="pair">
+        <button class="secondary" id="saved-close" data-t="close"></button>
+        <button class="primary" id="open-fiche" data-t="openFiche"></button>
+      </div>
+    </section>
+
+    <!-- Account. -->
+    <section id="account" class="view" hidden>
+      <div class="card who">
+        <div class="avatar" id="avatar"></div>
+        <div>
+          <div class="who-name" id="who-name"></div>
+          <div class="who-where" id="who-where"></div>
+        </div>
+      </div>
+      <p class="fine" id="via-app" data-t="viaApp" hidden></p>
+      <div class="pair">
+        <button class="secondary" id="account-back" data-t="back"></button>
+        <button class="danger" id="disconnect" data-t="disconnect"></button>
+      </div>
     </section>
 
     <script type="module" src="popup.js"></script>

@@ -42,6 +42,7 @@ struct SettingsView: View {
     @State private var confirmForget = false
     /// The code this member made for another device of theirs, shown as a QR.
     @State private var ownDeviceCode: MemberInviteCode?
+    @State private var ownDeviceForBrowser = false
     @State private var ownDeviceError: String?
     /// A friend from another household, invited as a guest (GuestInvite).
     @State private var guestInviteCode: GuestInvite.Code?
@@ -126,9 +127,11 @@ struct SettingsView: View {
         .sheet(isPresented: $showReportQueue) { ReportsReviewView() }
         .sheet(item: $ownDeviceCode) { code in
             InviteQRSheet(invitation: Invitation(server: session.serverURL ?? "", code: code.code),
-                          title: session.localized("devices.add.sheet_title"),
+                          title: session.localized(ownDeviceForBrowser ? "browser.connect" : "devices.add.sheet_title"),
                           expiresAt: code.expires_at, onRevoke: nil,
-                          watch: { await ownDeviceCodeState(code.code) })
+                          watch: { await ownDeviceCodeState(code.code) },
+                          lines: ownDeviceForBrowser ? [session.localized("browser.connect.line")] : [],
+                          forBrowser: ownDeviceForBrowser)
                 .environment(session)
         }
         .sheet(item: $guestInviteCode) { code in
@@ -170,6 +173,12 @@ struct SettingsView: View {
                                     IndexRow(icon: "plus.rectangle.on.rectangle",
                                              label: session.localized("devices.add"),
                                              accent: accent) { Task { await addOwnDevice() } }
+                                    // The browser extension: the same code,
+                                    // pasted as a link rather than scanned.
+                                    SetDivider()
+                                    IndexRow(icon: "safari",
+                                             label: session.localized("browser.connect"),
+                                             accent: accent) { Task { await addOwnDevice(browser: true) } }
                                     // A friend from another household, as a guest
                                     // who sees only this member. Gone once the
                                     // server says no (a child not allowed).
@@ -785,13 +794,16 @@ struct SettingsView: View {
         return "\(s.count) · \(formatBytes(s.size_bytes))"
     }
 
-    /// A fresh code for another device of this member's, shown as a QR.
-    private func addOwnDevice() async {
+    /// A fresh code for another device of this member's, shown as a QR — or,
+    /// for the browser extension, as a link to paste.
+    private func addOwnDevice(browser: Bool = false) async {
         guard let serverURL = session.serverURL, let token = session.tokenForActiveUser else { return }
         ownDeviceError = nil
         do {
-            ownDeviceCode = try await APIClient(baseURL: serverURL)
+            let code: MemberInviteCode = try await APIClient(baseURL: serverURL)
                 .post("/api/me/device-code", body: [String: String](), token: token)
+            ownDeviceForBrowser = browser
+            ownDeviceCode = code
         } catch {
             ownDeviceError = error.localizedDescription
         }
@@ -1235,7 +1247,11 @@ private struct InviteQRSheet: View {
     var watch: (() async -> String?)? = nil
     /// Under the title: what the code gives (a friend's guest invitation).
     var lines: [String] = []
+    /// For the browser extension: no QR (a browser does not scan), the link
+    /// written out with a button that copies it.
+    var forBrowser = false
     @State private var state = "pending"
+    @State private var copied = false
 
     var body: some View {
         VStack(spacing: 18) {
@@ -1258,11 +1274,22 @@ private struct InviteQRSheet: View {
                     .multilineTextAlignment(.center)
                     .frame(minHeight: 200)
             } else {
-                // Dark modules on white, whatever the theme: a scanner wants contrast.
-                QRCodeImage(text: invitation.link)
-                    .padding(14)
-                    .background(Color.white, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    .frame(maxWidth: 260)
+                if forBrowser {
+                    Text(invitation.link)
+                        .font(.system(size: 14, design: .monospaced))
+                        .foregroundStyle(theme.inkSoft)
+                        .multilineTextAlignment(.center)
+                        .textSelection(.enabled)
+                        .padding(.horizontal, 14).padding(.vertical, 12)
+                        .frame(maxWidth: 320)
+                        .background(theme.ink.opacity(0.06), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                } else {
+                    // Dark modules on white, whatever the theme: a scanner wants contrast.
+                    QRCodeImage(text: invitation.link)
+                        .padding(14)
+                        .background(Color.white, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .frame(maxWidth: 260)
+                }
                 Text(Self.formatted(invitation.code))
                     .font(.system(size: 22, weight: .medium, design: .monospaced))
                     .tracking(3)
@@ -1276,6 +1303,15 @@ private struct InviteQRSheet: View {
                         .font(.system(size: 12).monospacedDigit()).foregroundStyle(theme.inkMute)
                 }
                 HStack(spacing: 12) {
+                    if forBrowser {
+                        Button {
+                            copyLink()
+                        } label: {
+                            Label(session.localized(copied ? "browser.connect.copied" : "browser.connect.copy"),
+                                  systemImage: copied ? "checkmark" : "doc.on.doc")
+                        }
+                        .glassBorderedButton()
+                    }
                     if let url = URL(string: invitation.link) {
                         ShareLink(item: url) {
                             Label(session.localized("members.share"), systemImage: "square.and.arrow.up")
@@ -1310,6 +1346,16 @@ private struct InviteQRSheet: View {
 
     static func formatted(_ code: String) -> String {
         code.count == 8 ? "\(code.prefix(4))-\(code.suffix(4))" : code
+    }
+
+    private func copyLink() {
+        #if os(iOS)
+        UIPasteboard.general.string = invitation.link
+        #elseif os(macOS)
+        NSPasteboard.general.clearContents(); NSPasteboard.general.setString(invitation.link, forType: .string)
+        #endif
+        copied = true
+        Task { try? await Task.sleep(nanoseconds: 1_800_000_000); copied = false }
     }
 
     /// "Valid until 2 Oct", in the member's language — "until 14:32" for a

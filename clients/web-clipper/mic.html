@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="popup.css" />
+    <style>
+      body { width: auto; max-width: 420px; margin: 15vh auto; text-align: center; }
+      .view { align-items: center; }
+    </style>
+  </head>
+  <body>
+    <section class="view">
+      <div class="done-mark" id="mark" hidden>
+        <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path d="M7 15.5l5.5 5.5L23 9.5" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <h1 class="title" id="heading"></h1>
+      <p class="body center" id="text"></p>
+      <button class="primary" id="again" hidden></button>
+    </section>
+    <script type="module" src="mic.js"></script>
+  </body>
+</html>
