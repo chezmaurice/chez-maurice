@@ -1,6 +1,6 @@
 ---
 title: Carnet — the pocket companion
-date: '2026-11-07'
+date: '2026-11-08'
 flags: []
 locale: en
 description: 'The iOS/iPadOS companion to Maurice: log what happened, read books and
@@ -174,7 +174,7 @@ Carnet is in daily use at home; the minimal scope is on TestFlight (1.0.0 on the
 - **The article page and the conversations on the fiche were built on 19 October 2026 and checked against the home server, not yet on a phone**: the hand-off to the Maurice app, the menu of past conversations, a summary shown from the fiche.
 - **Chat only from an entry.** A conversation Maurice opened is still read here and answered in the Maurice app (*Reply in Maurice*, which the app answers since 9 October 2026); the thread opened from an entry shows text only — no source cards, no images, no tool trail, no stop button — and was never run against a real turn before it shipped. `Dictation.swift` is a copy of the Maurice app's file, not a shared package: a fix in one must be made in the other.
 - **Push reaches the phone; the tap was not re-checked on a real one.** The server picks the APNs topic by platform (`carnet-ios` → `eu.chezmaurice.carnet.app`, `APNS_CARNET_TOPIC` in `apns.ts`) and, since 13 October 2026, tries both APNs environments, so a TestFlight build is notified by the home server; a test notification was delivered that day. The tap handling was checked with a simulated push only.
-- **A companion's conversation is not opened from here**; the book page shows and creates the companion, the conversation itself is the Maurice app's.
+- **A companion's conversation is not opened from the book's drawer**; the book page shows and creates the companion, the conversation itself is the Maurice app's. Since 8 November 2026 it is filed on the book's fiche from its first exchange (the fiche is created, tied to the book, when there was none), and opens from there like any conversation on an entry.
 - **Mostly English.** The way in and the member sheet are in seven languages (2 November 2026); the rest of the app is not localised yet — the briefs are in the member's language, the chrome around them is not.
 - **The new way in (2 November 2026) has run only in the simulator**: the welcome screen, a code alone then the address, an unreachable household, pairing by address, a `carnet://join` link. Not yet on a phone: a real scan, a universal link (the App Store profile was made again with Associated Domains on 2 November 2026; the development profile was not, so a debug build on a phone is signed without them), *Add a device*, the admin sign-in, the member sheet signed in.
 - **The « + » and the per-member caches were checked on a phone on 1.0.1 build 21** (3 November 2026): a second member signed in on a shared iPhone sees only their own articles. Sharing the card ran on a phone in a debug build (6 November 2026).
