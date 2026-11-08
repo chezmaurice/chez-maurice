@@ -30,8 +30,10 @@ export type OpenAITurnEvent =
   | { type: "error"; message: string; kind?: BillingErrorKind };
 
 /** `out_of_credits`: the account is definitely empty. `plan_or_credits`: the
- *  provider refused on billing grounds without saying which — see below. */
-export type BillingErrorKind = "out_of_credits" | "plan_or_credits";
+ *  provider refused on billing grounds without saying which — see below.
+ *  `payment_failed`: the account is blocked until a failed payment is settled
+ *  (Mistral's 402 `billing_payment_failure`, met 7 November 2026). */
+export type BillingErrorKind = "out_of_credits" | "plan_or_credits" | "payment_failed";
 
 /** Read a billing refusal out of a provider error. Matched on the message rather
  *  than the status: all three providers answer 429 for ordinary rate limiting
@@ -51,6 +53,7 @@ export function billingErrorKind(detail: string): BillingErrorKind | undefined {
   // out-of-credits sentence word for word and means the opposite errand: wait
   // a minute, not top up. Rate-limit wording is ruled out before anything else.
   if (/per minute|rate.?limit|slow down/i.test(detail)) return undefined;
+  if (/payment[ _]fail/i.test(detail)) return "payment_failed";
   if (/no resource package|insufficient balance or/i.test(detail)) return "plan_or_credits";
   if (/insufficient[ _]balance|insufficient_quota|exceeded your current quota/i.test(detail)) return "out_of_credits";
   return undefined;

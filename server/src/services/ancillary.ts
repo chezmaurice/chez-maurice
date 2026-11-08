@@ -28,7 +28,7 @@ import { join } from "path";
 import db from "../db";
 import { getModel, ancillaryProviders, householdDefaultModel } from "./models";
 import { getHouseholdConfig, isOpenAIStyle, openaiStyleBaseUrl, openaiStyleKey } from "./claude";
-import { openaiTurn, PROMPT_CACHE_KEY_PROVIDERS } from "./openaiChat";
+import { openaiTurn, PROMPT_CACHE_KEY_PROVIDERS, type BillingErrorKind } from "./openaiChat";
 import { ollamaTurn } from "./ollama";
 import { newUsage, priceUsage, type TurnUsage } from "./pricing";
 import { docsModel } from "./mauriceDocs";
@@ -637,9 +637,25 @@ export async function ancillaryCompleteRetrying(
 }
 
 export class AncillaryError extends Error {
-  constructor(message: string, public readonly status: number = 502) {
+  constructor(
+    message: string,
+    public readonly status: number = 502,
+    /** Set when the provider refused on billing grounds: an errand for the
+     *  admin, never worth a retry. */
+    public readonly kind?: BillingErrorKind,
+  ) {
     super(message);
   }
+}
+
+/** A billing refusal in words a member can pass on, instead of the provider's
+ *  JSON. The raw body goes to the log. */
+function billingMessage(provider: string, kind: BillingErrorKind): string {
+  const what =
+    kind === "payment_failed" ? `refuses requests until a failed payment on the household's ${provider} account is settled`
+    : kind === "out_of_credits" ? `says the household's ${provider} credits have run out`
+    : `says this model isn't covered by the household's ${provider} package, or the balance has run out`;
+  return `The model provider ${what}. Please let the household admin know.`;
 }
 
 /**
@@ -754,7 +770,13 @@ export async function ancillaryComplete(req: AncillaryRequest): Promise<Ancillar
         text = ev.content || text;
         if (ev.usage) usage = usageOf(provider, modelId, ev.usage.prompt, ev.usage.completion, ev.usage.cached);
       }
-      else if (ev.type === "error") throw new AncillaryError(`${provider} error: ${ev.message}`);
+      else if (ev.type === "error") {
+        if (ev.kind) {
+          console.warn(`[ancillary] ${req.invocation}: ${provider} error: ${ev.message.slice(0, 300)}`);
+          throw new AncillaryError(billingMessage(provider, ev.kind), 402, ev.kind);
+        }
+        throw new AncillaryError(`${provider} error: ${ev.message}`);
+      }
     }
     if (!text.trim()) stop = "other";
     return { text: text.trim(), model: modelId, provider, stop, usage };

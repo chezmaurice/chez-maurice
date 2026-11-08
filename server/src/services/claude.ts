@@ -1164,8 +1164,7 @@ async function* runOpenAIAgentic(
         // is an errand for the admin. `out_of_credits` reuses the Anthropic
         // path's wording; the ambiguous one says both things it might mean.
         if (ev.kind) {
-          const key = ev.kind === "out_of_credits" ? "chat.out_of_credits" : "chat.plan_or_credits";
-          yield { type: "text_delta", text: t(lang, key) };
+          yield { type: "text_delta", text: t(lang, `chat.${ev.kind}`) };
           yield { type: "done", message_id: crypto.randomUUID() };
           return;
         }

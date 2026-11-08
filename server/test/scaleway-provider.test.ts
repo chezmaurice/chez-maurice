@@ -13,6 +13,7 @@ const db = (await import("../src/db")).default;
 const { configuredProviders } = await import("../src/services/models");
 const { priceFor } = await import("../src/services/pricing");
 const { billingErrorKind, openaiTurn } = await import("../src/services/openaiChat");
+const { AncillaryError, ancillaryCompleteRetrying } = await import("../src/services/ancillary");
 const { OPENAI_STYLE_BASE_URL, isOpenAIStyle, openaiStyleKey, openaiStyleBaseUrl } = await import("../src/services/claude");
 
 beforeAll(() => {
@@ -82,6 +83,33 @@ test("a per-minute quota is not an empty account", () => {
   )).toBeUndefined();
   expect(billingErrorKind("You exceeded your current quota, please check your plan and billing details.")).toBe("out_of_credits");
   expect(billingErrorKind("Insufficient balance or no resource package")).toBe("plan_or_credits");
+});
+
+const MISTRAL_402 =
+  '{"object":"error","message":"Please resolve your last payment failure to restore access.","type":"billing_payment_failure","param":null,"code":"2302","raw_status_code":402}';
+
+test("a failed payment is named, and a side task says so in words, once", async () => {
+  expect(billingErrorKind(MISTRAL_402)).toBe("payment_failed");
+  db.run(`UPDATE households SET scaleway_api_key = 'k-scw' WHERE id = 'default'`);
+  const realFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = (async () => { calls++; return new Response(MISTRAL_402, { status: 402 }); }) as any;
+  try {
+    const err = await ancillaryCompleteRetrying(
+      { invocation: "topic_tags", model: "mistral-small-3.2-24b-instruct-2506", prompt: "x", maxTokens: 10 },
+      [0, 0],
+    ).catch((e) => e);
+    expect(err).toBeInstanceOf(AncillaryError);
+    expect(err.status).toBe(402);
+    expect(err.kind).toBe("payment_failed");
+    expect(err.message).toBe(
+      "The model provider refuses requests until a failed payment on the household's scaleway account is settled. Please let the household admin know.",
+    );
+    expect(calls).toBe(1); // not worth asking again
+  } finally {
+    globalThis.fetch = realFetch;
+    db.run(`UPDATE households SET scaleway_api_key = NULL WHERE id = 'default'`);
+  }
 });
 
 test("reasoning streamed as `reasoning` counts as thinking", async () => {
