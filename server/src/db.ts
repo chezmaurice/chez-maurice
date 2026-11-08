@@ -1342,6 +1342,23 @@ db.run(`
 `);
 db.run(`CREATE INDEX IF NOT EXISTS idx_domain_mail_member ON domain_mail(member_id)`);
 
+// The domain a saved article is filed under (8 November 2026): one at most,
+// chosen at the save by the light model or by the member (data-api/services/
+// domainArticles.ts). `by` says who: `auto`, `member`, or `none` — the member
+// took it out of every domain, and it is never filed again. The brief reads
+// each once, after `added_at`. `path` is the fiche's, garden-relative.
+db.run(`
+  CREATE TABLE IF NOT EXISTS domain_articles (
+    member_id  TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    path       TEXT NOT NULL,
+    maurice_id TEXT REFERENCES maurices(id) ON DELETE CASCADE,
+    by         TEXT NOT NULL CHECK (by IN ('auto', 'member', 'none')),
+    added_at   TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (member_id, path)
+  )
+`);
+db.run(`CREATE INDEX IF NOT EXISTS idx_domain_articles_domain ON domain_articles(maurice_id)`);
+
 // A member's senders set aside from the reading of their mail (28 September
 // 2026): `days` of that sender's mail still read, 0 for none. Passed to every
 // triage (services/mailSenderRules.ts).

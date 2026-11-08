@@ -90,6 +90,7 @@ const TABLES: [table: string, column: string, secret?: string[]][] = [
   ["domain_briefs", "member_id"],
   ["domain_proposals", "member_id"],
   ["domain_mail", "member_id"],
+  ["domain_articles", "member_id"],
   ["domain_seen", "member_id"],
   ["mail_accounts", "member_id", ["secret"]],
   ["mail_conversations", "member_id"],
@@ -111,7 +112,7 @@ const TABLES: [table: string, column: string, secret?: string[]][] = [
  *  was spent there was not spent here. */
 const IMPORTED = [
   "user_preferences", "maurices", "folders", "files", "life_facts", "domain_briefs",
-  "domain_proposals", "domain_mail", "domain_seen", "mail_sender_rules",
+  "domain_proposals", "domain_mail", "domain_articles", "domain_seen", "mail_sender_rules",
 ];
 
 /** Account columns that are credentials, or the household's business. */
@@ -582,7 +583,7 @@ export async function importMember(archivePath: string, memberId: string): Promi
         report.files++;
       }
 
-      for (const name of ["life_facts", "domain_briefs", "domain_proposals", "domain_mail", "domain_seen", "mail_sender_rules"]) {
+      for (const name of ["life_facts", "domain_briefs", "domain_proposals", "domain_mail", "domain_articles", "domain_seen", "mail_sender_rules"]) {
         for (const row of table(name)) {
           if (insert(db, name, { ...row, member_id: memberId })) report.rows++;
           else report.skipped++;

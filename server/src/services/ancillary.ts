@@ -120,6 +120,12 @@ export const ANCILLARY_INVOCATIONS: AncillaryInvocation[] = [
   { id: "article_cleanup", side: "server", tier: "light", label: "Article cleanup",
     blurb: "Sorting a saved article's text from the page's furniture — credits, advertising markers, the header said twice — before it is read.",
     prefer: ["qwen3.6-35b-a3b"] },
+  // At the save (data-api/services/domainArticles.ts): which of the member's
+  // domains a saved article belongs to, if any. A choice among a few names,
+  // answered with a number; the member changes it from the share sheet.
+  { id: "article_domain", side: "server", tier: "light", label: "Article filing",
+    blurb: "Choosing which of the member's domains a saved article belongs to, if any.",
+    prefer: ["qwen3.6-35b-a3b"] },
   // A book's chapters condensed one by one (data-api/services/bookProcessing.ts),
   // each with the summaries before it as context — what the reader shows beside
   // the text and what the reading companion reads. The household's own default

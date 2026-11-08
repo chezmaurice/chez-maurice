@@ -4,6 +4,7 @@
  * GET  /api/v1/garden/articles/lookup?url=… — is it already saved?
  * GET  /api/v1/garden/articles/:slug        — one article's metadata + body
  * POST /api/v1/garden/articles/:slug/comment — add a note (opens the fiche)
+ * GET|PUT /api/v1/garden/articles/:slug/domain — the domain it is filed under
  * GET  /api/v1/garden/articles/:slug/text   — the captured full text
  * CRUD /api/v1/garden/articles/:slug/highlights — passage highlights
  *
@@ -26,8 +27,17 @@ import {
   readArticleBody,
   saveArticleFiche,
   type SaveArticleInput,
+  type SaveArticleResult,
 } from "../services/gardenArticles";
 import fs from "node:fs";
+import path from "node:path";
+import {
+  articleDomain,
+  domainChoices,
+  fileArticle,
+  setArticleDomain,
+  type ArticleDomain,
+} from "../../src/services/domainArticles";
 import { gardenFor, parseFiche } from "../services/gardenFiche";
 import { isSharedWith, memberBriefByUsername } from "../services/entryShares";
 import {
@@ -83,7 +93,13 @@ app.post("/", async (c) => {
     } else if (result.text_retaken) {
       scheduleArticleSummary(memberId, result, { first: clean, summarise: false });
     }
-    return c.json(result, result.duplicate ? 200 : 201);
+    // Filed under one of the member's domains, or none: the share sheet says
+    // where, and offers the others to change it.
+    const filed = await fileWithin(memberId, result);
+    return c.json(
+      { ...result, domain: filed.domain, domain_by: filed.by, domain_choices: domainChoices(memberId) },
+      result.duplicate ? 200 : 201,
+    );
   } catch (e) {
     if (e instanceof ArticleSaveError) return c.json({ error: e.message }, e.status);
     console.error("[garden-articles] save failed:", e);
@@ -145,6 +161,70 @@ app.post("/:slug/summary", async (c) => {
     return c.json({ error: `Failed to summarise: ${(e as Error).message}` }, 502);
   }
 });
+
+/** How long a save waits on the filing before answering without it. The
+ *  filing goes on: the article is filed when the model answers, and the
+ *  share sheet that left without knowing reads it on the fiche. */
+const FILING_WAIT_MS = 6000;
+
+async function fileWithin(memberId: string, result: SaveArticleResult): Promise<ArticleDomain> {
+  const filing = fileArticle(memberId, result.fiche_path, {
+    title: result.title,
+    publication: result.publication,
+    url: result.url,
+    excerpt: result.excerpt,
+    comment: result.comment,
+  }).catch((e) => {
+    console.warn(`[garden-articles] filing failed: ${(e as Error).message}`);
+    return articleDomain(memberId, result.fiche_path);
+  });
+  const late = new Promise<ArticleDomain>((done) =>
+    setTimeout(() => done(articleDomain(memberId, result.fiche_path)), FILING_WAIT_MS),
+  );
+  return Promise.race([filing, late]);
+}
+
+// The domain an article is filed under, and the member's domains to choose
+// from. PUT `{ domain_id }` files it there by the member's hand; `null` takes
+// it out of every domain for good.
+app.get("/:slug/domain", (c) => {
+  const memberId = c.get("userId") as string;
+  try {
+    const ref = findArticleBySlug(memberId, c.req.param("slug"), c.req.query("locale"));
+    const rel = ficheRel(memberId, ref.file);
+    return c.json({ ...articleDomain(memberId, rel), choices: domainChoices(memberId) });
+  } catch (e) {
+    if (e instanceof ArticleSaveError) return c.json({ error: e.message }, e.status);
+    throw e;
+  }
+});
+
+app.put("/:slug/domain", async (c) => {
+  const memberId = c.get("userId") as string;
+  let body: { domain_id?: string | null; locale?: string };
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: "Body must be JSON" }, 400);
+  }
+  if (body.domain_id !== null && typeof body.domain_id !== "string") {
+    return c.json({ error: "domain_id must be a domain's id, or null" }, 400);
+  }
+  try {
+    const ref = findArticleBySlug(memberId, c.req.param("slug"), body.locale);
+    const rel = ficheRel(memberId, ref.file);
+    return c.json({ ...setArticleDomain(memberId, rel, body.domain_id), choices: domainChoices(memberId) });
+  } catch (e) {
+    if (e instanceof ArticleSaveError) return c.json({ error: e.message }, e.status);
+    return c.json({ error: (e as Error).message }, 400);
+  }
+});
+
+function ficheRel(memberId: string, file: string): string {
+  const garden = gardenFor(memberId);
+  if (!garden) throw new ArticleSaveError("No notes for this member", 404);
+  return path.relative(garden.root, file);
+}
 
 // One article — everything the fiche knows, plus its markdown body (the lead
 // quote and the comment history). `?locale=` disambiguates the rare slug that

@@ -2,7 +2,8 @@
 
 One extension, the same code in every browser that takes one: it saves the
 page you are reading into Carnet as an article fiche, with a note — typed or
-dictated — and tags.
+dictated. No tags: the household files it under one of your domains, and
+says which.
 
 It exists for one reason the server cannot solve on its own: **it sends the
 DOM your browser already rendered.** A server-side fetch of a Le Monde or NYT
@@ -43,10 +44,11 @@ session (`POST /api/auth/logout`).
 
 Press the toolbar button (Alt+Shift+S). The popup shows the article — its
 picture, title and site — and says when it holds the whole text. **Why keep
-this?** unfolds the note, with a microphone, and the tags. **⌘/Ctrl+Enter**
-saves. If the address is already in Carnet, saving again adds your note to the
-fiche instead of making a twin. Once saved, **Open the fiche** goes to it on
-the household's site.
+this?** unfolds the note, with a microphone. **⌘/Ctrl+Enter** saves. If the
+address is already in Carnet, saving again adds your note to the fiche instead
+of making a twin. Once saved, the popup says which of your domains the article
+went to — **Change** offers the others, or none — and **Open the fiche** goes
+to it on the household's site.
 
 Dictation is the household's own (`/api/dictation`, Whisper at home), as in the
 apps: the browser records, the server writes it down in the language spoken.

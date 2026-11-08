@@ -245,7 +245,6 @@ html.sheet .note { height: 96px; font-size: 16px; }
 .mic.on .mic-stop { display: block; }
 html.sheet .mic { width: 44px; height: 44px; border-radius: 22px; }
 
-.tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip {
   height: 30px;
   padding: 0 12px;
@@ -259,23 +258,12 @@ html.sheet .mic { width: 44px; height: 44px; border-radius: 22px; }
   align-items: center;
   gap: 6px;
 }
-.chip.add { background: var(--fill); color: var(--ink); font-weight: 400; }
+.chip.plain { background: var(--fill); color: var(--ink); font-weight: 400; }
+.chip[aria-pressed="true"] { background: var(--tint); color: var(--on-tint); }
 html.material .chip { border-radius: 8px; height: 32px; }
-html.material .chip.add { border: 1px solid var(--outline); background: transparent; }
-.chip-input {
-  height: 30px;
-  width: 110px;
-  border-radius: 15px;
-  border: none;
-  background: var(--fill);
-  color: var(--ink);
-  font: inherit;
-  font-size: 13px;
-  padding: 0 12px;
-  outline: none;
-}
-html.material .chip-input { border-radius: 8px; border: 1px solid var(--tint); background: transparent; }
-html.sheet .chip, html.sheet .chip-input { height: 36px; font-size: 14px; }
+html.material .chip.plain { border: 1px solid var(--outline); background: transparent; }
+html.material .chip[aria-pressed="true"] { border-color: transparent; background: var(--chip); color: var(--on-chip); }
+html.sheet .chip { height: 36px; font-size: 14px; }
 
 /* Footer */
 
@@ -298,6 +286,13 @@ html.material.sheet .foot { justify-content: flex-end; }
   color: var(--good);
   display: flex; align-items: center; justify-content: center;
 }
+.filed { width: 100%; padding: 10px 12px; text-align: start; display: flex; flex-direction: column; gap: 10px; }
+.filed-row { display: flex; align-items: center; gap: 8px; color: var(--ink-2); font-size: 13px; }
+.filed-label { flex: 1; color: var(--ink); }
+.filed-label b { font-weight: 600; }
+.filed-choices { display: flex; flex-wrap: wrap; gap: 6px; }
+.filed-choices[hidden] { display: none; }
+button.link { border: none; background: none; color: var(--tint); font: inherit; font-size: 13px; font-weight: 500; padding: 4px 2px; cursor: pointer; }
 .pair { display: flex; gap: 10px; width: 100%; margin-top: 4px; }
 .pair > button { flex: 1; }
 

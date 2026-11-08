@@ -15,7 +15,6 @@ const phone = /Android|iPhone|iPad|Mobile/.test(ua);
 
 let config = null;
 let captured = null;
-let tags = [];
 let originGranted = true;
 
 document.documentElement.classList.add(apple ? "apple" : "material");
@@ -28,7 +27,6 @@ for (const node of document.querySelectorAll("[data-label]")) {
 }
 el("shortcut").textContent = `${/Mac/.test(ua) ? "⌘↩" : "Ctrl+↩"} ${t("shortcut")}`;
 el("address").placeholder = t("addressPlaceholder");
-el("tags").setAttribute("aria-label", t("tags"));
 
 init();
 
@@ -45,12 +43,11 @@ async function init() {
   el("disconnect").addEventListener("click", disconnect);
   el("connect-button").addEventListener("click", connectClicked);
   el("mic").addEventListener("click", toggleDictation);
+  el("filed-change").addEventListener("click", toggleChoices);
   el("comment").addEventListener("input", () => { updateSummary(); keepDraft(); });
   document.addEventListener("keydown", (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter" && !el("main").hidden) save();
   });
-  renderTags();
-
   config = await loadConfig();
   if (!isConfigured(config)) return showConnect();
   await showMain();
@@ -163,8 +160,7 @@ async function showMain() {
   const draft = await restoreDraft(captured.url);
   if (draft?.comment) el("comment").value = draft.comment;
   else if (captured.selection) el("comment").value = captured.selection;
-  if (draft?.tags?.length) { tags = draft.tags; renderTags(); }
-  if (el("comment").value || tags.length) setFold(true);
+  if (el("comment").value) setFold(true);
   updateSummary();
 
   checkAlreadySaved(captured.url);
@@ -241,7 +237,6 @@ async function finishSave(asked) {
     // same passage into the fiche twice.
     selection: captured.selection && captured.selection !== comment ? captured.selection : undefined,
     comment,
-    tags: tags.length ? tags : undefined,
     locale: lang,
     source_client: isSafari ? "safari" : /Firefox\//.test(ua) ? "firefox" : "chrome",
   };
@@ -261,13 +256,15 @@ async function finishSave(asked) {
     return;
   }
   await clearDraft();
-  const { duplicate, needs_capture, fiche_web_path } = reply.result;
+  const { duplicate, needs_capture, fiche_web_path, slug, locale, domain, domain_choices } = reply.result;
   if (needs_capture) {
     setStatus("status", t("bookmark"), "bad");
     el("save").disabled = el("save-check").disabled = false;
     return;
   }
   el("saved-body").textContent = duplicate ? t("savedDuplicate") : t("savedBody");
+  filed = { slug, locale, domain: domain ?? null, choices: domain_choices ?? [] };
+  renderFiled();
   el("open-fiche").hidden = !fiche_web_path;
   el("open-fiche").onclick = async () => {
     await ext.tabs.create({ url: `${config.serverUrl}${fiche_web_path}` });
@@ -276,7 +273,7 @@ async function finishSave(asked) {
   show("saved");
 }
 
-// ── The fold: note and tags ──────────────────────────────────────
+// ── The fold: the note ───────────────────────────────────────────
 
 function setFold(open) {
   el("fold").setAttribute("aria-expanded", String(open));
@@ -287,57 +284,68 @@ function setFold(open) {
 
 function updateSummary() {
   const open = el("fold").getAttribute("aria-expanded") === "true";
-  const parts = [];
-  if (el("comment").value.trim()) parts.push(t("note").toLowerCase());
-  if (tags.length) parts.push(tags.join(", "));
-  el("fold-summary").textContent = open ? "" : `· ${parts.length ? parts.join(" · ") : t("optional")}`;
+  const noted = el("comment").value.trim() ? t("note").toLowerCase() : t("optional");
+  el("fold-summary").textContent = open ? "" : `· ${noted}`;
 }
 
-function renderTags() {
-  const box = el("tags");
-  box.replaceChildren();
-  for (const tag of tags) {
-    const chip = document.createElement("button");
-    chip.className = "chip";
-    chip.setAttribute("role", "listitem");
-    chip.textContent = tag;
-    chip.title = chip.ariaLabel = `${t("removeTag")} ${tag}`;
-    chip.addEventListener("click", () => {
-      tags = tags.filter((x) => x !== tag);
-      renderTags(); updateSummary(); keepDraft();
-    });
-    box.append(chip);
+// ── The domain it was filed under ────────────────────────────────
+//
+// The server files a saved article under one of the member's domains, or
+// none (server/src/services/domainArticles.ts). Said here, with the others
+// to choose from; a member without domains sees nothing of it.
+
+let filed = null;
+
+function renderFiled() {
+  const box = el("filed");
+  if (!filed?.choices.length) { box.hidden = true; return; }
+  box.hidden = false;
+  const label = el("filed-label");
+  if (filed.domain) {
+    label.replaceChildren(`${t("filedIn")} `, Object.assign(document.createElement("b"), { textContent: filed.domain.name }));
+  } else {
+    label.textContent = t("filedNowhere");
   }
-  const add = document.createElement("button");
-  add.className = "chip add";
-  add.textContent = `+ ${t("addTag")}`;
-  add.addEventListener("click", () => {
-    const input = document.createElement("input");
-    input.className = "chip-input";
-    input.placeholder = t("tagPlaceholder");
-    input.setAttribute("aria-label", t("addTag"));
-    const commit = () => {
-      for (const tag of input.value.split(",").map((s) => s.trim()).filter(Boolean)) {
-        if (!tags.includes(tag)) tags.push(tag);
-      }
-      renderTags(); updateSummary(); keepDraft();
-    };
-    input.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === ",") { e.preventDefault(); e.stopPropagation(); commit(); el("tags").querySelector(".chip.add")?.click(); }
-      if (e.key === "Escape") { e.stopPropagation(); renderTags(); }
+  el("filed-change").textContent = filed.domain ? t("change") : t("choose");
+  const list = el("filed-choices");
+  list.replaceChildren();
+  for (const choice of [...filed.choices, { id: null, name: t("noDomain") }]) {
+    const chip = document.createElement("button");
+    chip.className = "chip plain";
+    chip.setAttribute("role", "listitem");
+    chip.textContent = choice.name;
+    chip.setAttribute("aria-pressed", String(choice.id !== null && filed.domain?.id === choice.id));
+    chip.addEventListener("click", () => chooseDomain(choice.id));
+    list.append(chip);
+  }
+}
+
+function toggleChoices() {
+  const open = el("filed-choices").hidden;
+  el("filed-choices").hidden = !open;
+  el("filed-change").setAttribute("aria-expanded", String(open));
+}
+
+async function chooseDomain(id) {
+  try {
+    const answer = await api(config, `/api/v1/garden/articles/${encodeURIComponent(filed.slug)}/domain`, {
+      method: "PUT",
+      body: { domain_id: id, locale: filed.locale },
     });
-    input.addEventListener("blur", () => { if (input.isConnected) commit(); });
-    add.replaceWith(input);
-    input.focus();
-  });
-  box.append(add);
+    filed = { ...filed, domain: answer.domain ?? null };
+    renderFiled();
+    el("filed-choices").hidden = true;
+    el("filed-change").setAttribute("aria-expanded", "false");
+  } catch (err) {
+    el("filed-label").textContent = `${t("changeFailed")} — ${err.message}`;
+  }
 }
 
 // A popup vanishes when it loses focus — to grant the microphone in a tab, to
 // look something up. What was typed is kept for this page until it is saved.
 async function keepDraft() {
   if (!captured) return;
-  await ext.storage.local.set({ draft: { url: captured.url, comment: el("comment").value, tags } });
+  await ext.storage.local.set({ draft: { url: captured.url, comment: el("comment").value } });
 }
 async function restoreDraft(url) {
   const { draft } = await ext.storage.local.get("draft");

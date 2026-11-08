@@ -171,6 +171,8 @@ export function mergeDomains(memberId: string, dropId: string, keepId: string): 
       [keepId, dropId],
     ).changes ?? 0);
     db.run(`DELETE FROM domain_mail WHERE maurice_id = ?`, [dropId]);
+    // An article is filed under one domain: it follows its domain into the kept one.
+    db.run(`UPDATE domain_articles SET maurice_id = ? WHERE maurice_id = ?`, [keepId, dropId]);
     db.run(`UPDATE domain_proposals SET maurice_id = ? WHERE maurice_id = ?`, [keepId, dropId]);
     db.run(`DELETE FROM maurices WHERE id = ?`, [dropId]);
   })();
