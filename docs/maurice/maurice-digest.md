@@ -1,6 +1,6 @@
 ---
 title: Maurice — the digest
-date: '2026-11-05'
+date: '2026-11-08'
 flags: []
 locale: en
 description: 'The system documentation condensed to what a user needs: everything
@@ -28,7 +28,7 @@ covers:
   maurice-knowledge: '2026-11-02'
   maurice-life: '2026-10-20'
   maurice-personas-hats: '2026-09-19'
-  maurice-server: '2026-11-07'
+  maurice-server: '2026-11-08'
   maurice-shared-gardens: '2026-10-20'
   maurice-tools: '2026-11-05'
   maurice-web-garden: '2026-11-06'
@@ -143,6 +143,7 @@ There is also a **browser clipper** that saves the page being read into the memb
 - **Prompt caching** lowers the cost of repeated prefixes: explicitly on Anthropic, automatically on Z.ai and, among Scaleway's models, reported only by DeepSeek V4 Flash. The cost meter shows what it saved.
 - **Context window:** when a conversation outgrows the model's window, the oldest turns are dropped, the cut is remembered so later turns stay consistent, and the model is told the beginning is missing.
 - **Provider plugins** can add a provider from outside the repository; none ships.
+- **When a provider refuses on billing grounds** — credits run out, a model outside the account's package, a failed payment to settle — Maurice says so in a sentence, in the chat and under a background job such as chapter summaries, and asks you to tell the household admin. Such a refusal is not tried again.
 
 *Gaps:* no provider failover; the context size is estimated from characters, not counted tokens; caching is invisible on most Scaleway models; Scaleway retires GLM 5.2 on 16 November 2026 (GLM 5.3, on Scaleway too, replaces it).
 
