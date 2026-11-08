@@ -34,6 +34,9 @@
 # All three iOS profiles must carry the app group group.eu.chezmaurice.maurice.
 # The Mac app embeds the same extension: PROVISIONING_PROFILE_MACOS_NOTIFICATIONS,
 # a Mac App Store profile for eu.chezmaurice.maurice.notifications, per Mac too.
+# It also embeds the Safari extension: PROVISIONING_PROFILE_MACOS_SAFARI, a Mac
+# App Store profile for eu.chezmaurice.maurice.safari ("Maurice macOS App Store
+# Safari" on the mini), same app group.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -145,6 +148,10 @@ archive_and_upload() {
       # Store profile of its own — per signing Mac, as the app's.
       : "${PROVISIONING_PROFILE_MACOS_NOTIFICATIONS:?manual macOS signing needs PROVISIONING_PROFILE_MACOS_NOTIFICATIONS, the Mac App Store profile of the notification extension}"
       extra_profiles=$'\t\t<key>'"${bundle}.notifications"$'</key><string>'"${PROVISIONING_PROFILE_MACOS_NOTIFICATIONS}"$'</string>'
+      # And the Safari web extension ("Save to Maurice"), bundle <app>.safari,
+      # in the same app group: it reads the session the app publishes there.
+      : "${PROVISIONING_PROFILE_MACOS_SAFARI:?manual macOS signing needs PROVISIONING_PROFILE_MACOS_SAFARI, the Mac App Store profile of the Safari extension}"
+      extra_profiles+=$'\n\t\t<key>'"${bundle}.safari"$'</key><string>'"${PROVISIONING_PROFILE_MACOS_SAFARI}"$'</string>'
     fi
     # macOS App Store pkgs are signed by the installer cert, which is NOT part of
     # the provisioning profile — it must be named separately or Xcode mis-validates.

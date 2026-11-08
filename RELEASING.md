@@ -59,13 +59,18 @@ the container guide.
 ## 2 & 3. macOS + iOS apps → TestFlight
 
 ```
-# macOS
-PROVISIONING_PROFILE_MACOS="Maurice macOS App Store" PLATFORMS=macos \
+# macOS — the app, its notification extension and its Safari extension
+PROVISIONING_PROFILE_MACOS="Maurice macOS App Store" \
+PROVISIONING_PROFILE_MACOS_NOTIFICATIONS="Maurice macOS App Store Notifications" \
+PROVISIONING_PROFILE_MACOS_SAFARI="Maurice macOS App Store Safari" PLATFORMS=macos \
 ASC_KEY_ID=<key id> ASC_ISSUER_ID=<issuer id> \
 ./app/build-testflight.sh
 
-# iOS (iPhone + iPad, universal) — version from app/VERSION, build from ASC
-PROVISIONING_PROFILE_IOS="Maurice iOS App Store" PLATFORMS=ios \
+# iOS (iPhone + iPad, universal) — version from app/VERSION, build from ASC;
+# the app, its share extension and its notification extension
+PROVISIONING_PROFILE_IOS="Maurice iOS App Store" \
+PROVISIONING_PROFILE_IOS_SHARE="Maurice iOS App Store Share" \
+PROVISIONING_PROFILE_IOS_NOTIFICATIONS="Maurice iOS App Store Notifications" PLATFORMS=ios \
 ASC_KEY_ID=<key id> ASC_ISSUER_ID=<issuer id> \
 ./app/build-testflight.sh
 
