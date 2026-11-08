@@ -16,16 +16,16 @@ parent: maurice-docs
 digest: true
 covers:
   maurice-applications: '2026-10-20'
-  maurice-architecture: '2026-11-07'
+  maurice-architecture: '2026-11-08'
   maurice-carnet: '2026-11-07'
   maurice-chat: '2026-11-03'
   maurice-composer: '2026-10-20'
   maurice-data-model: '2026-10-29'
   maurice-docs: '2026-10-20'
-  maurice-domains: '2026-10-20'
+  maurice-domains: '2026-11-08'
   maurice-files: '2026-06-19'
-  maurice-households-rooms: '2026-11-07'
-  maurice-knowledge: '2026-11-02'
+  maurice-households-rooms: '2026-11-08'
+  maurice-knowledge: '2026-11-08'
   maurice-life: '2026-10-20'
   maurice-personas-hats: '2026-09-19'
   maurice-server: '2026-11-08'
@@ -69,7 +69,7 @@ The founding idea is **a memory you can see and shape** — the *apprivoisé* (t
 4. **The tools** — small MCP servers behind one gateway, which the server calls on every turn. They are how Maurice *does* things: read and write notes, search, read mail.
 5. **The site** — an Astro engine that renders each member's notes as a themeable website, privately for the member and publicly for what they publish.
 
-There is also a **browser clipper** that saves the page being read into the member's notes, as Carnet's share sheet does.
+There is also a **browser extension**, *Save to Maurice* — one extension for Chrome and its kin (Brave, Edge, Arc), Firefox (desktop and Android) and Safari — that saves the page being read into the member's notes, as Carnet's share sheet does, with a note typed or dictated. It connects with a one-time code from the app (*Settings › Connect a browser*); in Safari on the Mac it comes with the Maurice app and uses its session. It is not yet in the browsers' catalogues.
 
 **Security boundary:** the server is the only door. The tool gateway, the web engine and Calibre-Web listen on loopback only and are reached through the server's authenticated proxy. The admin console answers only on the machine itself.
 
@@ -229,9 +229,10 @@ Each member has folders and files (5 GB each), in **Settings**: text, images, PD
 - **Bringing a history in:** *Import my conversations* takes ChatGPT and Claude export files; the next night maps them, so domains can appear at once.
 - **One domain per name:** a member cannot make two domains of the same name (case and accents aside); the editor says which one has it, a proposal of that name joins it, and duplicates made before the rule were merged into one, conversations, briefs and context together.
 - **In the clone of the notes:** each domain the member made is written there every night as a readable file — the brief, the instructions, the context, the conversations and mail filed in it — as it stood at the close of the previous day.
+- **Saved articles are filed too** (since 8 November 2026): no tags to type — when an article is saved, a light model files it under one of the member's domains, or none, and the extension says where, with *Change*. The member's choice is never overridden. A domain's brief then reads the articles filed under it, with the member's note: it knows what they read on the subject, not only what they said.
 - In Carnet, the *Maurice* screen lists domains (with the brief's age and author) and companions; a domain's brief can be edited, rewritten or erased there.
 
-*Gaps:* the marks exist only in the Maurice app; a large mixed subject (over about 80 conversations) is never proposed; members with few conversations get no filing; the grouping is not deterministic; a domain's first notes can carry personal details from conversations; shared domains have no shared brief; a reading companion's conversation cannot yet be opened from the book's page.
+*Gaps:* the marks exist only in the Maurice app; an article's domain is shown and changed only at the save (not on the article's page, nor on the domain's), Carnet's share sheet shows it only from its next release, and articles saved before 8 November 2026 are not filed; a large mixed subject (over about 80 conversations) is never proposed; members with few conversations get no filing; the grouping is not deterministic; a domain's first notes can carry personal details from conversations; shared domains have no shared brief; a reading companion's conversation cannot yet be opened from the book's page.
 
 *Detail:* `domains`, `personas-hats`.
 
@@ -239,7 +240,7 @@ Each member has folders and files (5 GB each), in **Settings**: text, images, PD
 
 - **Notes:** created, updated and listed by Maurice when asked ("keep this in my notes" works in any private conversation); private until the member says otherwise; in the member's language; an existing note is updated rather than duplicated. **Journal** notes and dreams, with named people linked to their fiches. **Fragments** hold long material inside a note.
 - **Entries** — books, films, series, podcasts (and single episodes), articles, games, music, people — can have up to three faces: the **fiche** (the member's private working notes: metadata, dated comments, résonances, fragments), the **card** (the published face, in the member's own words — Maurice never drafts it), and **flashcards**. Metadata and covers come from public catalogues (Google Books, TMDB, IGDB, MusicBrainz, Podcast Index, Wikidata, Open Graph); a hosted household needs no keys for them. An entry kept while its catalogue had no key fills itself in from *Refresh details* once the key is set, when its title names one work only; otherwise Carnet says why. A fiche is opened only by a deliberate gesture.
-- **Articles:** saved from Carnet's share sheet, the browser clipper or a conversation. The rendered page is captured (past paywalls), duplicates detected, page furniture (credits, ads, newsletter boxes) removed by a light model that only drops blocks and never rewrites, and two summaries written in the background: the essence in a paragraph, in your language, and a longer one in the article's, meant to be read instead of it, its length following the article's. A site that blocks robots leaves a **bookmark** to complete later from a browser. **Sharing an article gives it:** the other member gets their own copy, with its text and summaries, marked *Shared by*; your notes and highlights stay yours, and each copy then lives apart.
+- **Articles:** saved from Carnet's share sheet, the browser extension or a conversation, with a note, no tags: each is filed under one of the member's domains (§14). The rendered page is captured (past paywalls), duplicates detected, page furniture (credits, ads, newsletter boxes) removed by a light model that only drops blocks and never rewrites, and two summaries written in the background: the essence in a paragraph, in your language, and a longer one in the article's, meant to be read instead of it, its length following the article's. A site that blocks robots leaves a **bookmark** to complete later from a browser. **Sharing an article gives it:** the other member gets their own copy, with its text and summaries, marked *Shared by*; your notes and highlights stay yours, and each copy then lives apart.
 - **Highlights** (with note and colour) in books and articles, per member. A **résonance** files a passage onto another fiche as a dated block with a plain wiki-link back.
 - **People as hubs:** a person's fiche gathers what is known — relation, contact cards and addresses, fragments drawn from mail, a list of exchanges. The member's word is final: each element can be confirmed, rejected (never proposed again) or corrected; a confirmed relation is never overwritten (Maurice may only propose a revision beside it). Two people merge only on strong signals, never on a name alone.
 - **Flashcards** from a chapter, a book, a fiche or a fragment, in the Obsidian Spaced Repetition format, so the vault and the app share one schedule; hand-written cards survive regeneration.
@@ -359,7 +360,7 @@ Each member has folders and files (5 GB each), in **Settings**: text, images, PD
 - **…keep something from a conversation?** Ask ("keep this in my notes"), or tap *Keep* on what Maurice offers under a reply; for a work or a person it goes on that entry's fiche with a link back to the conversation.
 - **…correct what Maurice keeps about me?** A domain's brief: its page in the app or in Carnet (correct, rewrite, erase). A fact: the card's *correct*, *dismiss* or *forget*. A conversation filed in the wrong domain: *Detach* on the domain's page. A person fiche from the mail: confirm, reject or correct each element.
 - **…have Maurice read my mail?** Settings → Mail → Mailboxes, with an app password. Then the mailbox's card: *yes* to reading (overview by default), *read further back* if you want more, *Read now* if you don't want to wait for the night. *Forget* undoes it.
-- **…save an article?** From Safari, share → *Save to Carnet* (the page as you see it, paywalls included); from a computer, the browser clipper; or ask Maurice with the link.
+- **…save an article?** From Safari on a phone, share → *Save to Carnet* (the page as you see it, paywalls included); from a computer, the *Save to Maurice* extension (connect it once with *Settings › Connect a browser*; in Safari on the Mac, turn it on in Safari's settings); or ask Maurice with the link. It is filed under one of your domains; *Change* puts it elsewhere.
 - **…add books and get chapter summaries?** In Carnet, share the EPUB or PDF to *Save to Carnet*, or use *Add a file* under the **+**; or upload it in the library page (`/calibre`); in Carnet, a book's page offers to extract its chapters and to summarize them.
 - **…publish a note or a card?** On your site, open the note in the browser and flip it to public; in Carnet, write the shared side of an entry and tap *Publish*. It appears on your public pages if the household has them, or on your own domain.
 - **…bring my ChatGPT or Claude history?** Settings → *Import my conversations*, with the export file from ChatGPT or Claude. The next night proposes domains from it.

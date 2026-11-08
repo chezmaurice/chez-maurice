@@ -1,6 +1,6 @@
 ---
 title: Domains and their briefs
-date: '2026-10-20'
+date: '2026-11-08'
 flags: []
 locale: en
 description: A domain is a part of a member's life Maurice follows, with a brief
@@ -105,6 +105,12 @@ Since 17 October 2026 the night's notes export (`services/gardenExport.ts`, [[ma
 
 What it holds is what the member may take away: their own brief, never another member's of the same domain; among the conversations, only theirs and the rooms they sit in (`memberConversationList`, the member archive's rule); a conversation in the context that is not theirs is named as such, without its title. A conversation links to its own file when the member exports their conversations. The file is a readable copy, not one to import: the *My data* archive is what restores a domain.
 
+## Saved articles are filed under a domain (8 November 2026)
+
+The tags the share sheets and the browser extension used to ask for are gone: a domain is a tag the member does not type. At each save, the light model (`article_domain`) reads the article — title, source, opening, the member's note, weighed most — beside the member's adopted domains (name, tagline, the brief's one-liner) and names one or none (`services/domainArticles.ts`, table `domain_articles`: one row per fiche, `by` = `auto`, `member` or `none`). The browser extension says *Filed in …* with *Change* (Carnet's share sheets, iOS and Android, do too in their next release; until then they save untagged and the filing happens silently), which offers the other domains and *No domain*; the member's choice prevails, and an article taken out of every domain is never filed again. **The brief reads them**: a rewrite takes the articles filed since the previous one (ten at most, the most recent), each as its title, source, summary and the member's note, and the prompt names them as articles they saved; the brief's sources list them as `article:<path>`. A merge moves them with the domain; the member's archive and erasure carry the table.
+
+Not the corpus's neighbours, as for conversations: no article is filed yet to vote, and an article's prose against the member's questions sorts by style before subject — the reason the mail's digests are grouped among themselves. On the owner's fifteen domains, six made-up titles: five filed as expected, one loose (copper prices under geopolitics), a note about something else left the article unfiled.
+
 ## Ships vs. exists
 
 The briefs — the data, the night, the prompt section, the routes, the page — the domains themselves — the kind, the sort, the list, the editor — the proposals — the mapping, the opened conversation, the three tools, the adoption — the first notes — the fourth tool, the notes with their mark and provenance, the review on the site, the counts in the app — and the drawer (the rendered opening, the proposal routes, the button and the sheet) are in the server, the web engine and the Maurice app; nothing depends on the private tools: the corpus ships, and the mapping's arithmetic is in it. A hosted household without Ollama maps on its Scaleway-embedded store the same way (the tool reads whatever vectors the store holds). The hosted households run the same image and the same one-time sort at first start.
@@ -123,6 +129,7 @@ The briefs — the data, the night, the prompt section, the routes, the page —
 - **The domain tools ride in every private conversation while a proposal is open** — four tool definitions in the cached prefix of a member who settles nothing. Offering them only when the member speaks of domains was weighed and not built: a roster that changes between turns costs the cache and can vanish mid-exchange.
 - **A proposal page cuts one part at a time**, and shows every conversation of a very large proposal in one list.
 - **Carnet knows none of this**: it still lists the conversations Maurice opened, of which there will be no new ones for domains or mail, and has neither the proposals nor the pastilles.
+- **A filed article is seen only at the save.** The domain's page does not list its articles, the article's page in Carnet does not show its domain, and the clone of the notes does not export them; articles saved before 8 November 2026 are not filed.
 - **A group named once is not named again** unless enough new material joins it; a leftover the model once called a grab-bag stays unnamed until then.
 - **`same_as` is the model's word, matched on the name** — or, since the first real run the same evening (27 September 2026: 252 digests, 9 proposals, 27 threads filed under three open proposals, 8 ¢), a group the model names exactly like something already there, which it did once without saying so. A group it recognises under a slightly different name is proposed again, and one it wrongly recognises is filed under a domain it does not belong to; the brief reads it, the member does not see it anywhere yet (a domain's page lists its conversations, not its threads).
 - **The opening message is long for a member with many domains** — fifteen list items for the owner, one line each: it reads on a phone, but a member with thirty alive proposals would get thirty; a cap with "and N more in the drawer" is the obvious next step if it happens.

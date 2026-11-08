@@ -1,6 +1,6 @@
 ---
 title: Households, rooms & devices
-date: '2026-11-07'
+date: '2026-11-08'
 flags: []
 locale: en
 description: Members and roles, guests, multi-person rooms, device pairing and PINs,
@@ -47,7 +47,7 @@ Invite codes (`server/src/services/auth.ts`) are 8 characters from an unambiguou
 
 In the apps, the welcome screen's main action is **Scan an invitation** on a phone and **Paste the invitation link** on a computer (Mac, Windows, Linux). **Enter a code or an address** takes a link, an address or a bare code, and asks for the household address when it only has a code.
 
-**Adding one of your own devices (31 October 2026).** A member signed in on one device brings another in without the admin: Settings → *Add a device* (any member but a guest) shows a QR code, the code, the time it has left and a link to send (`POST /api/me/device-code`). The code lives in `device_link_codes`: **single use, ten minutes**, a new one withdrawing the member's unused one, claimed in one statement by `/api/auth/enroll` (checked after open invitations, before the admin's codes). The new device is signed in with no PIN to set (the member has one) and no account event (they made it themselves). The sheet showing the code asks every two seconds where it stands (`GET /api/me/device-code/:code` → pending, used or expired): it says the device is in and closes, or says the code has lapsed instead of leaving a dead QR on screen. A connected tool's `maur_` token cannot ask for one: it would turn a read token into a full session elsewhere. A forgotten PIN still needs the admin's code.
+**Adding one of your own devices (31 October 2026).** A member signed in on one device brings another in without the admin: Settings → *Add a device* (any member but a guest) shows a QR code, the code, the time it has left and a link to send (`POST /api/me/device-code`). The code lives in `device_link_codes`: **single use, ten minutes**, a new one withdrawing the member's unused one, claimed in one statement by `/api/auth/enroll` (checked after open invitations, before the admin's codes). The new device is signed in with no PIN to set (the member has one) and no account event (they made it themselves). The sheet showing the code asks every two seconds where it stands (`GET /api/me/device-code/:code` → pending, used or expired): it says the device is in and closes, or says the code has lapsed instead of leaving a dead QR on screen. A connected tool's `maur_` token cannot ask for one: it would turn a read token into a full session elsewhere. A forgotten PIN still needs the admin's code. **A browser comes in the same way** (8 November 2026): *Settings › Connect a browser* in the Maurice app (Carnet's member sheet in its next release) makes the same code, shown as the link to paste into the *Save to Maurice* extension rather than a QR, with *Copy the link*; the extension enrols with it and is then one of the member's devices, signed out from there or from the extension (`/api/auth/logout`). Safari needs none: the app that carries the extension hands it its session ([[maurice-architecture]]).
 
 **Leaving, three ways (2 November 2026).** The apps no longer use one word, "Disconnect", for two different things:
 
