@@ -1,4 +1,4 @@
-# Save to Maurice — the browser extension
+# Save to Carnet — the browser extension
 
 One extension, the same code in every browser that takes one: it saves the
 page you are reading into Carnet as an article fiche, with a note — typed or

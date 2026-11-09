@@ -222,7 +222,7 @@ targets:
           NSExtensionPointIdentifier: com.apple.usernotifications.service
           NSExtensionPrincipalClass: "$(PRODUCT_MODULE_NAME).NotificationService"
 
-  # "Save to Maurice" in Safari on the Mac. The web half is the extension
+  # "Save to Carnet" in Safari on the Mac. The web half is the extension
   # Chrome and Firefox get (clients/web-clipper), copied in as it is; the
   # native half hands its popup the session the app is signed in with
   # (Shared/BrowserSession.swift). On iPhone and iPad, Carnet carries it.
@@ -257,7 +257,7 @@ targets:
         CODE_SIGN_ENTITLEMENTS: MauriceSafariExtension/MauriceSafariExtension.entitlements
         ENABLE_HARDENED_RUNTIME: YES
         GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_KEY_CFBundleDisplayName: Save to Maurice
+        INFOPLIST_KEY_CFBundleDisplayName: Save to Carnet
         MARKETING_VERSION: "0.1"
         CURRENT_PROJECT_VERSION: "1"
         SKIP_INSTALL: YES

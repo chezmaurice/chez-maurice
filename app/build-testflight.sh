@@ -148,7 +148,7 @@ archive_and_upload() {
       # Store profile of its own — per signing Mac, as the app's.
       : "${PROVISIONING_PROFILE_MACOS_NOTIFICATIONS:?manual macOS signing needs PROVISIONING_PROFILE_MACOS_NOTIFICATIONS, the Mac App Store profile of the notification extension}"
       extra_profiles=$'\t\t<key>'"${bundle}.notifications"$'</key><string>'"${PROVISIONING_PROFILE_MACOS_NOTIFICATIONS}"$'</string>'
-      # And the Safari web extension ("Save to Maurice"), bundle <app>.safari,
+      # And the Safari web extension ("Save to Carnet"), bundle <app>.safari,
       # in the same app group: it reads the session the app publishes there.
       : "${PROVISIONING_PROFILE_MACOS_SAFARI:?manual macOS signing needs PROVISIONING_PROFILE_MACOS_SAFARI, the Mac App Store profile of the Safari extension}"
       extra_profiles+=$'\n\t\t<key>'"${bundle}.safari"$'</key><string>'"${PROVISIONING_PROFILE_MACOS_SAFARI}"$'</string>'

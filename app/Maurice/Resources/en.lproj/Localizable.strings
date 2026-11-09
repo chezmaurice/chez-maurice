@@ -659,7 +659,7 @@
 "devices.add.done" = "Device connected ✓";
 "devices.add.expired" = "This code has expired. Close and ask for a new one.";
 "browser.connect" = "Connect a browser";
-"browser.connect.line" = "In the “Save to Maurice” extension, paste this link — or type the address and the code. It works once, for ten minutes.";
+"browser.connect.line" = "In the “Save to Carnet” extension, paste this link — or type the address and the code. It works once, for ten minutes.";
 "browser.connect.copy" = "Copy the link";
 "browser.connect.copied" = "Copied";
 "members.share" = "Send the link";

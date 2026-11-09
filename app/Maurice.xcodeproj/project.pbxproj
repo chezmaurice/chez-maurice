@@ -1421,7 +1421,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "MauriceSafariExtension/Info-Generated.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "Save to Maurice";
+				INFOPLIST_KEY_CFBundleDisplayName = "Save to Carnet";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -1445,7 +1445,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "MauriceSafariExtension/Info-Generated.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "Save to Maurice";
+				INFOPLIST_KEY_CFBundleDisplayName = "Save to Carnet";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",

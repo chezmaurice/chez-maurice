@@ -659,7 +659,7 @@
 "devices.add.done" = "Dispositivo conectado ✓";
 "devices.add.expired" = "Este código ha caducado. Cierra y pide uno nuevo.";
 "browser.connect" = "Conectar un navegador";
-"browser.connect.line" = "En la extensión «Guardar en Maurice», pega este enlace — o escribe la dirección y el código. Sirve una vez, durante diez minutos.";
+"browser.connect.line" = "En la extensión «Guardar en Carnet», pega este enlace — o escribe la dirección y el código. Sirve una vez, durante diez minutos.";
 "browser.connect.copy" = "Copiar el enlace";
 "browser.connect.copied" = "Copiado";
 "members.share" = "Enviar el enlace";

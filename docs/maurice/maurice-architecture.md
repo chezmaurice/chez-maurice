@@ -1,6 +1,6 @@
 ---
 title: Maurice — architecture overview
-date: '2026-11-08'
+date: '2026-11-09'
 flags: []
 locale: en
 description: The five cooperating parts of Maurice, how a message flows end-to-end,
@@ -65,7 +65,7 @@ Two of them ship — **garden** (the notes tools) and, since September 2026, **c
 
 **Web** (`web/`) — An Astro engine that renders each member's notes as a browsable, themeable website — their site — under `/g/<member>`, with build-time encryption of private notes and Cloudflare deployment for the public one. See [[maurice-web-garden]] and [[maurice-shared-gardens]].
 
-There is also a **browser extension**, *Save to Maurice* (`clients/web-clipper`, since 8 November 2026 one WebExtension for Chrome and its kin, Firefox on the desktop and on Android, and Safari): it saves the page you are reading — its rendered DOM, past any paywall — into the member's notes as an article fiche, the same way Carnet's share sheet does, with a note typed or dictated (the household's Whisper), and says which domain the article was filed under. It signs in with a one-time device code made in the app (*Settings › Connect a browser*), and appears among the member's devices. In Safari it is carried by an app instead — the Maurice app on the Mac; Carnet on iPhone and iPad, in its next release — and uses that app's session. Not yet in the browsers' catalogues.
+There is also a **browser extension**, *Save to Carnet* (`clients/web-clipper`, since 8 November 2026 one WebExtension for Chrome and its kin, Firefox on the desktop and on Android, and Safari): it saves the page you are reading — its rendered DOM, past any paywall — into the member's notes as an article fiche, the same way Carnet's share sheet does, with a note typed or dictated (the household's Whisper), and says which domain the article was filed under. It signs in with a one-time device code made in the app (*Settings › Connect a browser*), and appears among the member's devices. In Safari it is carried by an app instead — the Maurice app on the Mac; Carnet on iPhone and iPad, in its next release — and uses that app's session. Not yet in the browsers' catalogues.
 
 ## How a message flows
 

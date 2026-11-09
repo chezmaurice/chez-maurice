@@ -1,6 +1,6 @@
 ---
 title: Maurice — the digest
-date: '2026-11-08'
+date: '2026-11-09'
 flags: []
 locale: en
 description: 'The system documentation condensed to what a user needs: everything
@@ -16,7 +16,7 @@ parent: maurice-docs
 digest: true
 covers:
   maurice-applications: '2026-10-20'
-  maurice-architecture: '2026-11-08'
+  maurice-architecture: '2026-11-09'
   maurice-carnet: '2026-11-09'
   maurice-chat: '2026-11-09'
   maurice-composer: '2026-10-20'
@@ -24,7 +24,7 @@ covers:
   maurice-docs: '2026-10-20'
   maurice-domains: '2026-11-08'
   maurice-files: '2026-06-19'
-  maurice-households-rooms: '2026-11-08'
+  maurice-households-rooms: '2026-11-09'
   maurice-knowledge: '2026-11-09'
   maurice-life: '2026-10-20'
   maurice-personas-hats: '2026-09-19'
@@ -69,7 +69,7 @@ The founding idea is **a memory you can see and shape** — the *apprivoisé* (t
 4. **The tools** — small MCP servers behind one gateway, which the server calls on every turn. They are how Maurice *does* things: read and write notes, search, read mail.
 5. **The site** — an Astro engine that renders each member's notes as a themeable website, privately for the member and publicly for what they publish.
 
-There is also a **browser extension**, *Save to Maurice* — one extension for Chrome and its kin (Brave, Edge, Arc), Firefox (desktop and Android) and Safari — that saves the page being read into the member's notes, as Carnet's share sheet does, with a note typed or dictated. It connects with a one-time code from the app (*Settings › Connect a browser*); in Safari on the Mac it comes with the Maurice app and uses its session. It is not yet in the browsers' catalogues.
+There is also a **browser extension**, *Save to Carnet* — one extension for Chrome and its kin (Brave, Edge, Arc), Firefox (desktop and Android) and Safari — that saves the page being read into the member's notes, as Carnet's share sheet does, with a note typed or dictated. It connects with a one-time code from the app (*Settings › Connect a browser*); in Safari on the Mac it comes with the Maurice app and uses its session. It is not yet in the browsers' catalogues.
 
 **Security boundary:** the server is the only door. The tool gateway, the web engine and Calibre-Web listen on loopback only and are reached through the server's authenticated proxy. The admin console answers only on the machine itself.
 
@@ -360,7 +360,7 @@ Each member has folders and files (5 GB each), in **Settings**: text, images, PD
 - **…keep something from a conversation?** Ask ("keep this in my notes"), or tap *Keep* on what Maurice offers under a reply; for a work or a person it goes on that entry's fiche with a link back to the conversation.
 - **…correct what Maurice keeps about me?** A domain's brief: its page in the app or in Carnet (correct, rewrite, erase). A fact: the card's *correct*, *dismiss* or *forget*. A conversation filed in the wrong domain: *Detach* on the domain's page. A person fiche from the mail: confirm, reject or correct each element.
 - **…have Maurice read my mail?** Settings → Mail → Mailboxes, with an app password. Then the mailbox's card: *yes* to reading (overview by default), *read further back* if you want more, *Read now* if you don't want to wait for the night. *Forget* undoes it.
-- **…save an article?** From Safari on a phone, share → *Save to Carnet* (the page as you see it, paywalls included); from a computer, the *Save to Maurice* extension (connect it once with *Settings › Connect a browser*; in Safari on the Mac, turn it on in Safari's settings); or ask Maurice with the link. It is filed under one of your domains; *Change* puts it elsewhere.
+- **…save an article?** From Safari on a phone, share → *Save to Carnet* (the page as you see it, paywalls included); from a computer, the *Save to Carnet* extension (the same name as the share sheet; connect it once with *Settings › Connect a browser*; in Safari on the Mac, turn it on in Safari's settings); or ask Maurice with the link. It is filed under one of your domains; *Change* puts it elsewhere.
 - **…add books and get chapter summaries?** In Carnet, share the EPUB or PDF to *Save to Carnet*, or use *Add a file* under the **+**; or upload it in the library page (`/calibre`); in Carnet, a book's page offers to extract its chapters and to summarize them.
 - **…publish a note or a card?** On your site, open the note in the browser and flip it to public; in Carnet, write the shared side of an entry and tap *Publish*. It appears on your public pages if the household has them, or on your own domain.
 - **…bring my ChatGPT or Claude history?** Settings → *Import my conversations*, with the export file from ChatGPT or Claude. The next night proposes domains from it.
