@@ -3615,12 +3615,29 @@ private struct ComposerBar: View {
         .photosPicker(isPresented: $showPhotoPicker, selection: $selectedPhotos,
                       maxSelectionCount: max(1, kMaxPhotosPerMessage - pendingImages.count),
                       selectionBehavior: .ordered, matching: .images)
+        #if os(iOS)
+        .fullScreenCover(isPresented: $showCamera) {
+            if SystemCameraPicker.isAvailable {
+                SystemCameraPicker(onCapture: { data in
+                    showCamera = false
+                    attachPhoto(data)
+                }, onCancel: { showCamera = false })
+                .ignoresSafeArea()
+            } else {
+                CameraCaptureView(mode: .photo) { data in
+                    showCamera = false
+                    attachPhoto(data)
+                }
+            }
+        }
+        #else
         .sheet(isPresented: $showCamera) {
             CameraCaptureView(mode: .photo) { data in
                 showCamera = false
                 attachPhoto(data)
             }
         }
+        #endif
         // "Files" files the picked document into the library AND attaches it as
         // conversation context in one gesture (any kind — text counts toward the
         // budget; img/pdf ride along as attachments). Photos/Camera stay inline.

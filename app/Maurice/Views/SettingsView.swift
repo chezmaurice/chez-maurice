@@ -3308,6 +3308,9 @@ final class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelega
     private var input: AVCaptureDeviceInput?
     private let queue = DispatchQueue(label: "maurice.camera.session")
     private var position: AVCaptureDevice.Position
+    /// Which way up the device is held, for the photo to be taken level:
+    /// without it every photo came out in the sensor's portrait orientation.
+    private var rotation: AVCaptureDevice.RotationCoordinator?
     var onCapture: ((Data) -> Void)?
 
     init(position: AVCaptureDevice.Position) { self.position = position }
@@ -3332,6 +3335,7 @@ final class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelega
                 ?? AVCaptureDevice.default(for: .video)
             if let device, let newInput = try? AVCaptureDeviceInput(device: device), self.session.canAddInput(newInput) {
                 self.session.addInput(newInput); self.input = newInput
+                self.rotation = AVCaptureDevice.RotationCoordinator(device: device, previewLayer: nil)
             }
             if !self.session.outputs.contains(self.output), self.session.canAddOutput(self.output) {
                 self.session.addOutput(self.output)
@@ -3343,7 +3347,15 @@ final class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelega
     }
 
     func flip() { position = position == .front ? .back : .front; configureAndRun() }
-    func capture() { queue.async { self.output.capturePhoto(with: AVCapturePhotoSettings(), delegate: self) } }
+    func capture() {
+        queue.async {
+            if let angle = self.rotation?.videoRotationAngleForHorizonLevelCapture,
+               let connection = self.output.connection(with: .video), connection.isVideoRotationAngleSupported(angle) {
+                connection.videoRotationAngle = angle
+            }
+            self.output.capturePhoto(with: AVCapturePhotoSettings(), delegate: self)
+        }
+    }
     func stop() { queue.async { if self.session.isRunning { self.session.stopRunning() } } }
 
     func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
@@ -3382,6 +3394,44 @@ struct CameraPreview: NSViewRepresentable {
         }
         required init?(coder: NSCoder) { fatalError("init(coder:) not used") }
         override func layout() { super.layout(); previewLayer.frame = bounds }
+    }
+}
+#endif
+
+#if os(iOS)
+/// The system camera, for a photo to send: landscape, flash, zoom, the
+/// lenses and *Retake* / *Use Photo* are iOS's own. Our `CameraCaptureView`
+/// stays for the avatar (a round viewfinder), on the Mac, and where there is
+/// no camera to hand over to (the simulator).
+struct SystemCameraPicker: UIViewControllerRepresentable {
+    let onCapture: (Data) -> Void
+    let onCancel: () -> Void
+
+    static var isAvailable: Bool { UIImagePickerController.isSourceTypeAvailable(.camera) }
+
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let picker = UIImagePickerController()
+        picker.sourceType = .camera
+        picker.cameraCaptureMode = .photo
+        picker.delegate = context.coordinator
+        return picker
+    }
+    func updateUIViewController(_ picker: UIImagePickerController, context: Context) {}
+    func makeCoordinator() -> Coordinator { Coordinator(self) }
+
+    final class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+        let parent: SystemCameraPicker
+        init(_ parent: SystemCameraPicker) { self.parent = parent }
+        func imagePickerController(_ picker: UIImagePickerController,
+                                   didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+            // `jpegData` writes the pixels the right way up: a landscape photo stays landscape.
+            if let image = info[.originalImage] as? UIImage, let data = image.jpegData(compressionQuality: 0.9) {
+                parent.onCapture(data)
+            } else {
+                parent.onCancel()
+            }
+        }
+        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) { parent.onCancel() }
     }
 }
 #endif
