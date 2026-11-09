@@ -37,7 +37,7 @@
     "gecko": {
       "id": "clipper@chezmaurice.eu",
       "strict_min_version": "128.0",
-      "data_collection_permissions": { "required": ["none"] }
+      "data_collection_permissions": { "required": ["websiteContent", "personalCommunications"] }
     },
     "gecko_android": {
       "strict_min_version": "128.0"
