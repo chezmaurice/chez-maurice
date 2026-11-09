@@ -89,7 +89,10 @@ function getHouseholdConfig(): {
     zaiApiKey: row.zai_api_key,
     scalewayApiKey: row.scaleway_api_key,
     scalewayProjectId: row.scaleway_project_id,
-    falApiKey: row.fal_api_key,
+    // fal.ai is switched off (9 November 2026): no image goes to it, whatever
+    // key a household still holds. Image generation, its tool and its consent
+    // row all follow from this being null.
+    falApiKey: null,
     defaultModel: row.default_model,
     maxTokens: row.max_tokens,
     everydayThinking: row.everyday_thinking == null ? null : row.everyday_thinking === 1,

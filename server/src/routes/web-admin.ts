@@ -783,7 +783,7 @@ web.get("/dashboard", async (c) => {
           <div class="field" style="margin-top:16px"><label class="label">${escape(t(lang, "settings.anthropic_key"))}</label>
             <input type="password" name="api_key" autocomplete="off" placeholder="${household.api_key ? escape(t(lang, "settings.saved_placeholder")) : "sk-ant-…"}" />
             <span class="hint">${escape(t(lang, "settings.leave_blank"))} ${household.api_key ? escape(t(lang, "settings.key_is_set")) : escape(t(lang, "settings.no_key_echo"))}</span></div>
-          <!-- fal.ai image-gen key hidden for the v1 release (feature unpolished); backend + save handler retained. -->
+          <!-- fal.ai is switched off (9 November 2026): no key field, no save; see getHouseholdConfig. -->
           <div class="grid2" style="margin-top:16px">
             <div class="field"><label class="label">${escape(t(lang, "settings.openai_key"))}</label>
               <input type="password" name="openai_api_key" autocomplete="off" placeholder="${household.openai_api_key ? escape(t(lang, "settings.saved_placeholder")) : "sk-…"}" />
@@ -1148,7 +1148,6 @@ web.post("/settings", async (c) => {
     const pid = (form.scaleway_project_id as string).trim();
     if (pid === "" || /^[0-9a-f-]{36}$/i.test(pid)) put("scaleway_project_id", pid || null);
   }
-  if (form.fal_api_key && (form.fal_api_key as string).trim()) put("fal_api_key", (form.fal_api_key as string).trim());
   if (form.ollama_host) put("ollama_host", (form.ollama_host as string).trim().replace(/\/+$/, ""));
   if (form.default_model && getModel((form.default_model as string).trim())) put("default_model", (form.default_model as string).trim());
   if (form.max_tokens) put("max_tokens", parseInt(form.max_tokens as string) || 4096);
