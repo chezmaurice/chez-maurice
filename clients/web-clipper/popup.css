@@ -167,12 +167,13 @@ html.material .round { background: transparent; }
 html.material .round.tinted { background: var(--tint); }
 html.sheet .round { width: 44px; height: 44px; border-radius: 22px; }
 
-/* The top bar is the phone sheet's (close · title · check); on a desktop
-   popover the footer's button does the saving. */
+/* No top bar: on a desktop popover the footer's button does the saving,
+   and on an iPhone Safari's own sheet already carries the extension's name
+   and a ✓ that closes it — the footer's button, full width, saves. */
 .bar { display: none; align-items: center; justify-content: space-between; }
 .bar-title { font-size: 17px; font-weight: 600; }
-html.sheet.apple .bar { display: flex; }
-html.sheet.apple .foot { display: none; }
+html.sheet.apple .foot .shortcut { display: none; }
+html.sheet.apple .foot #save { flex: 1; }
 .sheet-heading { display: none; }
 html.sheet.material .sheet-heading { display: block; }
 
@@ -213,7 +214,13 @@ html.material .article-title { font-weight: 500; }
   font-size: 14px;
   text-align: left;
 }
-.fold-label { display: flex; align-items: center; gap: 8px; }
+.fold-label { display: flex; align-items: center; gap: 8px; min-width: 0; }
+/* On an iPhone the question is a caption above the card, never squeezed
+   onto two lines beside the summary. */
+.fold-caption { display: none; font-size: 13px; font-weight: 500; color: var(--ink-2); padding: 0 4px; margin-bottom: -6px; }
+html.sheet.apple .fold-caption { display: block; }
+html.sheet.apple .fold-why { display: none; }
+html.sheet.apple .fold-summary { font-size: inherit; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fold-label svg { color: var(--ink-2); }
 .fold-summary { font-size: 12px; color: var(--ink-2); }
 .chevron { color: var(--ink-2); transition: transform 0.2s ease; }

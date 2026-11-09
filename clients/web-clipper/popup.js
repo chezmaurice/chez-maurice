@@ -12,6 +12,9 @@ const el = (id) => document.getElementById(id);
 const ua = navigator.userAgent;
 const apple = /Macintosh|Mac OS X|iPhone|iPad/.test(ua);
 const phone = /Android|iPhone|iPad|Mobile/.test(ua);
+/** Safari on an iPhone draws its own sheet around the popup — the
+ *  extension's name and a ✓ that closes it — so the popup has no bar. */
+const iosSheet = apple && phone;
 
 let config = null;
 let captured = null;
@@ -283,8 +286,16 @@ function setFold(open) {
 }
 
 function updateSummary() {
+  const note = el("comment").value.trim();
+  // On an iPhone the question sits above the card, as in Carnet's share
+  // sheet: the row says what is in the note, or that it is optional.
+  if (iosSheet) {
+    const optional = t("optional");
+    el("fold-summary").textContent = note.split("\n")[0] || optional.charAt(0).toUpperCase() + optional.slice(1);
+    return;
+  }
   const open = el("fold").getAttribute("aria-expanded") === "true";
-  const noted = el("comment").value.trim() ? t("note").toLowerCase() : t("optional");
+  const noted = note ? t("note").toLowerCase() : t("optional");
   el("fold-summary").textContent = open ? "" : `· ${noted}`;
 }
 
