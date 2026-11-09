@@ -46,6 +46,7 @@ const { loadLibrary, matchBook } = await import("../data-api/services/gardenShel
 const { bookKey } = await import("../data-api/services/bookTitles");
 const { listGardenEntries } = await import("../data-api/services/gardenEntries");
 const { gardenFor, parseFiche } = await import("../data-api/services/gardenFiche");
+const { linkBook } = await import("../data-api/services/gardenWrite");
 
 const ANNA = "bf-anna";
 const root = path.join(TMP, "gardens", ANNA);
@@ -178,4 +179,36 @@ describe("a reading companion", () => {
 test("a person's card names them: the entry has their name, not its slug", () => {
   const levin = listGardenEntries(gardenFor(ANNA)!).find((e) => e.slug === "michael-levin");
   expect(levin?.title).toBe("Michael Levin");
+});
+
+describe("tying an entry to a book by hand", () => {
+  const ref = { collection: "books", locale: "fr", slug: "dune-le-roman" };
+
+  beforeAll(() => {
+    // A title two books of the library answer to: nothing ties it by itself.
+    write("books/fr/dune-le-roman-fiche.md",
+      `---\ntitle: Dune\nresource_collection: books\nresource_id: dune-le-roman\ndate: '2026-08-01'\ntags: []\nlocale: fr\nmeta:\n  title: Dune\n---\n\nLu en août.\n`);
+  });
+
+  test("the book the member names becomes the entry's source", async () => {
+    const garden = gardenFor(ANNA)!;
+    await linkBook(ANNA, garden, ref, 9);
+    const fiche = parseFiche(fs.readFileSync(path.join(root, "books/fr/dune-le-roman-fiche.md"), "utf-8"))!;
+    expect(fiche.frontmatter.meta.calibre_id).toBe(9);
+    expect(fiche.body).toContain("Lu en août.");
+    // Named again, to the other edition: the member's word replaces the first.
+    await linkBook(ANNA, garden, ref, 8);
+    expect(parseFiche(fs.readFileSync(path.join(root, "books/fr/dune-le-roman-fiche.md"), "utf-8"))!.frontmatter.meta.calibre_id).toBe(8);
+  });
+
+  test("a book already another entry's stays with it", async () => {
+    // Humus is the book of humus-roman.
+    await expect(linkBook(ANNA, gardenFor(ANNA)!, ref, 7)).rejects.toMatchObject({ status: 409 });
+  });
+
+  test("only a book, and only one the library has", async () => {
+    await expect(linkBook(ANNA, gardenFor(ANNA)!, { collection: "people", locale: "fr", slug: "michael-levin" }, 8))
+      .rejects.toThrow();
+    await expect(linkBook(ANNA, gardenFor(ANNA)!, ref, 4242)).rejects.toMatchObject({ status: 404 });
+  });
 });

@@ -282,6 +282,35 @@ export async function entryForBook(
   return ref;
 }
 
+/**
+ * Tie a book entry to a book of the library, by hand: what the title alone
+ * could not settle (another edition, a subtitle, an author Calibre does not
+ * know), or settled wrongly. The fiche carries the id from then on; one with
+ * none is made. A book already tied to another entry stays with it.
+ */
+export async function linkBook(memberId: string, garden: GardenRef, ref: EntryRef, bookId: number): Promise<void> {
+  const entry = findEntry(garden, ref);
+  if (entry.collection !== "books") throw new EntryWriteError("Only a book is tied to the library", 400);
+  const book = await getBookMetadata(bookId);
+  if (!book) throw new EntryWriteError(`Book not found: ${bookId}`, 404);
+
+  const other = listGardenEntries(garden).find((e) =>
+    e.collection === "books" && e.slug !== entry.slug &&
+    Number(readFace(garden, e.fiche?.file)?.meta.calibre_id) === bookId);
+  if (other) throw new EntryWriteError(`This book is already the one of « ${other.title} »`, 409);
+
+  const { file, created } = ensureFiche(garden, entry, { calibre_id: bookId });
+  if (!created) {
+    const parsed = parseFiche(fs.readFileSync(file, "utf-8"));
+    if (!parsed) throw new EntryWriteError(`Could not parse: ${path.relative(garden.root, file)}`, 422);
+    if (parsed.frontmatter.meta?.calibre_id === bookId) return;
+    parsed.frontmatter.meta = { ...(parsed.frontmatter.meta ?? {}), calibre_id: bookId };
+    writeFiche(file, parsed.frontmatter, parsed.body);
+  }
+  autoCommit(garden, [file], `Tie books/${entry.slug} to the library's book ${bookId}`);
+  indexGardenPaths(memberId, [file]);
+}
+
 function majorityLocale(entries: GardenEntry[]): string | null {
   const counts = new Map<string, number>();
   for (const e of entries) counts.set(e.locale, (counts.get(e.locale) ?? 0) + 1);

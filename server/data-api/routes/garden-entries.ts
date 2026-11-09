@@ -14,7 +14,7 @@ import { cardsFace } from "../services/flashcards";
 import { getShelfEntry, listNotes, listShelf, siteFor } from "../services/gardenShelf";
 import { conversationsAbout, EntryConversationError, summaryFor } from "../services/entryConversations";
 import {
-  addNote, archiveEntry, cardPrint, completeCard, completeDetails, deleteEntry, deleteNote, editNote, republishIfChanged, setCover, deployState, entryForBook, EntryWriteError, setPublished, writeShared, type EntryRef,
+  addNote, archiveEntry, cardPrint, completeCard, completeDetails, deleteEntry, deleteNote, editNote, linkBook, republishIfChanged, setCover, deployState, entryForBook, EntryWriteError, setPublished, writeShared, type EntryRef,
 } from "../services/gardenWrite";
 
 import {
@@ -375,6 +375,17 @@ app.post("/entries/:collection/:locale/:slug/details", (c) =>
     await completeDetails(memberId, garden, ref);
     return republishIfChanged(memberId, garden, ref, print);
   }));
+
+/**
+ * The book of the library this entry is about, named by the member: `{ book_id }`.
+ * For what the title could not settle, or settled wrongly. Answers the entry
+ * with its book as its source.
+ */
+app.put("/entries/:collection/:locale/:slug/book", async (c) => {
+  const bookId = Number((await jsonBody(c))?.book_id);
+  if (!Number.isInteger(bookId)) return c.json({ error: "book_id required" }, 400);
+  return written(c, null, (memberId, garden, ref) => linkBook(memberId, garden, ref, bookId));
+});
 
 /** Publish: the `public` flag, then a deploy of the member's site. */
 app.post("/entries/:collection/:locale/:slug/shared/publish", (c) =>
