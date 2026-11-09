@@ -212,3 +212,20 @@ describe("tying an entry to a book by hand", () => {
     await expect(linkBook(ANNA, gardenFor(ANNA)!, ref, 4242)).rejects.toMatchObject({ status: 404 });
   });
 });
+
+test("PUT …/book answers the entry with the book as its source", async () => {
+  const { Hono } = await import("hono");
+  const { default: entries } = await import("../data-api/routes/garden-entries");
+  const app = new Hono();
+  app.use("*", async (c, next) => { c.set("userId" as never, ANNA as never); await next(); });
+  app.route("/", entries);
+  const put = (slug: string, body: unknown) => app.request(`/entries/books/fr/${slug}/book`, {
+    method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+  });
+  const res = await put("dune-le-roman", { book_id: 9 });
+  expect(res.status).toBe(201);
+  const entry = await res.json() as any;
+  expect(entry.source).toMatchObject({ type: "book", book_id: 9 });
+  expect((await put("dune-le-roman", {})).status).toBe(400);
+  expect((await put("dune-le-roman", { book_id: 7 })).status).toBe(409);
+});
