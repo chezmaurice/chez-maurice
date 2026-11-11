@@ -15,5 +15,13 @@
 	<array>
 		<string>group.eu.chezmaurice.maurice</string>
 	</array>
+	<!-- The households, members and sessions the Maurice app and Carnet share
+	     (SharedPairings.swift). The app's own group stays first: it is where
+	     a Keychain item with no group named goes. -->
+	<key>keychain-access-groups</key>
+	<array>
+		<string>$(AppIdentifierPrefix)eu.chezmaurice.maurice</string>
+		<string>$(AppIdentifierPrefix)eu.chezmaurice.shared</string>
+	</array>
 </dict>
 </plist>

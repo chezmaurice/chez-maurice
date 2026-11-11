@@ -112,6 +112,7 @@ final class SessionStore {
         didSet {
             UserDefaults.standard.set(currentHouseholdId, forKey: "maurice.currentHousehold")
             syncActiveUserMirror()
+            publishShared()
         }
     }
     var deviceId: String? {
@@ -202,6 +203,10 @@ final class SessionStore {
             guard let token = note.userInfo?["token"] as? String else { return }
             self?.sessionRejected(token: token)
         }
+        #if os(iOS)
+        joinShared()
+        SharedPairings.observe { [weak self] in self?.applyShared() }
+        #endif
     }
 
     // MARK: - Households
@@ -381,6 +386,7 @@ final class SessionStore {
             }
         }
         syncActiveUserMirror()
+        publishShared()
     }
 
     /// Fold fresh server profiles into the persisted device users. Avatar, color,
@@ -423,10 +429,12 @@ final class SessionStore {
     private func storeToken(_ token: String, for userId: String) {
         if let k = tokenKey(userId) { TokenVault.set(token, k) }
         publishBrowserSession()
+        publishShared()
     }
     private func removeToken(for userId: String) {
         if let k = tokenKey(userId) { TokenVault.remove(k) }
         publishBrowserSession()
+        publishShared()
     }
 
     private func mcpKey(_ userId: String) -> String? {
@@ -508,7 +516,105 @@ final class SessionStore {
             UserDefaults.standard.set(data, forKey: "maurice.households")
         }
         publishBrowserSession()
+        publishShared()
     }
+
+    // MARK: - Shared with Carnet (SharedPairings)
+
+    #if os(iOS)
+    /// What the two apps last agreed on, as this one knows it.
+    @ObservationIgnored private var sharedSeen: SharedPairings?
+    /// Set while Carnet's pairings are being applied here, so that applying
+    /// them does not write them back — and until `init` has read them, so
+    /// that loading this app's own copy does not overwrite a newer one.
+    @ObservationIgnored private var applyingShared = true
+    @ObservationIgnored private var sharedJoined = UserDefaults.standard.bool(forKey: "maurice.shared.joined")
+
+    /// These households, members and sessions, as Carnet is to see them.
+    private var sharedSnapshot: SharedPairings {
+        SharedPairings(households: households.map { h in
+            var tokens: [String: String] = [:]
+            for u in h.deviceUsers { tokens[u.id] = TokenVault.get(Self.tokenKey(h.id, u.id)) }
+            return .init(server: h.serverURL, key: h.key, name: h.name, color: h.color, icon: h.icon,
+                         members: h.deviceUsers.map {
+                             .init(id: $0.id, display_name: $0.displayName, avatar_color: $0.avatarColor, has_pin: $0.hasPin,
+                                   role: $0.role, avatar_url: $0.avatarURL, username: $0.username)
+                         },
+                         active: h.activeUserId, tokens: tokens)
+        }, current: currentHousehold?.serverURL)
+    }
+
+    /// The first launch after the update: what each app held becomes what both
+    /// hold. Afterwards, what is shared is what counts.
+    private func joinShared() {
+        applyingShared = false
+        if !sharedJoined {
+            var shared = sharedSnapshot
+            if let theirs = SharedPairings.read() { shared.absorb(theirs) }
+            shared.write()
+            sharedJoined = true
+            UserDefaults.standard.set(true, forKey: "maurice.shared.joined")
+        }
+        applyShared()
+    }
+
+    /// Something changed here: Carnet hears of it.
+    private func publishShared() {
+        guard sharedJoined, !applyingShared else { return }
+        let snapshot = sharedSnapshot
+        guard snapshot != sharedSeen else { return }
+        snapshot.write()
+        sharedSeen = snapshot
+    }
+
+    /// Carnet may have changed something: take it as it is, in place.
+    func applyShared() {
+        guard sharedJoined, let shared = SharedPairings.read(), shared != sharedSeen else { return }
+        sharedSeen = shared
+        applyingShared = true
+        defer { applyingShared = false }
+        var next: [Household] = []
+        for s in shared.households {
+            let local = households.first { s.same(server: $0.serverURL, key: $0.key) }
+            let hid = local?.id ?? UUID().uuidString
+            let known = Dictionary((local?.deviceUsers ?? []).map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+            let users = s.members.map { m in
+                DeviceUser(id: m.id, displayName: m.display_name, avatarColor: m.avatar_color, hasPin: m.has_pin,
+                           role: m.role, avatarURL: m.avatar_url, username: m.username ?? known[m.id]?.username)
+            }
+            for u in users {
+                let k = Self.tokenKey(hid, u.id)
+                if let t = s.tokens[u.id] {
+                    if TokenVault.get(k) != t { TokenVault.set(t, k) }
+                } else if TokenVault.get(k) != nil {
+                    TokenVault.remove(k)
+                    TokenVault.remove(Self.mcpKey(hid, u.id))
+                }
+            }
+            for u in local?.deviceUsers ?? [] where !users.contains(where: { $0.id == u.id }) {
+                TokenVault.remove(Self.tokenKey(hid, u.id))
+                TokenVault.remove(Self.mcpKey(hid, u.id))
+            }
+            next.append(Household(id: hid, serverURL: s.server, name: s.name, color: s.color, icon: s.icon,
+                                  key: s.key ?? local?.key, deviceUsers: users, activeUserId: s.active,
+                                  unread: local?.unread))
+        }
+        for gone in households where !next.contains(where: { $0.id == gone.id }) {
+            for u in gone.deviceUsers {
+                TokenVault.remove(Self.tokenKey(gone.id, u.id))
+                TokenVault.remove(Self.mcpKey(gone.id, u.id))
+            }
+        }
+        let wasActive = activeUserId
+        if next != households { households = next }
+        let current = next.first { $0.serverURL == shared.current }?.id ?? next.first?.id
+        if currentHouseholdId != current { currentHouseholdId = current }
+        syncActiveUserMirror()
+        if activeUserId != wasActive { loadLocalPrefs() }
+    }
+    #else
+    private func publishShared() {}
+    #endif
 
     /// On the Mac, the Safari extension saves as whoever is signed in here
     /// (BrowserSession). Called whenever the household, the member or a token

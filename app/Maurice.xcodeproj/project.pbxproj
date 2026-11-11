@@ -67,6 +67,7 @@
 		76F5A3E479E78CF38F358EE3 /* SharedPageLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2E6BA859F6B8FDD533D6143 /* SharedPageLoader.swift */; };
 		773B899803CBAAF839CDE0C1 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E0D0DF979284275260F31D2 /* SettingsView.swift */; };
 		775815BED73706273BEE92F3 /* MauriceTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1ABC13222ECFAD2CFC3180B /* MauriceTheme.swift */; };
+		7885F8F6D0283D1708F36200 /* SharedPairings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06C56ED7D952E232A31E88F0 /* SharedPairings.swift */; };
 		79A6D1DBFB049245E3D239D6 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 815355ED837E18AB9BEFDC83 /* APIClient.swift */; };
 		79D972E8244DCF5442DB6922 /* ChatSnippets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0093E2B2C16E646EA2A8E856 /* ChatSnippets.swift */; };
 		7CB12254AF16A2499EAEA7D7 /* ComposerStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70240FCC64F152DDCEC0F0E2 /* ComposerStore.swift */; };
@@ -112,6 +113,7 @@
 		C3F16250A82E93FC469EAA89 /* BudgetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 475D8D96ACDB87A322874BFA /* BudgetViews.swift */; };
 		C572E26B4642F721F7EEBBCB /* StoreStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F87E3560E9BC0F827F7693AD /* StoreStore.swift */; };
 		C75DA94A1212FB984F5CDC62 /* DomainEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D1A322B73BEA06F034F1718 /* DomainEditorView.swift */; };
+		C7B1798B0EC27B1252084DE1 /* SharedPairings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06C56ED7D952E232A31E88F0 /* SharedPairings.swift */; };
 		C8C934C400A253AFC27851C2 /* SearchKeyboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 437B5ED8350A54E9167D4BF5 /* SearchKeyboard.swift */; };
 		CAF942F37AE2F3E45A4761D0 /* Hats.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCDEAA0E48CC14C7C18BE8FD /* Hats.swift */; };
 		CB71AD2912D05739932A2EB1 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E01BB325D88F4E74B3571BC /* ChatView.swift */; };
@@ -212,6 +214,7 @@
 /* Begin PBXFileReference section */
 		0093E2B2C16E646EA2A8E856 /* ChatSnippets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatSnippets.swift; sourceTree = "<group>"; };
 		00B700626149A3D1C0D6D5CB /* PairingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PairingView.swift; sourceTree = "<group>"; };
+		06C56ED7D952E232A31E88F0 /* SharedPairings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedPairings.swift; sourceTree = "<group>"; };
 		0C40E3A8A575BAD3D6141A18 /* popup.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = popup.js; sourceTree = "<group>"; };
 		0CD335EB3BF542EDF13DA17D /* Maurice_iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Maurice_iOS.entitlements; sourceTree = "<group>"; };
 		0D1A322B73BEA06F034F1718 /* DomainEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DomainEditorView.swift; sourceTree = "<group>"; };
@@ -526,6 +529,7 @@
 				8C96937F0554878BAF247D3F /* MauriceStore.swift */,
 				405F9AA69C83E58A86FDD625 /* SessionStore.swift */,
 				E76EA458EBA05810D312BA7F /* SharedArticles.swift */,
+				06C56ED7D952E232A31E88F0 /* SharedPairings.swift */,
 				F87E3560E9BC0F827F7693AD /* StoreStore.swift */,
 			);
 			path = Services;
@@ -883,6 +887,7 @@
 				B5655384F94390632B3335BB /* SettingsView.swift in Sources */,
 				7303D09FAC7F9EC16F45847B /* ShareInbox.swift in Sources */,
 				ED50C0B176EE6BC4F5861734 /* SharedArticles.swift in Sources */,
+				7885F8F6D0283D1708F36200 /* SharedPairings.swift in Sources */,
 				916AE95E4B6FA8F0CB44AAD5 /* SignupViews.swift in Sources */,
 				98920F5C7DB20F4AF25B7C78 /* SortMenu.swift in Sources */,
 				2A90B07E5E28A6BBC4C8F40B /* SourcesCard.swift in Sources */,
@@ -958,6 +963,7 @@
 				7D338BE53D7A3CA7660BB1C5 /* SessionStore.swift in Sources */,
 				773B899803CBAAF839CDE0C1 /* SettingsView.swift in Sources */,
 				64D0DD327596E3D664637693 /* SharedArticles.swift in Sources */,
+				C7B1798B0EC27B1252084DE1 /* SharedPairings.swift in Sources */,
 				0B22EE6A0C04549D360A0F6A /* SignupViews.swift in Sources */,
 				13534AB1DC9B63D211D638DA /* SortMenu.swift in Sources */,
 				A6490C4406B6EA6D2FA33CBF /* SourcesCard.swift in Sources */,
