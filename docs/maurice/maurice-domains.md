@@ -1,6 +1,6 @@
 ---
 title: Domains and their briefs
-date: '2026-11-08'
+date: '2026-11-12'
 flags: []
 locale: en
 description: A domain is a part of a member's life Maurice follows, with a brief
@@ -107,7 +107,7 @@ What it holds is what the member may take away: their own brief, never another m
 
 ## Saved articles are filed under a domain (8 November 2026)
 
-The tags the share sheets and the browser extension used to ask for are gone: a domain is a tag the member does not type. At each save, the light model (`article_domain`) reads the article — title, source, opening, the member's note, weighed most — beside the member's adopted domains (name, tagline, the brief's one-liner) and names one or none (`services/domainArticles.ts`, table `domain_articles`: one row per fiche, `by` = `auto`, `member` or `none`). The browser extension says *Filed in …* with *Change* (Carnet's share sheets, iOS and Android, do too in their next release; until then they save untagged and the filing happens silently), which offers the other domains and *No domain*; the member's choice prevails, and an article taken out of every domain is never filed again. **The brief reads them**: a rewrite takes the articles filed since the previous one (ten at most, the most recent), each as its title, source, summary and the member's note, and the prompt names them as articles they saved; the brief's sources list them as `article:<path>`. A merge moves them with the domain; the member's archive and erasure carry the table.
+The tags the share sheets and the browser extension used to ask for are gone: a domain is a tag the member does not type. At each save, the light model (`article_domain`) reads the article — title, source, opening, the member's note, weighed most — beside the member's adopted domains (name, tagline, the brief's one-liner) and names one or none (`services/domainArticles.ts`, table `domain_articles`: one row per fiche, `by` = `auto`, `member` or `none`). The browser extension says *Filed in …* with *Change* (Carnet's share sheet does too on Android; on iPhone and iPad it does in Carnet's next release, and until then saves untagged while the filing happens silently), which offers the other domains and *No domain*; the member's choice prevails, and an article taken out of every domain is never filed again. **The brief reads them**: a rewrite takes the articles filed since the previous one (ten at most, the most recent), each as its title, source, summary and the member's note, and the prompt names them as articles they saved; the brief's sources list them as `article:<path>`. A merge moves them with the domain; the member's archive and erasure carry the table.
 
 Not the corpus's neighbours, as for conversations: no article is filed yet to vote, and an article's prose against the member's questions sorts by style before subject — the reason the mail's digests are grouped among themselves. On the owner's fifteen domains, six made-up titles: five filed as expected, one loose (copper prices under geopolitics), a note about something else left the article unfiled.
 

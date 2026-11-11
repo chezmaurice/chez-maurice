@@ -1,6 +1,6 @@
 ---
 title: Maurice — the digest
-date: '2026-11-11'
+date: '2026-11-12'
 flags: []
 locale: en
 description: 'The system documentation condensed to what a user needs: everything
@@ -17,19 +17,19 @@ digest: true
 covers:
   maurice-applications: '2026-10-20'
   maurice-architecture: '2026-11-11'
-  maurice-carnet: '2026-11-11'
-  maurice-chat: '2026-11-11'
+  maurice-carnet: '2026-11-12'
+  maurice-chat: '2026-11-12'
   maurice-composer: '2026-10-20'
   maurice-data-model: '2026-10-29'
   maurice-docs: '2026-10-20'
-  maurice-domains: '2026-11-08'
+  maurice-domains: '2026-11-12'
   maurice-files: '2026-06-19'
-  maurice-households-rooms: '2026-11-11'
-  maurice-knowledge: '2026-11-09'
+  maurice-households-rooms: '2026-11-12'
+  maurice-knowledge: '2026-11-12'
   maurice-life: '2026-10-20'
   maurice-personas-hats: '2026-09-19'
   maurice-server: '2026-11-09'
-  maurice-shared-gardens: '2026-11-11'
+  maurice-shared-gardens: '2026-11-12'
   maurice-tools: '2026-11-05'
   maurice-web-garden: '2026-11-06'
 ---
@@ -89,9 +89,9 @@ There is also a **browser extension**, *Save to Carnet* — one extension for Ch
 ## 5. Households, members, devices
 
 - **One server is one household**; a device can hold several households, each with its own session, switched from a pill with an unread badge.
-- **The Maurice app and Carnet share them** on an iPhone or iPad: join a household, sign in or out, switch, or forget a household in one, and the other follows at once. On Android, Windows and Linux the same comes with the apps' next release (the other app follows when told, or when it comes back to the front); not on the Mac, where there is no Carnet.
+- **The Maurice app and Carnet share them** on an iPhone or iPad: join a household, sign in or out, switch, or forget a household in one, and the other follows at once. On Android the same holds since Maurice 0.5.13 and Carnet 0.1.14 on Obtainium (the other app follows when told, or when it comes back to the front); the Play build and Windows and Linux get it with their next release; not on the Mac, where there is no Carnet.
 - **Joining:** scan the invitation (paste its link on a computer), or enter a code or the household's address; the app shows the household's name, icon and colour. A **fresh device joins with an invite code** given by an admin (8 characters, about 7 days, reusable within that window, rate-limited), then the member sets a PIN. An admin can also issue an **open invitation** — QR code, typed code or link, single use, 7 days — with which a newcomer gives a first name and colour and becomes a standard member. The invitation's link opens the app when it is installed; otherwise a page offers Maurice and Carnet for your device, then opens the invitation in either. A member already signed in on one device adds another **without the admin**: Settings → *Add a device* shows a QR code that works once, for ten minutes. Once a member is signed in on a device, the device shows the household's members, and switching is a tap plus a PIN. *Sign out* ends your session and keeps the household; *Forget this household* removes it from the device; a member without a PIN comes back on a device only with an invite code. The admin signs in with a username and password (at least 12 characters, not containing the username), and changes it in Settings → *Administrator password*, which signs out the admin's other devices. A PIN that everybody tries first (1111, 1234, 2580, 1212…) is refused. A code the admin makes for someone who already uses their account is **told to that member** (an alert in the app, a line under *My data*, a push).
-- **Managing members from the app:** an admin taps someone in Settings → Members to change their name or colour, give them a new device, or delete them (with a confirmation: everything of theirs is erased); the same pane renames the household. The app never sets someone else's PIN — that would let the admin sign in as them untold: a **forgotten PIN** is a new device code, after which the member chooses a new PIN. Keys, models, caps and the reply length are never set from the app either; they belong to whoever runs the machine. On Android and the desktop this comes with the apps' next release, as do the guest invitation, *Connect a browser*, *Create my Maurice* and an unread badge per household.
+- **Managing members from the app:** an admin taps someone in Settings → Members to change their name or colour, give them a new device, or delete them (with a confirmation: everything of theirs is erased); the same pane renames the household. The app never sets someone else's PIN — that would let the admin sign in as them untold: a **forgotten PIN** is a new device code, after which the member chooses a new PIN. Keys, models, caps and the reply length are never set from the app either; they belong to whoever runs the machine. Android has it through Obtainium, with the guest invitation, *Connect a browser*, *Create my Maurice* and an unread badge per household; the Play build and the desktop with their next release.
 - **Roles:**
   - **admin** — manages members, keys, models, budgets and the household's identity;
   - **standard** — a full member with a mandatory PIN;
@@ -185,7 +185,7 @@ There is also a **browser extension**, *Save to Carnet* — one extension for Ch
 - **Facts:** Maurice may propose a small stable fact about the member ("X is eleven") as a card; it reaches his prompt only once kept, and can be corrected, dismissed or forgotten.
 - **Settings:** appearance and language, *Activity* (the progress pulse), the cost meter, *Budget*, *Mail*, the files library, *Import my conversations* (ChatGPT and Claude exports, each import confirmed with the provider named), *My data* (the AI providers, the privacy policy, export and erasure), and for admins members, invitations and the open reports.
 - **Platforms:** Liquid Glass on iOS/macOS 26 with a fallback to iOS 17 / macOS 14; iPad and Mac use the system toolbar; drag-and-drop on the Mac.
-- **On Android, Windows and Linux:** the same app in Material 3, through Obtainium on Android (a build with no Google dependency; a Play build with Play purchases is on its own line), kept in step with the iOS app by a test suite that runs both on the same cases. Dictation there always goes through the household's server, the camera is the system's, push comes through UnifiedPush; the desktop has no camera nor scanner. Its next release brings what the iOS app gained lately: managing members, guest invitations, shared notes, person review, received conversations read-only, removing someone from a room, the camera, and no message to Maurice before the server confirms the member's yes to its providers.
+- **On Android, Windows and Linux:** the same app in Material 3, through Obtainium on Android (a build with no Google dependency; a Play build with Play purchases is on its own line), kept in step with the iOS app by a test suite that runs both on the same cases. Dictation there always goes through the household's server, the camera is the system's, push comes through UnifiedPush; the desktop has no camera nor scanner. Maurice 0.5.13 on Obtainium (12 November 2026) carries what the iOS app gained lately — managing members, guest invitations, shared notes, person review, received conversations read-only, removing someone from a room, the camera, no message to Maurice before the server confirms the member's yes to its providers; the Play build and the desktop get it with their next release.
 
 *Gaps:* no branching; no cost total across conversations; a selection stays within one message; the server dictation's live preview is not marked as provisional; sharing an article is iOS only, and a long article goes whole into the conversation (a Wikipedia page is about 30k tokens, read again on every turn).
 
@@ -234,7 +234,7 @@ Each member has folders and files (5 GB each), in **Settings**: text, images, PD
 - **Saved articles are filed too** (since 8 November 2026): no tags to type — when an article is saved, a light model files it under one of the member's domains, or none, and the extension says where, with *Change*. The member's choice is never overridden. A domain's brief then reads the articles filed under it, with the member's note: it knows what they read on the subject, not only what they said.
 - In Carnet, the *Maurice* screen lists domains (with the brief's age and author) and companions; a domain's brief can be edited, rewritten or erased there.
 
-*Gaps:* the marks exist only in the Maurice app; an article's domain is shown and changed only at the save (not on the article's page, nor on the domain's), Carnet's share sheet shows it only from its next release, and articles saved before 8 November 2026 are not filed; a large mixed subject (over about 80 conversations) is never proposed; members with few conversations get no filing; the grouping is not deterministic; a domain's first notes can carry personal details from conversations; shared domains have no shared brief; a reading companion's conversation opens from the book's fiche, not yet from the book's drawer.
+*Gaps:* the marks exist only in the Maurice app; an article's domain is shown and changed only at the save (not on the article's page, nor on the domain's), Carnet's share sheet shows it on Android, on iPhone and iPad only from its next release, and articles saved before 8 November 2026 are not filed; a large mixed subject (over about 80 conversations) is never proposed; members with few conversations get no filing; the grouping is not deterministic; a domain's first notes can carry personal details from conversations; shared domains have no shared brief; a reading companion's conversation opens from the book's fiche, not yet from the book's drawer.
 
 *Detail:* `domains`, `personas-hats`.
 
@@ -315,7 +315,7 @@ Each member has folders and files (5 GB each), in **Settings**: text, images, PD
 - **The *Maurice* screen:** domains and their briefs (edit, rewrite, erase), reading companions, and older conversations Maurice opened (answered in the Maurice app). A book's page can create a reading companion.
 - No location tracking; a privacy manifest declares no tracking and nothing collected by the publisher. The way in, the member sheet, the share and sending sheets and an entry's ⋯ menu speak seven languages, following the language you chose in Maurice; the rest is in English — on Android, in French too. Reading is on iPhone, iPad and Android; on a Mac the notes are read in the browser.
 
-*Status:* in daily use at home; version 1.0 is on the App Store (free), later work in 1.0.1 on TestFlight; the same Carnet on Android (Obtainium), whose next release brings the **+**, note editing, giving to another household, linking a book, and an outbox that retries what was refused. *Gaps:* Carnet on Android registers no push yet; *Log* and *Dashboards* are experimental and not shipped; the hand-off to the Maurice app and the fiche's conversations were not yet tried on a phone, nor were the session, invitation and offline-queue fixes of 21 October (checked on a simulator); no flashcard review; a shared article's copy was not yet watched arriving on a phone; giving an entry to another household ran between two test servers, not yet on phones; the iPad and a real publish from a phone were never exercised; the new way in has run only in the simulator.
+*Status:* in daily use at home; version 1.0 is on the App Store (free), later work in 1.0.1 on TestFlight; the same Carnet on Android (0.1.14 on Obtainium), with the **+**, note editing, giving to another household, linking a book, and an outbox that retries what was refused; the Play build and the desktop get these with their next release. *Gaps:* Carnet on Android registers no push yet; *Log* and *Dashboards* are experimental and not shipped; the hand-off to the Maurice app and the fiche's conversations were not yet tried on a phone, nor were the session, invitation and offline-queue fixes of 21 October (checked on a simulator); no flashcard review; a shared article's copy was not yet watched arriving on a phone; giving an entry to another household ran between two test servers, not yet on phones; the iPad and a real publish from a phone were never exercised; the new way in has run only in the simulator.
 
 *Detail:* `carnet`.
 

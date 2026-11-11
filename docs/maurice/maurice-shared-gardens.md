@@ -1,6 +1,6 @@
 ---
 title: Shared notes
-date: '2026-11-11'
+date: '2026-11-12'
 flags: []
 locale: en
 description: Per-note sharing, from which each audience's shared notes are derived —
@@ -38,7 +38,7 @@ The routes are small and human:
 - `POST …/leave` — remove *yourself* from a note's audience (`removeSelf`) — you can leave shared notes, you don't delete others' access.
 - `PATCH /api/v1/gardens/:id` — set the shared notes' **web theme** (`setGardenTheme` → `garden_settings.web_theme`, keyed by audience).
 
-In the app, the sidebar's *Notes* section lists your own notes and every set you share; a set's page shows its members and the share/leave controls per note. Its entries come newest-edit first (the server sorts on each file's mtime) and a sort menu offers **Title** and **Kind** as well; the default is named in the menu, so getting back to it is never a guess. Sharing a note with someone moves it among the notes you keep together; the note's page says where it is (*in the notes you keep with Paola*, *in your own notes*). The Android and desktop app has the same *Notes* section, a set's page (search, web theme, sort, *to review*) and a note's access (share, leave), merged on 11 November 2026 and arriving with its next release.
+In the app, the sidebar's *Notes* section lists your own notes and every set you share; a set's page shows its members and the share/leave controls per note. Its entries come newest-edit first (the server sorts on each file's mtime) and a sort menu offers **Title** and **Kind** as well; the default is named in the menu, so getting back to it is never a guess. Sharing a note with someone moves it among the notes you keep together; the note's page says where it is (*in the notes you keep with Paola*, *in your own notes*). The Android and desktop app has the same *Notes* section, a set's page (search, web theme, sort, *to review*) and a note's access (share, leave), on Android since Maurice 0.5.13 on Obtainium (12 November 2026); the Play build and the desktop get it with their next release.
 
 ## On the web
 
