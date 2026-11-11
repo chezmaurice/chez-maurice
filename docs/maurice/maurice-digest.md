@@ -1,6 +1,6 @@
 ---
 title: Maurice — the digest
-date: '2026-11-09'
+date: '2026-11-11'
 flags: []
 locale: en
 description: 'The system documentation condensed to what a user needs: everything
@@ -17,14 +17,14 @@ digest: true
 covers:
   maurice-applications: '2026-10-20'
   maurice-architecture: '2026-11-09'
-  maurice-carnet: '2026-11-09'
+  maurice-carnet: '2026-11-11'
   maurice-chat: '2026-11-09'
   maurice-composer: '2026-10-20'
   maurice-data-model: '2026-10-29'
   maurice-docs: '2026-10-20'
   maurice-domains: '2026-11-08'
   maurice-files: '2026-06-19'
-  maurice-households-rooms: '2026-11-09'
+  maurice-households-rooms: '2026-11-11'
   maurice-knowledge: '2026-11-09'
   maurice-life: '2026-10-20'
   maurice-personas-hats: '2026-09-19'
@@ -126,7 +126,7 @@ There is also a **browser extension**, *Save to Carnet* — one extension for Ch
 - **Your data, your copy:** *My data* in the app exports a member archive (conversations, rows, notes with their history, files, mail store — no credentials), imports one, and **erases** — the member's data, or the whole account — everywhere the server reaches, including nightly local snapshots. The answer lists what it cannot reach: a copy of the notes on a remote elsewhere, a published site, archives an admin already exported, and a hosted household's off-site backups (kept up to 12 months; restoring one would bring the member back). Carnet offers the same *Delete my account*.
 - **Your notes as a git clone:** each member can clone their own notes (Settings → *My data* → *Clone my notes*), read-only, with a key that opens nothing else. The clone holds the notes, fiches and their history, and every night Maurice writes into it, under `_maurice/`, the member's highlights, reading positions, archived entries and domains (brief, instructions, context, what is filed in each), and their conversations if they turn that on. It is **not encrypted**: notes marked encrypted are in clear text in it, as they are on the server's disk.
 - **Household archive:** the whole household as one file (databases, every member's notes with their history, files, configuration, the household key) to move it elsewhere. No password is in it: each member reconnects their mailbox after a move. At home it comes from the admin console on the machine. A hosted household's admin asks for it on their Chez Maurice account, with their password, and gets a link by mail that works once, for a few hours. That copy holds no session, PIN or provider key either, nor the household key and the mail it seals: in the new home everyone joins again with a code and reconnects their mailbox, which Maurice reads again.
-- **Moving without losing anyone:** the apps know a household by its address. A household on a domain of its own that keeps its name and points it at the new machine moves unnoticed, sessions and all, when it is moved with the console's archive. One that changes its name leaves a DNS record under the old one (`_maurice.<old name>`, TXT, `v=maurice1; moved=https://<new address>`): the Maurice app and Carnet then follow it by themselves, after checking that the new address holds the household's identity key, which no forged record can fake. On Android and the desktop this arrives with their next release.
+- **Moving without losing anyone:** the apps know a household by its address. A household on a domain of its own that keeps its name and points it at the new machine moves unnoticed, sessions and all, when it is moved with the console's archive. One that changes its name leaves a DNS record under the old one (`_maurice.<old name>`, TXT, `v=maurice1; moved=https://<new address>`): the Maurice app and Carnet then follow it by themselves, after checking that the new address holds the household's identity key, which no forged record can fake. Android installed through Obtainium follows too; the Play build and the desktop with their next release.
 
 *Gaps:* a notification to an app version older than November 2026 still passes through Apple in clear — the room's title, who wrote and the start of the message. On a Mac, notifications arrive only once Chez Maurice is allowed in System Settings → Notifications.
 
@@ -311,7 +311,7 @@ Each member has folders and files (5 GB each), in **Settings**: text, images, PD
 - **Share extension** (*Save to Carnet*): saves the rendered page from Safari (past paywalls), or an address from other apps, with an optional first note; an EPUB or a PDF shared to it goes to the household's library; an offline queue keeps what could not be sent and sends it later as the member who shared it — kept, and listed in the member sheet, while that member has no session on the device.
 - **Open in the browser** opens the member's site signed in.
 - **The *Maurice* screen:** domains and their briefs (edit, rewrite, erase), reading companions, and older conversations Maurice opened (answered in the Maurice app). A book's page can create a reading companion.
-- No location tracking; a privacy manifest declares no tracking and nothing collected by the publisher. The way in, the member sheet, the share and sending sheets and an entry's ⋯ menu speak seven languages, following the language you chose in Maurice; the rest is in English. Reading is iPhone/iPad only; on a Mac the notes are read in the browser.
+- No location tracking; a privacy manifest declares no tracking and nothing collected by the publisher. The way in, the member sheet, the share and sending sheets and an entry's ⋯ menu speak seven languages, following the language you chose in Maurice; the rest is in English — on Android, in French too. Reading is iPhone/iPad only; on a Mac the notes are read in the browser.
 
 *Status:* in daily use at home; version 1.0 is on the App Store (free), later work in 1.0.1 on TestFlight. *Gaps:* *Log* and *Dashboards* are experimental and not shipped; the hand-off to the Maurice app and the fiche's conversations were not yet tried on a phone, nor were the session, invitation and offline-queue fixes of 21 October (checked on a simulator); no flashcard review; a shared article's copy was not yet watched arriving on a phone; giving an entry to another household ran between two test servers, not yet on phones; the iPad and a real publish from a phone were never exercised; the new way in has run only in the simulator.
 
@@ -371,7 +371,7 @@ Each member has folders and files (5 GB each), in **Settings**: text, images, PD
 - **…have my dictation transcribed by Whisper?** It stays on the device by default. Turn on Settings → Dictation → *Transcribe on the household server* (on a hosted household, after accepting its provider).
 - **…open my notes in Obsidian?** Settings → *My data* → *Clone my notes*: copy the address, username and key. In Obsidian, install the community plugin *Git* and run *Clone an existing remote repo*; on an iPad, Working Copy clones it too; on a computer, `git clone` the address and open the folder as a vault. It stays read-only: edit in Maurice, the clone follows.
 - **…take my data with me, or leave?** Settings → *My data*: export an archive, erase your data, or delete your account (Carnet: member sheet → Privacy → *Delete my account*). The owner of a hosted Maurice can also take the whole household as one archive, or erase it entirely, from the account page.
-- **…move my household to another machine or address?** Export it from the console (at home) or the account page (hosted), and import it on the new machine. Keep the same name if you can and point it at the new machine: nothing changes for anyone. If the name changes, publish `_maurice.<old name>  TXT  "v=maurice1; moved=https://<new address>"` and keep the old domain for a few months; Apple devices follow, others are paired again. With the hosted archive everyone signs in again with a code.
+- **…move my household to another machine or address?** Export it from the console (at home) or the account page (hosted), and import it on the new machine. Keep the same name if you can and point it at the new machine: nothing changes for anyone. If the name changes, publish `_maurice.<old name>  TXT  "v=maurice1; moved=https://<new address>"` and keep the old domain for a few months; Apple devices and Android from Obtainium follow, others are paired again. With the hosted archive everyone signs in again with a code.
 - **…run Maurice myself?** Run the container on a machine of yours (Docker), make it reachable (Tailscale or Cloudflare Tunnel), and set the provider keys in the admin console. Or be hosted: a household on Maurice's own Scaleway machines, with models included.
 
 ## 24. Not built, and known gaps
