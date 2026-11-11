@@ -16,9 +16,9 @@ parent: maurice-docs
 digest: true
 covers:
   maurice-applications: '2026-10-20'
-  maurice-architecture: '2026-11-09'
+  maurice-architecture: '2026-11-11'
   maurice-carnet: '2026-11-11'
-  maurice-chat: '2026-11-09'
+  maurice-chat: '2026-11-11'
   maurice-composer: '2026-10-20'
   maurice-data-model: '2026-10-29'
   maurice-docs: '2026-10-20'
@@ -29,7 +29,7 @@ covers:
   maurice-life: '2026-10-20'
   maurice-personas-hats: '2026-09-19'
   maurice-server: '2026-11-09'
-  maurice-shared-gardens: '2026-10-20'
+  maurice-shared-gardens: '2026-11-11'
   maurice-tools: '2026-11-05'
   maurice-web-garden: '2026-11-06'
 ---
@@ -63,8 +63,8 @@ The founding idea is **a memory you can see and shape** — the *apprivoisé* (t
 
 ## 3. The parts and how they fit
 
-1. **The Maurice app** — native SwiftUI for iPhone, iPad and Mac. It is the only place to chat with Maurice (there is no web chat client). A pure client: it holds no authoritative state and talks HTTPS and WebSocket to the server.
-2. **Carnet** — the iPhone/iPad companion for capturing and reading: books, articles, the member's entries, what Maurice keeps on them. No general chat: its Maurice button opens a conversation about the entry in the Maurice app.
+1. **The Maurice app** — native SwiftUI for iPhone, iPad and Mac, and the same app for Android, Windows and Linux (Kotlin and Compose), which follows the Apple one feature by feature. It is the only place to chat with Maurice (there is no web chat client). A pure client: it holds no authoritative state and talks HTTPS and WebSocket to the server.
+2. **Carnet** — the companion for capturing and reading, on iPhone and iPad and, the same way, on Android, Windows and Linux: books, articles, the member's entries, what Maurice keeps on them. No general chat: its Maurice button opens a conversation about the entry in the Maurice app.
 3. **The server** — one Bun/Hono process, the whole backend. Its chat engine handles accounts, conversations, domains, files, notes and their sharing, the composer, models, moderation and the streaming loop that calls the model and runs tools. Its data API (`/api/v1/*`) serves books, the media in the members' notes (articles, entries, résonances, flashcards) and, for the experimental tools, health, tasks, signals and so on.
 4. **The tools** — small MCP servers behind one gateway, which the server calls on every turn. They are how Maurice *does* things: read and write notes, search, read mail.
 5. **The site** — an Astro engine that renders each member's notes as a themeable website, privately for the member and publicly for what they publish.
@@ -91,7 +91,7 @@ There is also a **browser extension**, *Save to Carnet* — one extension for Ch
 - **One server is one household**; a device can hold several households, each with its own session, switched from a pill with an unread badge.
 - **The Maurice app and Carnet share them** on an iPhone or iPad: join a household, sign in or out, switch, or forget a household in one, and the other follows at once.
 - **Joining:** scan the invitation (paste its link on a computer), or enter a code or the household's address; the app shows the household's name, icon and colour. A **fresh device joins with an invite code** given by an admin (8 characters, about 7 days, reusable within that window, rate-limited), then the member sets a PIN. An admin can also issue an **open invitation** — QR code, typed code or link, single use, 7 days — with which a newcomer gives a first name and colour and becomes a standard member. The invitation's link opens the app when it is installed; otherwise a page offers Maurice and Carnet for your device, then opens the invitation in either. A member already signed in on one device adds another **without the admin**: Settings → *Add a device* shows a QR code that works once, for ten minutes. Once a member is signed in on a device, the device shows the household's members, and switching is a tap plus a PIN. *Sign out* ends your session and keeps the household; *Forget this household* removes it from the device; a member without a PIN comes back on a device only with an invite code. The admin signs in with a username and password (at least 12 characters, not containing the username), and changes it in Settings → *Administrator password*, which signs out the admin's other devices. A PIN that everybody tries first (1111, 1234, 2580, 1212…) is refused. A code the admin makes for someone who already uses their account is **told to that member** (an alert in the app, a line under *My data*, a push).
-- **Managing members from the app:** an admin taps someone in Settings → Members to change their name or colour, give them a new device, or delete them (with a confirmation: everything of theirs is erased); the same pane renames the household. The app never sets someone else's PIN — that would let the admin sign in as them untold: a **forgotten PIN** is a new device code, after which the member chooses a new PIN. Keys, models, caps and the reply length are never set from the app either; they belong to whoever runs the machine. On Android and the desktop this arrives later.
+- **Managing members from the app:** an admin taps someone in Settings → Members to change their name or colour, give them a new device, or delete them (with a confirmation: everything of theirs is erased); the same pane renames the household. The app never sets someone else's PIN — that would let the admin sign in as them untold: a **forgotten PIN** is a new device code, after which the member chooses a new PIN. Keys, models, caps and the reply length are never set from the app either; they belong to whoever runs the machine. On Android and the desktop this comes with the apps' next release, as do the guest invitation, *Connect a browser*, *Create my Maurice* and an unread badge per household.
 - **Roles:**
   - **admin** — manages members, keys, models, budgets and the household's identity;
   - **standard** — a full member with a mandatory PIN;
@@ -101,7 +101,7 @@ There is also a **browser extension**, *Save to Carnet* — one extension for Ch
 - **Push notifications** reach the Maurice app and Carnet when someone writes to you, including as a guest in another household: through Apple's service for the Apple apps, and through Web Push for a device that registers a subscription — the Android app, in private testing, via UnifiedPush and a relay such as ntfy. The payload is encrypted to the device: the relay sees that a message passed, not what it says. On an iPhone, iPad or Mac the same holds for Apple: it carries "New message" and a sealed block that the app opens on the device to show the room, who wrote and the text. A household run on your own machine notifies Apple devices through Chez Maurice's push relay, which receives only the device's token and that sealed block; it can be turned off (`MAURICE_PUSH_RELAY_URL=off`), and Apple devices are then not notified.
 - **Personal tokens** (`maur_…`) let a member connect other clients (see §18).
 
-*Gaps:* sessions do not expire (they end only when revoked); roles, a guest's reach beyond the member who invited them, the *child* and *may publish* flags and the access grid are set only in the console, which a hosted household's owner cannot reach; an admin's open invitation still makes a standard member; `maurice://` invitation links open only on iOS; on Android the two apps are still joined one by one.
+*Gaps:* sessions do not expire (they end only when revoked); roles, a guest's reach beyond the member who invited them, the *child* and *may publish* flags and the access grid are set only in the console, which a hosted household's owner cannot reach; an admin's open invitation still makes a standard member; on a Mac, a `maurice://` invitation link does not open the app (it is pasted); on Android the two apps are still joined one by one.
 
 *Detail:* `households-rooms`, `server`.
 
@@ -185,6 +185,7 @@ There is also a **browser extension**, *Save to Carnet* — one extension for Ch
 - **Facts:** Maurice may propose a small stable fact about the member ("X is eleven") as a card; it reaches his prompt only once kept, and can be corrected, dismissed or forgotten.
 - **Settings:** appearance and language, *Activity* (the progress pulse), the cost meter, *Budget*, *Mail*, the files library, *Import my conversations* (ChatGPT and Claude exports, each import confirmed with the provider named), *My data* (the AI providers, the privacy policy, export and erasure), and for admins members, invitations and the open reports.
 - **Platforms:** Liquid Glass on iOS/macOS 26 with a fallback to iOS 17 / macOS 14; iPad and Mac use the system toolbar; drag-and-drop on the Mac.
+- **On Android, Windows and Linux:** the same app in Material 3, through Obtainium on Android (a build with no Google dependency; a Play build with Play purchases is on its own line), kept in step with the iOS app by a test suite that runs both on the same cases. Dictation there always goes through the household's server, the camera is the system's, push comes through UnifiedPush; the desktop has no camera nor scanner. Its next release brings what the iOS app gained lately: managing members, guest invitations, shared notes, person review, received conversations read-only, removing someone from a room, the camera, and no message to Maurice before the server confirms the member's yes to its providers.
 
 *Gaps:* no branching; no cost total across conversations; a selection stays within one message; the server dictation's live preview is not marked as provisional; sharing an article is iOS only, and a long article goes whole into the conversation (a Wikipedia page is about 30k tokens, read again on every turn).
 
@@ -312,9 +313,9 @@ Each member has folders and files (5 GB each), in **Settings**: text, images, PD
 - **Share extension** (*Save to Carnet*): saves the rendered page from Safari (past paywalls), or an address from other apps, with an optional first note; an EPUB or a PDF shared to it goes to the household's library; an offline queue keeps what could not be sent and sends it later as the member who shared it — kept, and listed in the member sheet, while that member has no session on the device.
 - **Open in the browser** opens the member's site signed in.
 - **The *Maurice* screen:** domains and their briefs (edit, rewrite, erase), reading companions, and older conversations Maurice opened (answered in the Maurice app). A book's page can create a reading companion.
-- No location tracking; a privacy manifest declares no tracking and nothing collected by the publisher. The way in, the member sheet, the share and sending sheets and an entry's ⋯ menu speak seven languages, following the language you chose in Maurice; the rest is in English — on Android, in French too. Reading is iPhone/iPad only; on a Mac the notes are read in the browser.
+- No location tracking; a privacy manifest declares no tracking and nothing collected by the publisher. The way in, the member sheet, the share and sending sheets and an entry's ⋯ menu speak seven languages, following the language you chose in Maurice; the rest is in English — on Android, in French too. Reading is on iPhone, iPad and Android; on a Mac the notes are read in the browser.
 
-*Status:* in daily use at home; version 1.0 is on the App Store (free), later work in 1.0.1 on TestFlight. *Gaps:* *Log* and *Dashboards* are experimental and not shipped; the hand-off to the Maurice app and the fiche's conversations were not yet tried on a phone, nor were the session, invitation and offline-queue fixes of 21 October (checked on a simulator); no flashcard review; a shared article's copy was not yet watched arriving on a phone; giving an entry to another household ran between two test servers, not yet on phones; the iPad and a real publish from a phone were never exercised; the new way in has run only in the simulator.
+*Status:* in daily use at home; version 1.0 is on the App Store (free), later work in 1.0.1 on TestFlight; the same Carnet on Android (Obtainium), whose next release brings the **+**, note editing, giving to another household, linking a book, and an outbox that retries what was refused. *Gaps:* Carnet on Android registers no push yet; *Log* and *Dashboards* are experimental and not shipped; the hand-off to the Maurice app and the fiche's conversations were not yet tried on a phone, nor were the session, invitation and offline-queue fixes of 21 October (checked on a simulator); no flashcard review; a shared article's copy was not yet watched arriving on a phone; giving an entry to another household ran between two test servers, not yet on phones; the iPad and a real publish from a phone were never exercised; the new way in has run only in the simulator.
 
 *Detail:* `carnet`.
 

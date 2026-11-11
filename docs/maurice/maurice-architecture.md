@@ -1,6 +1,6 @@
 ---
 title: Maurice — architecture overview
-date: '2026-11-09'
+date: '2026-11-11'
 flags: []
 locale: en
 description: The five cooperating parts of Maurice, how a message flows end-to-end,
@@ -52,6 +52,8 @@ Maurice is five cooperating parts. Two native clients are pure clients — the *
 **Maurice app** (`app/Maurice`) — Native SwiftUI, one multiplatform target for iPhone, iPad, and Mac. It renders the chat experience and never holds authoritative state: it pairs to a server, authenticates a member, and talks HTTPS + WebSocket. Since August it also dictates (Apple's SpeechAnalyzer on the device on OS 26, otherwise the household's server transcribing the clip with Whisper, with the iPhone's Action Button as a shortcut) and shows what each turn cost; since 19 September 2026 it shows **one Maurice** and, beside the conversations, the member's **domains** — the parts of their life he follows, each with the brief he keeps on it — where it used to offer a roster of specialized Maurices to summon. See [[maurice-chat]], [[maurice-domains]], [[maurice-personas-hats]] (what became of the personas), [[maurice-composer]].
 
 **Carnet** (separate repo, `carnet/`) — The iOS/iPadOS companion, sharing the design system and the household identity with the Maurice app. Where Maurice is the conversational front door, Carnet is the pocket client for *capturing and consuming*: log signals, read books and articles, browse your notes, and save what you read into them through a share sheet. See [[maurice-carnet]].
+
+**Android and desktop apps** (separate repo, `maurice-android`) — The Maurice app and Carnet for Android, Windows and Linux, in Kotlin and Compose Multiplatform: one `core` for everything said to the household server, the screens shared, thin launchers per platform. They port the SwiftUI apps' behaviour, not their structure, and record the last iOS commit carried over (`parity.md`); a parity suite runs the same cases through the Swift and the Kotlin code against one fake household. Two lines: `foss`, with no Google dependency (push through UnifiedPush), published on Obtainium; `main`, the Play build, which may carry Play Billing. The Mac keeps its SwiftUI app. See [[maurice-chat]] and [[maurice-carnet]].
 
 **Server** (`server/`) — A single Bun process on Hono, split in two:
 - `server/src` — the **chat engine**: auth, users, conversations, domains and reading companions (`maurices`) with their briefs, files, notes and their sharing (gardens), the context composer, models, moderation reports, and the streaming agentic loop that calls the LLM and executes tools.
