@@ -275,7 +275,9 @@ auth.post("/password", requireAuth, async (c) => {
   if (!me || me.role !== "admin" || !me.password_hash) return c.json({ error: "Only the administrator has a password" }, 403);
   if (!current_password || !(await verifyPassword(String(current_password), me.password_hash))) {
     loginLimiter.recordFailure(ip);
-    return c.json({ error: "The current password is not right", code: "password_wrong" }, 401);
+    // 403, not 401: the session is fine, the password is not — a client takes
+    // a 401 on a signed request for a session that ended, and signs out.
+    return c.json({ error: "The current password is not right", code: "password_wrong" }, 403);
   }
   const user = getUser(me.id);
   const problem = passwordProblem(new_password, user?.username);

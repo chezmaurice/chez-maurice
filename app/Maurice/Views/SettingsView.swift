@@ -1599,7 +1599,8 @@ private struct AdminPasswordPane: View {
             current = ""; fresh = ""; again = ""
             done = true
         } catch APIError.server(let status, let message) {
-            error = status == 401 ? session.localized("password.wrong")
+            // 403 since 12 Nov 2026 (a 401 read as an ended session); 401 from older servers.
+            error = status == 403 || status == 401 ? session.localized("password.wrong")
                 : status == 400 ? session.localized("password.weak")
                 : status == 429 ? session.localized("password.too_many")
                 : message

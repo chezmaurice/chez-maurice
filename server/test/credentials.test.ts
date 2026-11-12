@@ -59,7 +59,8 @@ test("the admin changes their password: the current one first, a strong new one,
   const here = createSession(ADMIN).token;
   const other = createSession(ADMIN).token;
   let r = await post("/password", here, { current_password: "faux", new_password: "la tasse bleue du matin" });
-  expect(r.status).toBe(401);
+  // Not a 401: the apps would take it for an ended session and sign the admin out.
+  expect(r.status).toBe(403);
   expect((await r.json()).code).toBe("password_wrong");
   r = await post("/password", here, { current_password: OLD, new_password: "trop court" });
   expect((await r.json()).code).toBe("password_short");
