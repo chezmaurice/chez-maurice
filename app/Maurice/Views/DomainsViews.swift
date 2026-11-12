@@ -411,6 +411,9 @@ struct DomainsListSheet: View {
                             .foregroundStyle(theme.inkSoft)
                             .padding(.horizontal, 14).padding(.vertical, 12)
                             .background(RoundedRectangle(cornerRadius: 12).strokeBorder(theme.ruleHard, style: StrokeStyle(lineWidth: 0.5, dash: [4, 3])))
+                            // A plain button answers only where it paints: the
+                            // dashed outline and the words, not the space between.
+                            .contentShape(RoundedRectangle(cornerRadius: 12))
                         }
                         .buttonStyle(.plain)
                         .padding(.top, 10)

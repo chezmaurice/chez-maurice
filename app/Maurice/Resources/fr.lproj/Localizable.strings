@@ -70,6 +70,7 @@
 "persona.field.name" = "Nom";
 "persona.error.name_taken" = "Vous avez déjà un domaine « %@ ». Donnez-lui un autre nom, ou ouvrez celui qui existe.";
 "persona.error.save_failed" = "L’enregistrement a échoué. Réessayez.";
+"persona.error.delete_failed" = "La suppression a échoué. Réessayez.";
 "persona.field.tagline" = "Accroche en une ligne";
 "persona.field.creativity" = "CRÉATIVITÉ";
 "persona.instructions.placeholder" = "Ce que couvre ce domaine, en quelques phrases. Maurice le lit comme l’énoncé du domaine, et le cahier de la nuit s’y tient.";
@@ -448,7 +449,8 @@
 /* A reply that could not be followed to its end */
 "chat.error.busy" = "Maurice est déjà en train de répondre dans cette conversation.";
 "chat.error.lost" = "La connexion avec Maurice a été perdue. S’il a fini de répondre, sa réponse apparaîtra dans le fil.";
-"chat.notice.network" = "Le réseau n’a pas répondu. Réessaie dans un instant.";
+"chat.notice.network" = "Le réseau n’a pas répondu. Réessayez dans un instant.";
+"chat.error.unreadable" = "La réponse du serveur est illisible.";
 
 
 /* Reading progress: pause while you look ahead, and reset */
@@ -1024,6 +1026,11 @@
 "mydata.ai.withdraw_note" = "Retirer votre accord arrête tout envoi : Maurice ne vous répond plus et le travail de nuit s’arrête pour vous. Ce qui a déjà été envoyé n’est pas rappelé.";
 
 /* Reporting a reply of Maurice's (ReportSheet ai_reply, operator queue) */
+"report.reason.spam" = "Spam";
+"report.reason.harassment_or_bullying" = "Harcèlement ou intimidation";
+"report.reason.sexual_content" = "Contenu sexuel";
+"report.reason.child_safety" = "Sécurité des enfants / contenu impliquant un mineur";
+"report.reason.other" = "Autre chose";
 "report.ai.title" = "Signaler cette réponse";
 "report.ai.disclosure" = "Cette réponse de Maurice, et votre message juste avant, seront envoyés à la personne qui gère votre Maurice pour qu’elle les examine. Le reste de la conversation reste privé.";
 "report.ai.reason" = "Motif";

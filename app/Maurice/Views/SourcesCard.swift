@@ -93,11 +93,11 @@ enum TurnSources {
         if isWeb {
             let url = item.string("url").lowercased()
             if !url.isEmpty {
-                return url
-                    .replacingOccurrences(of: "https://", with: "")
-                    .replacingOccurrences(of: "http://", with: "")
-                    .replacingOccurrences(of: "www.", with: "")
-                    .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+                var rest = Substring(url)
+                for scheme in ["https://", "http://"] where rest.hasPrefix(scheme) { rest = rest.dropFirst(scheme.count) }
+                // The host's leading "www." only: `example.com/www.page` is another page.
+                if rest.hasPrefix("www.") { rest = rest.dropFirst(4) }
+                return String(rest).trimmingCharacters(in: CharacterSet(charactersIn: "/"))
             }
         }
         return item.string("title") + "|" + item.string("subtitle")

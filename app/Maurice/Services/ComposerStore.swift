@@ -208,10 +208,19 @@ final class ComposerStore {
         _ id: String?,
         lockedName: String = "", lockedCount: Int = 0, lockedWeight: Int = 0
     ) async {
-        conversationId = id
         self.lockedName = lockedName
         self.lockedCount = lockedCount
         self.lockedWeight = lockedWeight
+        // The tray was just carried here (`carryTo`): it is this conversation's
+        // already, and its spec may not be saved yet — reading it back would
+        // empty the tray.
+        if let carried = carriedTo, carried == id {
+            carriedTo = nil
+            await reweigh()
+            return
+        }
+        carriedTo = nil
+        conversationId = id
         clear()
         await loadSpec()
         await reweigh()
@@ -319,6 +328,18 @@ final class ComposerStore {
         }
     }
 
+    /// The conversation the tray was carried to, until the view binds it.
+    @ObservationIgnored private var carriedTo: String?
+
+    /// A conversation was just created from a blank page: what the member
+    /// gathered there becomes its context, saved before its first turn reads it.
+    func carryTo(_ id: String) async {
+        guard conversationId == nil, !items.isEmpty else { return }
+        conversationId = id
+        carriedTo = id
+        await save()
+    }
+
     func save() async {
         guard let cid = conversationId else { return }
         _ = await request("PUT", "/api/v1/composer/context/\(cid)", body: ["items": items.map { $0.payload() }])
@@ -372,12 +393,30 @@ final class ComposerStore {
         guard let cid = conversationId else { return }
         guard let json = await request("GET", "/api/v1/composer/context/\(cid)") as? [String: Any],
               let raw = json["items"] as? [[String: Any]] else { return }
-        items = raw.compactMap { Self.itemFromSpec($0) }
+        items = []
+        for d in raw {
+            guard let it = Self.itemFromSpec(d) else { continue }
+            items.append(it)
+            // What the spec knew when it was saved, until /weigh says better:
+            // a card must not read as weighing nothing because /weigh failed.
+            let snap = d["snapshot"] as? [String: Any]
+            if let w = snap?["weight"] as? Int { weightById[it.id] = w }
+            if let c = snap?["count"] as? Int { countById[it.id] = c }
+        }
+    }
+
+    /// An item's id as the server gives it: a string or a number. Anything
+    /// else (absent, null, a boolean) is no id, and no item — one made up
+    /// from it ("note-<null>") would point at nothing on the server.
+    nonisolated static func specId(_ v: Any?) -> String? {
+        if let s = v as? String { return s }
+        guard let n = v as? NSNumber, CFGetTypeID(n) != CFBooleanGetTypeID() else { return nil }
+        return n.stringValue
     }
 
     nonisolated static func itemFromSpec(_ d: [String: Any]) -> TrayItem? {
-        guard let typeStr = d["type"] as? String, let type = ComposerItemType(rawValue: typeStr) else { return nil }
-        let rawId: String = (d["id"] as? String) ?? String(describing: d["id"] ?? "")
+        guard let typeStr = d["type"] as? String, let type = ComposerItemType(rawValue: typeStr),
+              let rawId = specId(d["id"]) else { return nil }
         var it = TrayItem(type: type, rawId: rawId, title: rawId)
         let snap = d["snapshot"] as? [String: Any]
         switch type {
@@ -566,12 +605,15 @@ final class ComposerStore {
     /// not, and a caller that treated them alike wrote an empty list over the
     /// real one every time a search was cancelled.
     func search(_ q: String) async -> [SearchEntry]? {
-        let qs = q.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        // As a query value: `&`, `=`, `+` and `#` are the query's own syntax.
+        var allowed = CharacterSet.urlQueryAllowed
+        allowed.remove(charactersIn: "&=+#?")
+        let qs = q.addingPercentEncoding(withAllowedCharacters: allowed) ?? ""
         guard let json = await request("GET", "/api/v1/composer/search?q=\(qs)") as? [String: Any],
               let results = json["results"] as? [[String: Any]] else { return nil }
         return results.compactMap { r in
-            guard let typeStr = r["type"] as? String, let type = ComposerItemType(rawValue: typeStr) else { return nil }
-            let rawId = (r["id"] as? String) ?? String(describing: r["id"] ?? "")
+            guard let typeStr = r["type"] as? String, let type = ComposerItemType(rawValue: typeStr),
+                  let rawId = Self.specId(r["id"]) else { return nil }
             let badges = r["badges"] as? [String: Any] ?? [:]
             return SearchEntry(
                 type: type, rawId: rawId,

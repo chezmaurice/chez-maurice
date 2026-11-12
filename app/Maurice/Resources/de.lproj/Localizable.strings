@@ -70,6 +70,7 @@
 "persona.field.name" = "Name";
 "persona.error.name_taken" = "Du hast bereits einen Bereich „%@“. Gib diesem einen anderen Namen oder öffne den vorhandenen.";
 "persona.error.save_failed" = "Speichern fehlgeschlagen. Versuche es erneut.";
+"persona.error.delete_failed" = "Löschen fehlgeschlagen. Versuche es erneut.";
 "persona.field.tagline" = "Slogan in einer Zeile";
 "persona.field.creativity" = "KREATIVITÄT";
 "persona.instructions.placeholder" = "Was dieser Bereich umfasst, in wenigen Sätzen. Maurice liest es als Beschreibung des Bereichs, und das nächtliche Heft hält sich daran.";
@@ -449,6 +450,7 @@
 "chat.error.busy" = "Maurice antwortet in dieser Unterhaltung bereits.";
 "chat.error.lost" = "Die Verbindung zu Maurice ist abgebrochen. Falls er fertig geantwortet hat, erscheint seine Antwort im Verlauf.";
 "chat.notice.network" = "Das Netzwerk hat nicht geantwortet. Versuch es gleich noch einmal.";
+"chat.error.unreadable" = "Die Antwort des Servers ist nicht lesbar.";
 
 
 /* Reading progress: pause while you look ahead, and reset */
@@ -1024,6 +1026,11 @@
 "mydata.ai.withdraw_note" = "Ein Widerruf stoppt jedes Senden: Maurice antwortet dir nicht mehr und die nächtliche Arbeit hört für dich auf. Bereits Gesendetes wird nicht zurückgeholt.";
 
 /* Reporting a reply of Maurice's (ReportSheet ai_reply, operator queue) */
+"report.reason.spam" = "Spam";
+"report.reason.harassment_or_bullying" = "Belästigung oder Mobbing";
+"report.reason.sexual_content" = "Sexuelle Inhalte";
+"report.reason.child_safety" = "Kinderschutz / Inhalte mit Minderjährigen";
+"report.reason.other" = "Etwas anderes";
 "report.ai.title" = "Diese Antwort melden";
 "report.ai.disclosure" = "Diese Antwort von Maurice und deine Nachricht direkt davor werden an die Person geschickt, die deinen Maurice betreibt, damit sie sie prüft. Der Rest des Gesprächs bleibt privat.";
 "report.ai.reason" = "Grund";

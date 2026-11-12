@@ -32,7 +32,8 @@ enum PastedText {
     }
 
     static func lineCount(_ text: String) -> Int {
-        text.trimmingCharacters(in: .newlines).reduce(1) { $1 == "\n" ? $0 + 1 : $0 }
+        // `isNewline`: a Windows CRLF is one Character, "\r\n", not "\n".
+        text.trimmingCharacters(in: .newlines).reduce(1) { $1.isNewline ? $0 + 1 : $0 }
     }
 
     /// "Pasted text · 42 lines"

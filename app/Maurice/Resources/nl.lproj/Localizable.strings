@@ -70,6 +70,7 @@
 "persona.field.name" = "Naam";
 "persona.error.name_taken" = "Je hebt al een domein ‘%@’. Geef dit een andere naam, of open het bestaande.";
 "persona.error.save_failed" = "Opslaan is mislukt. Probeer het opnieuw.";
+"persona.error.delete_failed" = "Verwijderen is mislukt. Probeer het opnieuw.";
 "persona.field.tagline" = "Eenregelige slogan";
 "persona.field.creativity" = "CREATIVITEIT";
 "persona.instructions.placeholder" = "Wat dit domein omvat, in een paar zinnen. Maurice leest het als de omschrijving van het domein, en het nachtelijke schrift houdt zich eraan.";
@@ -449,6 +450,7 @@
 "chat.error.busy" = "Maurice is in dit gesprek al aan het antwoorden.";
 "chat.error.lost" = "De verbinding met Maurice is verbroken. Als hij klaar was met antwoorden, verschijnt zijn antwoord in de draad.";
 "chat.notice.network" = "Het netwerk gaf geen antwoord. Probeer het zo nog eens.";
+"chat.error.unreadable" = "Het antwoord van de server is onleesbaar.";
 
 
 /* Reading progress: pause while you look ahead, and reset */
@@ -1011,6 +1013,11 @@
 "mydata.ai.withdraw_note" = "Intrekken stopt elke verzending: Maurice antwoordt je niet meer en het nachtwerk stopt voor jou. Wat al is verstuurd, wordt niet teruggehaald.";
 
 /* Reporting a reply of Maurice's (ReportSheet ai_reply, operator queue) */
+"report.reason.spam" = "Spam";
+"report.reason.harassment_or_bullying" = "Intimidatie of pesten";
+"report.reason.sexual_content" = "Seksuele inhoud";
+"report.reason.child_safety" = "Kinderveiligheid / inhoud met een minderjarige";
+"report.reason.other" = "Iets anders";
 "report.ai.title" = "Dit antwoord melden";
 "report.ai.disclosure" = "Dit antwoord van Maurice, en je bericht vlak ervoor, worden gestuurd naar de persoon die je Maurice beheert, zodat die ernaar kan kijken. De rest van het gesprek blijft privé.";
 "report.ai.reason" = "Reden";

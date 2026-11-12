@@ -294,9 +294,20 @@ final class SessionStore {
     }
 
     /// Remove (disconnect) the current household + its tokens. Falls back to
-    /// another household, or fully unpaired if it was the last.
+    /// another household, or fully unpaired if it was the last. Each member's
+    /// session ends on the server first, as `signOut` does: a copy of a token
+    /// (a backup, another device) must not outlive the household here.
     func unpair() {
         guard let hid = currentHouseholdId else { return }
+        if let url = serverURL {
+            let tokens = deviceUsers.compactMap { tokenForUser($0.id) }
+            Task {
+                let api = APIClient(baseURL: url)
+                for token in tokens {
+                    let _: OkResponse? = try? await api.post("/api/auth/logout", body: [String: String](), token: token)
+                }
+            }
+        }
         for user in deviceUsers { removeToken(for: user.id); clearMcpToken(for: user.id) }
         households.removeAll { $0.id == hid }
         currentHouseholdId = households.first?.id
@@ -495,8 +506,13 @@ final class SessionStore {
         let _: ServerPreferences? = try? await api.patch("/api/users/me/preferences", body: body, token: token)
     }
 
+    /// Set while the member's preferences are read back: each assignment's
+    /// `didSet` would otherwise write the values not yet read (the previous
+    /// member's, or nil) over the ones stored.
+    @ObservationIgnored private var loadingLocalPrefs = false
+
     private func saveLocalPrefs() {
-        guard let uid = activeUserId else { return }
+        guard !loadingLocalPrefs, let uid = activeUserId else { return }
         UserDefaults.standard.set(palette, forKey: "maurice.prefs.\(uid).palette")
         UserDefaults.standard.set(localeIdentifier, forKey: "maurice.prefs.\(uid).locale")
         UserDefaults.standard.set(webTheme, forKey: "maurice.prefs.\(uid).webTheme")
@@ -504,6 +520,8 @@ final class SessionStore {
 
     private func loadLocalPrefs() {
         guard let uid = activeUserId else { return }
+        loadingLocalPrefs = true
+        defer { loadingLocalPrefs = false }
         palette = UserDefaults.standard.string(forKey: "maurice.prefs.\(uid).palette") ?? "auto"
         localeIdentifier = UserDefaults.standard.string(forKey: "maurice.prefs.\(uid).locale")
         webTheme = UserDefaults.standard.string(forKey: "maurice.prefs.\(uid).webTheme") ?? "manuscript"

@@ -499,7 +499,11 @@ struct DomainEditor: View {
         guard let id = draft.rawId else { return }
         saving = true
         Task {
-            await store.delete(id)
+            guard await store.delete(id) else {
+                saving = false
+                saveProblem = session.localized("persona.error.delete_failed")
+                return
+            }
             // Refresh the conversation list (the server has unbound its
             // conversations, which go on with the everyday Maurice).
             await chat.loadConversations()

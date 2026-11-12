@@ -396,10 +396,15 @@ final class MauriceStore {
         await loadOverview()
     }
 
-    func delete(_ id: String) async {
-        _ = await request("DELETE", "/api/maurices/\(id)")
+    /// Whether the server deleted it: the row goes only then, or it would
+    /// come back at the next load.
+    @discardableResult
+    func delete(_ id: String) async -> Bool {
+        let (status, _) = await requestStatus("DELETE", "/api/maurices/\(id)")
+        guard (200..<300).contains(status) else { return false }
         maurices.removeAll { $0.rawId == id }
         overview[id] = nil
+        return true
     }
 
     // MARK: domain briefs
@@ -481,8 +486,10 @@ final class MauriceStore {
         var req = URLRequest(url: url)
         req.httpMethod = method
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        if let body { req.httpBody = try? JSONSerialization.data(withJSONObject: body) }
+        if let body {
+            req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            req.httpBody = try? JSONSerialization.data(withJSONObject: body)
+        }
         guard let (data, resp) = try? await URLSession.shared.data(for: req),
               let http = resp as? HTTPURLResponse else { return (0, nil) }
         APIClient.note(http, for: req)

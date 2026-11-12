@@ -67,12 +67,18 @@ final class APIClient: Sendable {
         _ path: String,
         token: String? = nil
     ) async throws {
-        let request = buildRequest(path, method: "DELETE", token: token)
-        let (_, response) = try await URLSession.shared.data(for: request)
-        if let http = response as? HTTPURLResponse { Self.note(http, for: request) }
-        guard let http = response as? HTTPURLResponse,
-              (200...299).contains(http.statusCode) else {
-            throw APIError.requestFailed
+        var request = buildRequest(path, method: "DELETE", token: token)
+        // Nothing is sent: no body to describe.
+        request.setValue(nil, forHTTPHeaderField: "Content-Type")
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse else { throw APIError.requestFailed }
+        Self.note(http, for: request)
+        guard (200...299).contains(http.statusCode) else {
+            // A refusal is the server's to word, as for the other verbs.
+            if let body = try? JSONDecoder().decode(ErrorBody.self, from: data) {
+                throw APIError.server(http.statusCode, body.error)
+            }
+            throw APIError.server(http.statusCode, "Request failed")
         }
     }
 
@@ -1115,6 +1121,9 @@ struct McpTokenResponse: Decodable {
 func parseServerDate(_ s: String) -> Date? {
     // ISO8601 with timezone (e.g. trailing Z) — unambiguous.
     let iso = ISO8601DateFormatter()
+    if let d = iso.date(from: s) { return d }
+    // …and with milliseconds, as JavaScript's `toISOString()` writes them.
+    iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
     if let d = iso.date(from: s) { return d }
 
     // Naive formats: assume UTC explicitly.

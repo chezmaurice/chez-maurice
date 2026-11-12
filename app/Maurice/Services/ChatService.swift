@@ -166,7 +166,15 @@ final class ChatService {
     /// Route a failure to the right surface: the network not answering is a
     /// notice, anything the server actually said is an error.
     private func report(_ e: Error) {
-        if Self.isNetworkError(e) { notice = L("chat.notice.network") } else { error = e.localizedDescription }
+        if Self.isNetworkError(e) {
+            notice = L("chat.notice.network")
+        } else if e is DecodingError {
+            // Not JSON (a proxy's error page) or not the shape expected:
+            // Foundation's sentence about it tells the member nothing.
+            error = L("chat.error.unreadable")
+        } else {
+            error = e.localizedDescription
+        }
     }
 
     // ── Rooms ───────────────────────────────────────────────────
@@ -1000,6 +1008,8 @@ final class ChatService {
     func report(targetType: String, targetId: String, reason: String, note: String?) async -> Bool {
         guard let api, let token, let convoId = activeConversationId else { return false }
         struct Body: Encodable { let target_type: String; let target_id: String; let reason: String; let note: String? }
+        // A note of spaces is no note: the operator would receive an empty one.
+        let note = (note?.trimmingCharacters(in: .whitespacesAndNewlines)).flatMap { $0.isEmpty ? nil : $0 }
         do {
             let _: OkResp = try await api.post(
                 "/api/conversations/\(convoId)/reports",
@@ -1035,19 +1045,24 @@ final class ChatService {
         guard let api, let token, let convoId = activeConversationId else { return }
         do {
             let _: OkResp = try await api.post("/api/conversations/\(convoId)/leave", body: EmptyBody(), token: token)
-            conversations.removeAll { $0.id == convoId }
-            activeConversationId = conversations.first?.id
-            messages = []
-            participants = []
+            // As for a conversation deleted: the next one opens with its thread.
+            dropRoom(convoId)
         } catch {
             report(error)
         }
     }
 
-    /// Operator-only: open reports (child_safety first).
-    func loadOpenReports() async -> [ReportView] {
-        guard let api, let token else { return [] }
-        return (try? await api.get("/api/reports?status=open", token: token)) ?? []
+    /// Operator-only: open reports (child_safety first). Nil when the queue
+    /// could not be read — said, never shown as an empty queue: the admin must
+    /// not take an unreadable queue for one where nobody reported anything.
+    func loadOpenReports() async -> [ReportView]? {
+        guard let api, let token else { return nil }
+        do {
+            return try await api.get("/api/reports?status=open", token: token)
+        } catch {
+            report(error)
+            return nil
+        }
     }
 
     func actionReport(_ id: String, removeMessage: Bool, ejectMember: Bool) async {
@@ -1094,12 +1109,17 @@ final class ChatService {
 
     // MARK: - Send (Streaming)
 
+    /// Called with a conversation `send` or `postBubble` just created, before
+    /// its first turn: the composer carries its tray there (`carryTo`).
+    @ObservationIgnored var onCreated: ((String) async -> Void)?
+
     func send(_ text: String, images: [Data] = []) async {
         guard api != nil, token != nil else { return }
 
         if activeConversationId == nil {
             // A fresh thread inherits the armed Maurice (everyday if none).
             await createConversation(mauriceId: currentMauriceId)
+            if let id = activeConversationId { await onCreated?(id) }
         }
         guard let convoId = activeConversationId else { return }
 
@@ -1126,7 +1146,10 @@ final class ChatService {
     /// 💬 — post a human-only turn to the room without summoning any Maurice.
     func postBubble(_ text: String, images: [Data] = []) async {
         guard let api, let token else { return }
-        if activeConversationId == nil { await createConversation() }
+        if activeConversationId == nil {
+            await createConversation()
+            if let id = activeConversationId { await onCreated?(id) }
+        }
         guard let convoId = activeConversationId else { return }
 
         messages.append(ServerMessage(
@@ -1975,15 +1998,7 @@ enum ReportReason: String, CaseIterable, Identifiable {
     case child_safety
     case other
     var id: String { rawValue }
-    var label: String {
-        switch self {
-        case .spam: return "Spam"
-        case .harassment_or_bullying: return "Harassment or bullying"
-        case .sexual_content: return "Sexual content"
-        case .child_safety: return "Child safety / content involving a minor"
-        case .other: return "Other"
-        }
-    }
+    var label: String { L("report.reason.\(rawValue)") }
 }
 
 /// Why a reply of Maurice's is reported (ReportSheet, `ai_reply`).
@@ -2000,15 +2015,17 @@ enum AIReplyReason: String, CaseIterable, Identifiable {
 /// Operator view of a report (from GET /api/reports): shared-room content, or
 /// the copy of a reported reply of Maurice's (`ai_reply`) with the question
 /// before it — never a private 1:1 itself.
+/// Only what identifies a report is required: a report missing a detail is
+/// still shown, and never takes the rest of the queue down with it.
 struct ReportView: Decodable, Identifiable {
     let id: String
-    let room_id: String
+    let room_id: String?
     let target_type: String
-    let target_id: String
+    let target_id: String?
     let reason: String
     let note: String?
-    let status: String
-    let created_at: String
+    let status: String?
+    let created_at: String?
     let reporter_display_name: String?
     let room_title: String?
     let reported_message: ReportedMessage?
@@ -2020,11 +2037,28 @@ struct ReportedMessage: Decodable {
     let id: String
     let content: String
     let author_id: String?
-    let created_at: String
+    let created_at: String?
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        content = try c.decodeIfPresent(String.self, forKey: .content) ?? ""
+        author_id = try c.decodeIfPresent(String.self, forKey: .author_id)
+        created_at = try c.decodeIfPresent(String.self, forKey: .created_at)
+    }
+    private enum CodingKeys: String, CodingKey { case id, content, author_id, created_at }
 }
 
 struct ReportedMember: Decodable {
     let id: String
     let display_name: String
-    let username: String
+    let username: String?
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        display_name = try c.decodeIfPresent(String.self, forKey: .display_name) ?? ""
+        username = try c.decodeIfPresent(String.self, forKey: .username)
+    }
+    private enum CodingKeys: String, CodingKey { case id, display_name, username }
 }

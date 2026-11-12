@@ -108,6 +108,11 @@ struct ChatView: View {
                 #endif
             }
         }
+        .onAppear {
+            // What a blank page gathered goes with the conversation its first
+            // question creates.
+            chat.onCreated = { [composer] id in await composer.carryTo(id) }
+        }
         .task(id: chat.activeConversationId) {
             isNearBottom = true // a freshly opened thread follows to the latest
             let m = maurices.maurice(for: chat.activeConversation?.maurice_id)
@@ -3906,7 +3911,7 @@ struct ReportSheet: View {
         Task {
             let ok = await chat.report(
                 targetType: targetType, targetId: targetId,
-                reason: aiReason.rawValue, note: note.isEmpty ? nil : note)
+                reason: aiReason.rawValue, note: note)
             submitting = false
             if ok { done = true }
         }
@@ -3962,7 +3967,7 @@ struct ReportSheet: View {
         Task {
             let ok = await chat.report(
                 targetType: targetType, targetId: targetId,
-                reason: reason.rawValue, note: note.isEmpty ? nil : note)
+                reason: reason.rawValue, note: note)
             submitting = false
             if ok {
                 if reason == .child_safety { done = true } else { dismiss() }
@@ -3977,11 +3982,16 @@ struct ReportsReviewView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var reports: [ReportView] = []
     @State private var loading = true
+    /// The last read failed: what the admin sees is not the queue as it is.
+    @State private var unread: String?
 
     var body: some View {
         NavigationStack {
             List {
-                if reports.isEmpty && !loading {
+                if let unread {
+                    Text(unread).font(.callout).foregroundStyle(.red)
+                }
+                if reports.isEmpty && !loading && unread == nil {
                     Text("No open reports.").foregroundStyle(.secondary)
                 }
                 ForEach(reports) { r in
@@ -4031,7 +4041,17 @@ struct ReportsReviewView: View {
         }
     }
 
-    private func load() async { loading = true; reports = await chat.loadOpenReports(); loading = false }
+    private func load() async {
+        loading = true
+        if let list = await chat.loadOpenReports() {
+            reports = list
+            unread = nil
+        } else {
+            // What was read before stays; the failure is said above it.
+            unread = chat.error ?? chat.notice ?? L("chat.notice.network")
+        }
+        loading = false
+    }
     private func act(_ r: ReportView, remove: Bool, eject: Bool) {
         Task { await chat.actionReport(r.id, removeMessage: remove, ejectMember: eject); await load() }
     }

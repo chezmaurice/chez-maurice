@@ -70,6 +70,7 @@
 "persona.field.name" = "Name";
 "persona.error.name_taken" = "You already have a domain called “%@”. Give this one another name, or open the one you have.";
 "persona.error.save_failed" = "Saving failed. Try again.";
+"persona.error.delete_failed" = "Deleting failed. Try again.";
 "persona.field.tagline" = "One-line tagline";
 "persona.field.creativity" = "CREATIVITY";
 "persona.instructions.placeholder" = "What this domain covers, in a few sentences. Maurice reads it as the statement of the domain, and the night’s brief follows it.";
@@ -449,6 +450,7 @@
 "chat.error.busy" = "Maurice is already answering in this conversation.";
 "chat.error.lost" = "The connection to Maurice was lost. If he finished answering, his reply will show up in the thread.";
 "chat.notice.network" = "The network did not answer. Try again in a moment.";
+"chat.error.unreadable" = "The server's answer could not be read.";
 
 
 /* Reading progress: pause while you look ahead, and reset */
@@ -1024,6 +1026,11 @@
 "mydata.ai.withdraw_note" = "Withdrawing stops everything from being sent: Maurice no longer answers you and the night’s work stops for you. What was already sent is not recalled.";
 
 /* Reporting a reply of Maurice's (ReportSheet ai_reply, operator queue) */
+"report.reason.spam" = "Spam";
+"report.reason.harassment_or_bullying" = "Harassment or bullying";
+"report.reason.sexual_content" = "Sexual content";
+"report.reason.child_safety" = "Child safety / content involving a minor";
+"report.reason.other" = "Something else";
 "report.ai.title" = "Report this reply";
 "report.ai.disclosure" = "This reply of Maurice’s, and your message just before it, will be sent to the person who runs your Maurice so they can look into it. The rest of the conversation stays private.";
 "report.ai.reason" = "Reason";

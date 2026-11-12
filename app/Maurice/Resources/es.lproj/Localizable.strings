@@ -70,6 +70,7 @@
 "persona.field.name" = "Nombre";
 "persona.error.name_taken" = "Ya tienes un dominio «%@». Ponle otro nombre a este, o abre el que ya existe.";
 "persona.error.save_failed" = "No se pudo guardar. Inténtalo de nuevo.";
+"persona.error.delete_failed" = "No se pudo eliminar. Inténtalo de nuevo.";
 "persona.field.tagline" = "Lema en una línea";
 "persona.field.creativity" = "CREATIVIDAD";
 "persona.instructions.placeholder" = "Lo que abarca este dominio, en unas frases. Maurice lo lee como el enunciado del dominio, y el cuaderno nocturno se ciñe a él.";
@@ -449,6 +450,7 @@
 "chat.error.busy" = "Maurice ya está respondiendo en esta conversación.";
 "chat.error.lost" = "Se perdió la conexión con Maurice. Si terminó de responder, su respuesta aparecerá en el hilo.";
 "chat.notice.network" = "La red no respondió. Inténtalo de nuevo en un momento.";
+"chat.error.unreadable" = "La respuesta del servidor no se puede leer.";
 
 
 /* Reading progress: pause while you look ahead, and reset */
@@ -1024,6 +1026,11 @@
 "mydata.ai.withdraw_note" = "Retirar el consentimiento detiene todo envío: Maurice deja de responderte y el trabajo nocturno se detiene para ti. Lo ya enviado no se recupera.";
 
 /* Reporting a reply of Maurice's (ReportSheet ai_reply, operator queue) */
+"report.reason.spam" = "Spam";
+"report.reason.harassment_or_bullying" = "Acoso o intimidación";
+"report.reason.sexual_content" = "Contenido sexual";
+"report.reason.child_safety" = "Seguridad infantil / contenido con un menor";
+"report.reason.other" = "Otra cosa";
 "report.ai.title" = "Denunciar esta respuesta";
 "report.ai.disclosure" = "Esta respuesta de Maurice, y tu mensaje justo antes, se enviarán a la persona que gestiona tu Maurice para que los revise. El resto de la conversación sigue siendo privado.";
 "report.ai.reason" = "Motivo";
