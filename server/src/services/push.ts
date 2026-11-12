@@ -6,7 +6,7 @@
 // has no socket connected.
 
 import db from "../db";
-import { isApplePlatform, sendApns } from "./apns";
+import { appFor, isApplePlatform, sendApns } from "./apns";
 import { b64urlDecode, b64urlEncode, encryptWebPush, isPushEndpoint, sendWebPush } from "./webpush";
 
 /** The push's content encrypted to an Apple device's keys, as Web Push would
@@ -40,12 +40,20 @@ export function removeDeviceToken(token: string): void {
  *  skipped and kept: nothing delivers it. */
 export async function pushToUser(
   userId: string,
-  payload: { title: string; body: string; conversationId?: string },
+  push: {
+    title: string; body: string; conversationId?: string;
+    /** An entry to open on the tap, `<collection>/<locale>/<slug>`: Carnet's. */
+    entry?: string;
+    /** Only the devices of this app: an entry means nothing to the Maurice app. */
+    app?: "maurice" | "carnet";
+  },
   send: typeof sendApns = sendApns,
   sendWeb: typeof sendWebPush = sendWebPush,
 ): Promise<void> {
-  const rows = db.query(`SELECT token, household_tag, platform, p256dh, auth FROM device_tokens WHERE user_id = ?`)
-    .all(userId) as { token: string; household_tag: string | null; platform: string | null; p256dh: string | null; auth: string | null }[];
+  const { app, ...payload } = push;
+  const rows = (db.query(`SELECT token, household_tag, platform, p256dh, auth FROM device_tokens WHERE user_id = ?`)
+    .all(userId) as { token: string; household_tag: string | null; platform: string | null; p256dh: string | null; auth: string | null }[])
+    .filter((r) => !app || appFor(r.platform) === app);
   console.log(`[push] pushToUser ${userId}: ${rows.length} token(s)`);
   for (const { token, household_tag, platform, p256dh, auth } of rows) {
     const short = token.startsWith("http") ? new URL(token).host : token.slice(0, 10) + "…";

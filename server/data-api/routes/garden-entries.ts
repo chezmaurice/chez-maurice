@@ -193,11 +193,10 @@ app.post("/entries/:collection/:locale/:slug/participants", async (c) => {
   if (!target) return c.json({ error: "Unknown member" }, 404);
 
   const { collection, locale, slug } = c.req.param();
-  if (!(await getShelfEntry(memberId, garden, collection, locale, slug))) {
-    return c.json({ error: "No such entry" }, 404);
-  }
+  const entry = await getShelfEntry(memberId, garden, collection, locale, slug);
+  if (!entry) return c.json({ error: "No such entry" }, 404);
   try {
-    shareEntry({ owner_id: memberId, collection, locale, slug }, target.id);
+    shareEntry({ owner_id: memberId, collection, locale, slug }, target.id, entry.title);
   } catch (e) {
     if (e instanceof EntryShareError) return c.json({ error: e.message }, e.status);
     throw e;

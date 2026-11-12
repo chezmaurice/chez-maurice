@@ -493,6 +493,6 @@ export async function importEntry(memberId: string, body: ImportInput): Promise<
   // about it there, on this one fiche (the spec's property 3, Candide,
   // 3 November 2026). The household's own rule, an article given as a copy,
   // is for an ordinary share; the shelf lists this one because of `given_from`.
-  if (target) shareEntry({ owner_id: memberId, ...ref }, target.id);
+  if (target) shareEntry({ owner_id: memberId, ...ref }, target.id, title);
   return ref;
 }

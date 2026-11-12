@@ -18,6 +18,8 @@
 import db from "../../src/db";
 import { guestCanReach } from "../../src/services/users";
 import { hasBlocked } from "../../src/services/safety";
+import { pushToUser } from "../../src/services/push";
+import { t, userLocale } from "../../src/services/i18n";
 
 export interface MemberBrief {
   id: string;
@@ -114,7 +116,7 @@ export function isSharedWith(memberId: string, ref: SharedRef): boolean {
  * and everyone already there — and nobody is pulled in by a member they have
  * blocked.
  */
-export function shareEntry(ref: SharedRef, memberId: string): void {
+export function shareEntry(ref: SharedRef, memberId: string, title?: string): void {
   const target = memberBrief(memberId);
   if (!target) throw new EntryShareError("Unknown member", 404);
   if (target.id === ref.owner_id) throw new EntryShareError("The entry is already theirs", 400);
@@ -122,10 +124,21 @@ export function shareEntry(ref: SharedRef, memberId: string): void {
     if (!guestCanReach(target.id, present)) throw new EntryShareError("Not allowed to add this member", 403);
   }
   if (hasBlocked(target.id, ref.owner_id)) throw new EntryShareError("Not allowed to add this member", 403);
-  db.run(
+  const added = db.run(
     `INSERT OR IGNORE INTO entry_shares (owner_id, collection, locale, slug, member_id) VALUES (?, ?, ?, ?, ?)`,
     [ref.owner_id, ref.collection, ref.locale, ref.slug, target.id],
-  );
+  ).changes > 0;
+  // The member is told, on Carnet, once: sharing again says nothing more.
+  // Their name and the title only — never a note of the entry.
+  if (added && title) {
+    const by = memberBrief(ref.owner_id);
+    void pushToUser(target.id, {
+      title,
+      body: t(userLocale(target.id), "push.entry_shared", by?.display_name || by?.username || "?"),
+      entry: `${ref.collection}/${ref.locale}/${ref.slug}`,
+      app: "carnet",
+    });
+  }
 }
 
 export function unshareEntry(ref: SharedRef, memberId: string): void {

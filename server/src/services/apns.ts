@@ -134,6 +134,8 @@ export interface ApplePush {
   title: string;
   body: string;
   conversationId?: string;
+  /** An entry Carnet opens on the tap, `<collection>/<locale>/<slug>`. */
+  entry?: string;
   householdTag?: string;
   platform?: string;
   /** The fields above, encrypted to the device's keys (RFC 8291, base64url):
@@ -162,6 +164,7 @@ export function applePayload(p: ApplePush): Record<string, unknown> {
   return {
     aps: { alert: { title: p.title, body: p.body }, sound: "default" },
     ...(p.conversationId ? { conversationId: p.conversationId } : {}),
+    ...(p.entry ? { entry: p.entry } : {}),
     ...(p.householdTag ? { householdTag: p.householdTag } : {}),
   };
 }

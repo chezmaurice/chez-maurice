@@ -65,3 +65,23 @@ test("an Android device with Web Push keys is reached through its endpoint, and 
   expect(tokens()).toContain(live);
   expect(tokens()).not.toContain(gone);
 });
+
+test("an entry shared is pushed to Carnet alone, with the entry to open", async () => {
+  db.run(`DELETE FROM device_tokens WHERE user_id = ?`, [MEMBER]);
+  registerDeviceToken(MEMBER, "tok-ios", "ios");
+  registerDeviceToken(MEMBER, "tok-carnet", "carnet-ios");
+
+  const sent: { token: string; p: Record<string, unknown> }[] = [];
+  await pushToUser(MEMBER, { title: "Microrobots", body: "Candide l’a partagé avec vous", entry: "articles/fr/microrobots", app: "carnet" },
+    async (token, p) => {
+      sent.push({ token, p: p as any });
+      return { ok: true, status: 200 };
+    });
+
+  expect(sent.map((s) => s.token)).toEqual(["tok-carnet"]);
+  expect(sent[0].p).toMatchObject({ title: "Microrobots", entry: "articles/fr/microrobots", platform: "carnet-ios" });
+  expect(sent[0].p).not.toHaveProperty("app");
+  // Unsealed, the entry rides beside `aps` for the tap.
+  const { applePayload } = await import("../src/services/apns");
+  expect(applePayload(sent[0].p as any)).toMatchObject({ entry: "articles/fr/microrobots" });
+});
