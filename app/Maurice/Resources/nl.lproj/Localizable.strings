@@ -1017,7 +1017,7 @@
 "report.reason.harassment_or_bullying" = "Intimidatie of pesten";
 "report.reason.sexual_content" = "Seksuele inhoud";
 "report.reason.child_safety" = "Kinderveiligheid / inhoud met een minderjarige";
-"report.reason.other" = "Iets anders";
+"report.reason.other" = "Anders";
 "report.ai.title" = "Dit antwoord melden";
 "report.ai.disclosure" = "Dit antwoord van Maurice, en je bericht vlak ervoor, worden gestuurd naar de persoon die je Maurice beheert, zodat die ernaar kan kijken. De rest van het gesprek blijft privé.";
 "report.ai.reason" = "Reden";

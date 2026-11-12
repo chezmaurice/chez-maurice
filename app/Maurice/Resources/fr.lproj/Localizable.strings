@@ -1030,7 +1030,7 @@
 "report.reason.harassment_or_bullying" = "Harcèlement ou intimidation";
 "report.reason.sexual_content" = "Contenu sexuel";
 "report.reason.child_safety" = "Sécurité des enfants / contenu impliquant un mineur";
-"report.reason.other" = "Autre chose";
+"report.reason.other" = "Autre";
 "report.ai.title" = "Signaler cette réponse";
 "report.ai.disclosure" = "Cette réponse de Maurice, et votre message juste avant, seront envoyés à la personne qui gère votre Maurice pour qu’elle les examine. Le reste de la conversation reste privé.";
 "report.ai.reason" = "Motif";
