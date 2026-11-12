@@ -66,7 +66,7 @@ beforeAll(() => {
 
   // An article captured and untouched; a bookmark the site refused.
   write("articles/fr/microrobots-fiche.md",
-    `---\ntitle: Microrobots\nresource_collection: articles\nresource_id: microrobots\ndate: '2026-10-07'\ntags: []\nlocale: fr\nmeta:\n  url: https://example.org/m\n  publication: The New York Times\n  word_count: 1085\n  excerpt: Atomic Machines.\n  opened: false\n---\n\n> Atomic Machines.\n`);
+    `---\ntitle: Microrobots\nresource_collection: articles\nresource_id: microrobots\ndate: '2026-10-07'\ntags: []\nlocale: fr\nmeta:\n  url: https://example.org/m\n  publication: The New York Times\n  word_count: 1085\n  excerpt: Atomic Machines.\n  opened: false\n  summary: Des robots minuscules.\n  summary_long: Tiny robots, at length.\n  summary_lang: en\n  summary_version: 4\n---\n\n> Atomic Machines.\n`);
   write("articles/fr/microrobots-fiche/_fragments/001.frag", `---\nsummary: "Texte intégral — The New York Times"\n---\nThe text.`);
   write("articles/fr/soil-fiche.md",
     `---\ntitle: Soil\nresource_collection: articles\nresource_id: soil\ndate: '2026-09-30'\ntags: []\nlocale: fr\nmeta:\n  url: https://example.org/s\n  status: needs-capture\n---\n\n> An excerpt.\n\n## Commentaire\n\nLu chez L.\n`);
@@ -143,7 +143,11 @@ describe("the list", () => {
   test("an article is captured or a link only; an untouched one holds no notes but its highlights", async () => {
     const { entries } = await listShelf(MEMBER.id, garden, BOOKS as any);
     const micro = entries.find((e) => e.id === "articles/fr/microrobots")!;
-    expect(micro.source).toEqual({ type: "article", url: "https://example.org/m", captured: true, word_count: 1085, reading_minutes: 5 });
+    // The summaries travel with the list, for a device to keep them offline.
+    expect(micro.source).toEqual({
+      type: "article", url: "https://example.org/m", captured: true, word_count: 1085, reading_minutes: 5,
+      summary: { text: "Des robots minuscules.", long: "Tiny robots, at length.", current: true },
+    });
     expect(micro.mine).toEqual({ notes: 1, opened: false });
     expect(micro.byline).toBe("The New York Times");
     const soil = entries.find((e) => e.id === "articles/fr/soil")!;

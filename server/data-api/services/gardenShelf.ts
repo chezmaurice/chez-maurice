@@ -82,9 +82,10 @@ export interface ArticleSource {
   word_count: number;
   reading_minutes: number;
   /**
-   * Page only, not the list: the article's summaries (articleSummary.ts) — the
-   * essence in a paragraph (`text`), and the long one meant to be read in the
-   * article's place (`long`, "" until written). Null until there is one;
+   * The article's summaries (articleSummary.ts), in the list as on the page,
+   * so a device keeps them for reading offline — the essence in a paragraph
+   * (`text`), and the long one meant to be read in the article's place
+   * (`long`, "" until written). Null until there is one;
    * `current` false while one is missing or of an older kind — Carnet asks
    * for them again.
    */
@@ -556,6 +557,12 @@ async function describe(
     book ? await bookSource(memberId, book)
     : e.collection === "articles" ? articleSource(card, fiche, garden, e.fiche?.file)
     : null;
+  if (source?.type === "article") {
+    const stored = storedSummaryOf(fiche ? fiche.meta : (card?.fm ?? {}), userLocale(memberId));
+    // A version 2 fiche holds the long text alone, in `summary`.
+    const [short, long] = stored.version === 2 ? ["", stored.summary] : [stored.summary, stored.long];
+    source.summary = short || long ? { text: short, long, current: stored.current } : null;
+  }
 
   let mine: ShelfEntry["mine"] = null;
   if (fiche && e.fiche) {
@@ -886,15 +893,6 @@ export async function getShelfEntry(
   const lib = loadLibrary(books);
   const counts: Counts = { books: countHighlights(memberId), articles: countArticleHighlights(memberId) };
   const { row, card, fiche, book, subject } = await describe(memberId, garden, e, lib, counts);
-  if (row.source?.type === "article") {
-    const stored = storedSummaryOf(fiche ? fiche.meta : (card?.fm ?? {}), userLocale(memberId));
-    // A version 2 fiche holds the long text alone, in `summary`.
-    const [short, long] = stored.version === 2 ? ["", stored.summary] : [stored.summary, stored.long];
-    row.source = {
-      ...row.source,
-      summary: short || long ? { text: short, long, current: stored.current } : null,
-    };
-  }
   const site = siteFor(ownerId);
   const foreign = ownerId !== memberId;
   const owner = memberBrief(ownerId);
