@@ -35,7 +35,7 @@ import { pushToUser } from "../services/push";
 import { indexConversationInBackground } from "../services/mcpClient";
 import { searchConversations } from "../services/conversationSearch";
 import { takeReview } from "../services/reviewFooter";
-import { heldEntry, offerSharedArticle, ownEntryRef, suggestInBackground } from "../services/entrySuggestions";
+import { heldEntry, offerSharedArticle, ownEntryRef, startedBookOf, suggestInBackground } from "../services/entrySuggestions";
 import { linkOnFicheInBackground } from "../../data-api/services/entryConversations";
 import { saveSpec } from "../services/composer/specs";
 import { ConversationGiftError, exportConversation } from "../services/conversationGift";
@@ -139,7 +139,17 @@ conversations.post("/", async (c) => {
   // the entry's own ref it found nothing, and the turn went out with no
   // context at all (10 October 2026).
   // Saved again on a reused one: the snapshot is then of the fiche as it is now.
-  if (entryRef) saveSpec(uid, convo.id, [{ type: "fiche", id: `${entryRef}-fiche` }]);
+  // A book the member is reading in Carnet comes too, on the `progress` scope:
+  // the conversation is then a reading companion, knows where they are, and
+  // is given nothing past it (issue #41).
+  if (entryRef) {
+    const fiche = { type: "fiche", id: `${entryRef}-fiche` };
+    const bookId = startedBookOf(uid, entryRef);
+    const withBook = bookId != null
+      ? saveSpec(uid, convo.id, [fiche, { type: "book", id: bookId, representation: "summary", scope: { mode: "progress" } }])
+      : null;
+    if (!withBook || "errors" in withBook) saveSpec(uid, convo.id, [fiche]);
+  }
   return c.json(convo, unused ? 200 : 201);
 });
 

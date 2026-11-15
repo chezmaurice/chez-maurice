@@ -32,6 +32,8 @@ import {
   autoCommit, fichePath, gardenFor, markOpened, parseFiche, writeFiche, type GardenRef, type ResourceCollection,
 } from "../../data-api/services/gardenFiche";
 import { listGardenEntries, type GardenEntry } from "../../data-api/services/gardenEntries";
+import { readFace } from "../../data-api/services/gardenShelf";
+import { resolveBookItem } from "./composer/weights";
 import { indexGardenPaths } from "../../data-api/services/gardenIndex";
 import { noteBlock, withNote } from "../../data-api/services/gardenNote";
 import { appendResonance } from "../../data-api/services/gardenLinks";
@@ -169,6 +171,29 @@ export function ownEntryRef(memberId: string, ref: string): string | null {
   }
   const entry = entryIn(memberId, ref);
   return entry ? refOf(entry) : null;
+}
+
+/**
+ * The library book behind an entry held from Carnet, when the member has
+ * started reading it: its Calibre id, for the conversation to load it on the
+ * `progress` scope beside the fiche. Without it the conversation had the
+ * fiche's title and nothing of where the reader was, though Carnet had
+ * recorded it seconds before (15 November 2026, issue #41).
+ *
+ * Null when the fiche names no book, the member's library does not hold it,
+ * or they have not reached a body chapter yet: a book not started loads
+ * nothing on that scope anyway, and would only clutter the context. The
+ * caller's own entries only — a shared entry's id is its owner's library's.
+ */
+export function startedBookOf(memberId: string, entryRef: string): number | null {
+  if (entryRef.startsWith("@")) return null;
+  const entry = entryIn(memberId, entryRef);
+  const garden = gardenFor(memberId);
+  if (!entry || entry.collection !== "books" || !garden) return null;
+  const id = Number(readFace(garden, entry.fiche?.file)?.meta.calibre_id);
+  if (!Number.isInteger(id) || id <= 0) return null;
+  const book = resolveBookItem(memberId, { type: "book", id, scope: { mode: "progress" } });
+  return !book.missing && (book.progressChapter ?? -1) >= 0 ? id : null;
 }
 
 /** The entry under `<collection>/<locale>/<slug>` in a member's garden. */
