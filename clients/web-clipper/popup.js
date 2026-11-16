@@ -171,6 +171,10 @@ async function showMain() {
   if (draft?.comment) el("comment").value = draft.comment;
   else if (captured.selection) el("comment").value = captured.selection;
   if (el("comment").value) setFold(true);
+  // On an iPhone Safari's sheet opens half the screen high at the least,
+  // and a folded note left that half empty under the button: the note is
+  // open there from the start, without the keyboard.
+  else if (iosSheet) setFold(true, false);
   updateSummary();
 
   checkAlreadySaved(captured.url);
@@ -289,11 +293,11 @@ async function finishSave(asked) {
 
 // ── The fold: the note ───────────────────────────────────────────
 
-function setFold(open) {
+function setFold(open, focus = true) {
   el("fold").setAttribute("aria-expanded", String(open));
   el("fold-body").hidden = !open;
   updateSummary();
-  if (open) el("comment").focus();
+  if (open && focus) el("comment").focus();
 }
 
 function updateSummary() {
