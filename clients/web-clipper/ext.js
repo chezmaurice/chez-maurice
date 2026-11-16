@@ -13,6 +13,27 @@
 
 export const ext = globalThis.browser ?? globalThis.chrome;
 
+/**
+ * The toolbar icon is a bare pipe on a transparent ground: dark for a light
+ * browser, cream for a dark one. No manifest key for a dark variant works
+ * across Chrome, Firefox and Safari, so the swap happens at run time, from
+ * wherever `matchMedia` exists — the background page in Firefox and Safari,
+ * and the popup everywhere (a Chromium service worker has no `matchMedia`).
+ */
+const SIZES = [16, 32, 48, 128];
+
+export function followColorScheme() {
+  if (typeof globalThis.matchMedia !== "function" || !ext.action?.setIcon) return;
+  const query = globalThis.matchMedia("(prefers-color-scheme: dark)");
+  const apply = () => {
+    const name = query.matches ? "icon-dark" : "icon";
+    const path = Object.fromEntries(SIZES.map((size) => [size, `icons/${name}-${size}.png`]));
+    ext.action.setIcon({ path })?.catch?.(() => {});
+  };
+  apply();
+  query.addEventListener?.("change", apply);
+}
+
 /** Safari hosts the extension inside an app (Carnet on iPhone and iPad,
  *  Maurice on the Mac), which already holds the member's session. */
 export const isSafari =

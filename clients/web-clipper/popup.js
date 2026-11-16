@@ -1,4 +1,4 @@
-import { api, connect, ext, forget, isConfigured, isSafari, loadConfig, originPattern, parseConnectInput } from "./ext.js";
+import { api, connect, ext, followColorScheme, forget, isConfigured, isSafari, loadConfig, originPattern, parseConnectInput } from "./ext.js";
 import { lang, t } from "./strings.js";
 
 /**
@@ -31,6 +31,7 @@ for (const node of document.querySelectorAll("[data-label]")) {
 el("shortcut").textContent = `${/Mac/.test(ua) ? "⌘↩" : "Ctrl+↩"} ${t("shortcut")}`;
 el("address").placeholder = t("addressPlaceholder");
 
+followColorScheme();
 init();
 
 async function init() {

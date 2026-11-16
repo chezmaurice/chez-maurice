@@ -11,7 +11,9 @@
  * manifest names this file for both.
  */
 
-import { api, ext, loadConfig } from "./ext.js";
+import { api, ext, followColorScheme, loadConfig } from "./ext.js";
+
+followColorScheme();
 
 ext.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.type !== "save-article") return false;
