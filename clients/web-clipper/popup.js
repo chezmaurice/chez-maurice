@@ -141,12 +141,6 @@ async function disconnect() {
 
 async function showMain() {
   show("main");
-  // The account button is who saves: their avatar, a cog when the session
-  // names no one.
-  const named = Boolean(config.member?.name);
-  el("me").hidden = !named;
-  el("cog").hidden = named;
-  if (named) paintAvatar(el("me"));
   if (ext.permissions?.contains) {
     originGranted = await ext.permissions
       .contains({ origins: [originPattern(config.serverUrl)] })
