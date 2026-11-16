@@ -110,10 +110,16 @@ async function finishConnect(asked, serverUrl, code) {
 
 // ── Account ──────────────────────────────────────────────────────
 
+/** The member's initial on their colour (the tint without one). */
+function paintAvatar(node) {
+  const name = config.member?.name || "—";
+  node.textContent = name.slice(0, 1).toUpperCase();
+  if (config.member?.color) node.style.background = config.member.color;
+}
+
 function showAccount() {
   const name = config.member?.name || "—";
-  el("avatar").textContent = name.slice(0, 1).toUpperCase();
-  if (config.member?.color) el("avatar").style.background = config.member.color;
+  paintAvatar(el("avatar"));
   el("who-name").textContent = name;
   el("who-where").textContent = config.household || new URL(config.serverUrl).host;
   el("via-app").hidden = !config.fromApp;
@@ -134,6 +140,12 @@ async function disconnect() {
 
 async function showMain() {
   show("main");
+  // The account button is who saves: their avatar, a cog when the session
+  // names no one.
+  const named = Boolean(config.member?.name);
+  el("me").hidden = !named;
+  el("cog").hidden = named;
+  if (named) paintAvatar(el("me"));
   if (ext.permissions?.contains) {
     originGranted = await ext.permissions
       .contains({ origins: [originPattern(config.serverUrl)] })
@@ -259,7 +271,7 @@ async function finishSave(asked) {
     return;
   }
   await clearDraft();
-  const { duplicate, needs_capture, fiche_web_path, slug, locale, domain, domain_choices } = reply.result;
+  const { duplicate, needs_capture, slug, locale, domain, domain_choices } = reply.result;
   if (needs_capture) {
     setStatus("status", t("bookmark"), "bad");
     el("save").disabled = el("save-check").disabled = false;
@@ -268,9 +280,13 @@ async function finishSave(asked) {
   el("saved-body").textContent = duplicate ? t("savedDuplicate") : t("savedBody");
   filed = { slug, locale, domain: domain ?? null, choices: domain_choices ?? [] };
   renderFiled();
-  el("open-fiche").hidden = !fiche_web_path;
-  el("open-fiche").onclick = async () => {
-    await ext.tabs.create({ url: `${config.serverUrl}${fiche_web_path}` });
+  // The fiche opens in Carnet, where the member is signed in — not on the
+  // site, where this browser mostly is not. Only on a phone or a tablet,
+  // where Carnet lives; elsewhere the sheet just closes.
+  const entry = phone && slug && locale ? `carnet://entry/articles/${locale}/${encodeURIComponent(slug)}` : null;
+  el("open-carnet").hidden = !entry;
+  el("open-carnet").onclick = async () => {
+    await ext.tabs.create({ url: entry });
     window.close();
   };
   show("saved");
