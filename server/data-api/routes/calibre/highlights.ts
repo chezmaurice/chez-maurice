@@ -7,6 +7,7 @@ import {
   updateHighlight,
   deleteHighlight,
 } from "../../services/highlights";
+import { heldConversationOutcome } from "../../services/entryConversations";
 import { gardenFor } from "../../services/gardenFiche";
 import { entryForBook } from "../../services/gardenWrite";
 
@@ -40,7 +41,12 @@ highlights.get("/:bookId/highlights", (c) => {
   if (view && !HIGHLIGHT_VIEWS.includes(view as any)) {
     return c.json({ error: `view must be one of: ${HIGHLIGHT_VIEWS.join(", ")}` }, 400);
   }
-  return c.json(listHighlights(memberId, bookId, view ? asHighlightView(view) : undefined));
+  // A passage talked over with Maurice carries the conversation, and what it
+  // came to once that is written: the reader shows it with the passage.
+  return c.json(listHighlights(memberId, bookId, view ? asHighlightView(view) : undefined).map((h) => ({
+    ...h,
+    conversation: h.conversation_id ? heldConversationOutcome(memberId, h.conversation_id) : null,
+  })));
 });
 
 // POST /books/:bookId/highlights

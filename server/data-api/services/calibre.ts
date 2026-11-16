@@ -119,16 +119,17 @@ export function invalidateLibraryRoot(): void {
 }
 
 let db: Database | null = null;
-// Which root `db` is open against — distinct from cachedRoot, which caches
+// Which file `db` is open against — distinct from cachedRoot, which caches
 // resolution. Conflating the two is what made the old refresh rule unreadable.
-let openedRoot: string | null = null;
+// The file, not the root: CALIBRE_DB_PATH moves it without moving the root,
+// and under `bun test` a later suite read the library an earlier one deleted.
+let openedPath: string | null = null;
 
 function getDb(): Database {
-  const root = getLibraryRoot();
-  if (!db || openedRoot !== root) {
+  const dbPath = process.env.CALIBRE_DB_PATH ?? path.join(getLibraryRoot(), "metadata.db");
+  if (!db || openedPath !== dbPath) {
     db?.close();
-    openedRoot = root;
-    const dbPath = process.env.CALIBRE_DB_PATH ?? path.join(root, "metadata.db");
+    openedPath = dbPath;
     db = new Database(dbPath, { readonly: true });
   }
   return db;

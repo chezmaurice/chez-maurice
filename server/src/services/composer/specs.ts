@@ -5,11 +5,13 @@ import { readChapters, listChapters } from "./calibre";
 import { resolveFileItem, resolveFolderItem, fileText, fileBinary, type FileAttachment } from "./files";
 import { ficheText, resolveFicheItem } from "./fiches";
 import { conversationContext, type SummaryStatus } from "./conversationSummary";
+import { getHighlight } from "../../../data-api/services/highlights";
 import {
   resolveBookItem,
   conversationWeight,
   validateItems,
   CTX_BUDGET,
+  type BookFocus,
   type ItemValidationError,
 } from "./weights";
 
@@ -269,6 +271,32 @@ function renderBook(
   return `# ${title} (calibre book_id ${bookId}) — ${what}, ${parts.length} chapter${parts.length === 1 ? "" : "s"}\n\n${parts.join("\n\n---\n\n")}`;
 }
 
+/**
+ * Where a conversation opened from Carnet's reader starts: the chapter open
+ * there, or the passage the member just highlighted in it — with that
+ * chapter's full text, since the summaries say what a chapter is about, not
+ * what it says. Empty without a focus, or when the chapter is not the book's.
+ */
+function focusText(memberId: string, bookId: number, focus?: BookFocus): string {
+  if (!focus) return "";
+  const highlight = focus.highlight != null ? getHighlight(memberId, Number(focus.highlight)) : null;
+  const ref = highlight && highlight.book_id === bookId ? highlight.chapter_slug : focus.chapter;
+  const book = ref ? listChapters(memberId, bookId) : null;
+  if (!ref || !book?.chapters.some((c) => c.ref === ref)) return "";
+  const header = (chapterHeaders(book.chapters).get(ref) ?? `## ${ref}`).replace(/^## /, "");
+  const out = ["# Where this conversation starts"];
+  if (highlight && highlight.book_id === bookId) {
+    out.push(`The member opened it from Carnet's reader, on a passage they had just highlighted in ${header}. It is what they want to talk about:`);
+    out.push(highlight.quote.trim().split("\n").map((l) => `> ${l}`).join("\n"));
+    if (highlight.note?.trim()) out.push(`Their note on it: ${highlight.note.trim()}`);
+  } else {
+    out.push(`The member opened it from Carnet's reader, on ${header}, the chapter they are reading: "this chapter" means this one.`);
+  }
+  const full = readChapters(memberId, bookId, [ref], "full")[0]?.text;
+  if (full) out.push(`## ${header} — full text\n\n${full}`);
+  return out.join("\n\n");
+}
+
 // ── Resolution to the actual text payload Maurice loads ──
 
 export interface ResolvedItemText {
@@ -314,7 +342,8 @@ export function resolveSpecToText(memberId: string, spec: ContextSpec): Resolved
         : (it.snapshot?.refs ?? []);
       const rep = (it.snapshot?.representation ?? "summary") as "summary" | "full";
       const chs = readChapters(memberId, Number(it.id), refs, rep);
-      const text = renderBook(memberId, Number(it.id), rep, chs);
+      const text = [renderBook(memberId, Number(it.id), rep, chs), focusText(memberId, Number(it.id), it.focus)]
+        .filter(Boolean).join("\n\n---\n\n");
       return { type: "book", id: it.id, text, weight: estimateTokens(text) };
     }
     if (it.type === "fiche") {

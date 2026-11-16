@@ -38,6 +38,10 @@ import { takeReview } from "../services/reviewFooter";
 import { heldEntry, offerSharedArticle, ownEntryRef, startedBookOf, suggestInBackground } from "../services/entrySuggestions";
 import { linkOnFicheInBackground } from "../../data-api/services/entryConversations";
 import { saveSpec } from "../services/composer/specs";
+import type { BookFocus } from "../services/composer/weights";
+import { attachConversation, getHighlight, type Highlight } from "../../data-api/services/highlights";
+import { gardenFor } from "../../data-api/services/gardenFiche";
+import { entryForBook, EntryWriteError } from "../../data-api/services/gardenWrite";
 import { ConversationGiftError, exportConversation } from "../services/conversationGift";
 import { memberLocale } from "../services/domainBriefs";
 import { t } from "../services/i18n";
@@ -118,7 +122,7 @@ conversations.get("/", (c) => {
 // ── POST /api/conversations ─────────────────────────────────────
 
 conversations.post("/", async (c) => {
-  const { maurice_id, entry } = await c.req.json().catch(() => ({}));
+  const { maurice_id, entry, book, chapter, highlight } = await c.req.json().catch(() => ({}));
   const uid = c.get("userId");
   // A Maurice is private to its creator — can't bind a thread to someone else's.
   if (!canUseMaurice(maurice_id ?? null, uid)) return c.json({ error: "Not found" }, 404);
@@ -130,11 +134,38 @@ conversations.post("/", async (c) => {
     entryRef = ownEntryRef(uid, String(entry));
     if (!entryRef) return c.json({ error: "No such entry" }, 404);
   }
+  // Held from Carnet's reader: a book of the library, rather than an entry —
+  // its entry, made on the spot when the book had none, as a first note
+  // makes it — and where in it the conversation starts: the chapter open
+  // there, or a passage just highlighted (16 November 2026).
+  let readerBook: number | null = null;
+  let focus: BookFocus | null = null;
+  let passage: Highlight | null = null;
+  if (entryRef == null && book != null) {
+    readerBook = Number(book);
+    const garden = gardenFor(uid);
+    if (!Number.isInteger(readerBook) || readerBook <= 0 || !garden) return c.json({ error: "No such book" }, 404);
+    if (highlight != null) {
+      passage = getHighlight(uid, Number(highlight));
+      if (!passage || passage.book_id !== readerBook) return c.json({ error: "No such highlight" }, 404);
+      focus = { highlight: passage.id };
+    } else if (typeof chapter === "string" && chapter) {
+      focus = { chapter };
+    }
+    try {
+      const ref = await entryForBook(uid, garden, readerBook);
+      entryRef = `${ref.collection}/${ref.locale}/${ref.slug}`;
+    } catch (e) {
+      return c.json({ error: (e as Error).message }, e instanceof EntryWriteError ? e.status : 500);
+    }
+  }
   // Carnet creates the conversation on the tap that opens the Maurice app; a
   // second tap before anything was said there reopens the same one rather
-  // than leaving an empty thread behind each time.
-  const unused = entryRef ? emptyEntryConversation(uid, entryRef, maurice_id ?? null) : null;
+  // than leaving an empty thread behind each time. Not one opened on a
+  // passage: that one is the passage's own.
+  const unused = entryRef && !passage ? emptyEntryConversation(uid, entryRef, maurice_id ?? null) : null;
   const convo = unused ?? createConversation(uid, maurice_id ?? null, { entryRef });
+  if (passage) attachConversation(uid, passage.id, convo.id);
   // The composer names a fiche by its file's stem, `-fiche` included: under
   // the entry's own ref it found nothing, and the turn went out with no
   // context at all (10 October 2026).
@@ -142,11 +173,15 @@ conversations.post("/", async (c) => {
   // A book the member is reading in Carnet comes too, on the `progress` scope:
   // the conversation is then a reading companion, knows where they are, and
   // is given nothing past it (issue #41).
+  // From the reader the book comes whatever the progress says: the member is
+  // in it, and the focus names the chapter.
   if (entryRef) {
     const fiche = { type: "fiche", id: `${entryRef}-fiche` };
-    const bookId = startedBookOf(uid, entryRef);
+    const bookId = readerBook ?? startedBookOf(uid, entryRef);
     const withBook = bookId != null
-      ? saveSpec(uid, convo.id, [fiche, { type: "book", id: bookId, representation: "summary", scope: { mode: "progress" } }])
+      ? saveSpec(uid, convo.id, [fiche, {
+          type: "book", id: bookId, representation: "summary", scope: { mode: "progress" }, ...(focus ? { focus } : {}),
+        }])
       : null;
     if (!withBook || "errors" in withBook) saveSpec(uid, convo.id, [fiche]);
   }

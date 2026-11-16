@@ -40,6 +40,13 @@ function getDb(): Database {
     } catch {
       // already there
     }
+    // The conversation with Maurice opened from the highlight, in Carnet's
+    // reader: what it came to is shown with the passage (16 November 2026).
+    try {
+      db.exec(`ALTER TABLE highlights ADD COLUMN conversation_id TEXT`);
+    } catch {
+      // already there
+    }
     db.exec(`CREATE INDEX IF NOT EXISTS idx_highlights_member_book ON highlights(member_id, book_id)`);
   }
   return db;
@@ -63,6 +70,8 @@ export interface Highlight {
   start_offset: number | null;
   end_offset: number | null;
   view: HighlightView;
+  /** The conversation with Maurice opened from this passage, if any. */
+  conversation_id: string | null;
   created_at: string;
 }
 
@@ -94,6 +103,19 @@ export function countHighlights(memberId: string): Map<number, number> {
     .query("SELECT book_id, COUNT(*) AS n FROM highlights WHERE member_id = ? GROUP BY book_id")
     .all(memberId) as { book_id: number; n: number }[];
   return new Map(rows.map((r) => [r.book_id, r.n]));
+}
+
+/** One of a member's highlights, or null when it is not theirs. */
+export function getHighlight(memberId: string, id: number): Highlight | null {
+  return getDb()
+    .query("SELECT * FROM highlights WHERE id = ? AND member_id = ?")
+    .get(id, memberId) as Highlight | null;
+}
+
+/** The passage was talked over with Maurice in this conversation — the last
+ *  one opened from it, when there were several. */
+export function attachConversation(memberId: string, id: number, conversationId: string): void {
+  getDb().run("UPDATE highlights SET conversation_id = ? WHERE id = ? AND member_id = ?", [conversationId, id, memberId]);
 }
 
 export interface NewHighlight {

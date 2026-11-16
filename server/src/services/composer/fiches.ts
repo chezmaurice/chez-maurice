@@ -21,6 +21,8 @@ import db from "../../db";
 import { getUser } from "../users";
 import { gardensRoot } from "../gardensRoot";
 import { estimateTokens } from "./notes";
+import { listHighlights } from "../../../data-api/services/highlights";
+import { listArticleHighlights } from "../../../data-api/services/articleHighlights";
 
 /** Mirrors data-api's RESOURCE_COLLECTIONS: every collection that has fiches. */
 const COLLECTIONS = [
@@ -212,7 +214,55 @@ function fragmentSummary(raw: string): string {
   return s.replace(/^["']|["']$/g, "");
 }
 
-/** The fiche's text: its body, then each fragment under its own summary. */
+interface Marked { quote: string; note: string | null; chapter?: string; at: number; conversation?: string | null }
+
+/**
+ * The member's highlights on the work behind a fiche, as the model reads them:
+ * each passage, its note, and whether it was talked over already. They live in
+ * Carnet's store, not in the garden — the garden has them only once a night,
+ * under `_maurice/` — so a conversation held from the fiche did not see them
+ * (16 November 2026). The member's own fiches only: a shared entry's
+ * highlights are its owner's reading.
+ */
+function highlightsText(memberId: string, id: string, meta: FicheMeta, raw: string): string {
+  if (id.startsWith("@")) return "";
+  let marked: Marked[] = [];
+  try {
+    if (meta.collection === "books") {
+      const fm = raw.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? "";
+      const bookId = Number(fm.match(/^\s*calibre_id:\s*(\d+)\s*$/m)?.[1]);
+      if (!Number.isInteger(bookId) || bookId <= 0) return "";
+      marked = listHighlights(memberId, bookId).map((h) => ({
+        quote: h.quote, note: h.note, chapter: h.chapter_slug, at: h.start_offset ?? 0, conversation: h.conversation_id,
+      }));
+    } else if (meta.collection === "articles") {
+      const slug = meta.slug.replace(/-fiche$/, "");
+      marked = listArticleHighlights(memberId, meta.locale, slug).map((h) => ({ quote: h.quote, note: h.note, at: h.start_offset ?? 0 }));
+    }
+  } catch {
+    return "";
+  }
+  if (!marked.length) return "";
+  // Reading order: by chapter (their refs sort as the book runs), then place.
+  marked.sort((a, b) => (a.chapter ?? "").localeCompare(b.chapter ?? "", undefined, { numeric: true }) || a.at - b.at);
+  const out = [`## Highlights\n\nPassages the member marked while reading, in reading order, with their own notes.`];
+  let chapter: string | undefined;
+  for (const h of marked) {
+    if (h.chapter && h.chapter !== chapter) {
+      chapter = h.chapter;
+      out.push(`### ${chapter.replace(/^\d+-/, "")}`);
+    }
+    const quote = h.quote.trim().split("\n").map((l) => `> ${l}`).join("\n");
+    const lines = [quote];
+    if (h.note?.trim()) lines.push(`Note: ${h.note.trim()}`);
+    if (h.conversation) lines.push(`(Talked over with Maurice in conversation ${h.conversation}.)`);
+    out.push(lines.join("\n\n"));
+  }
+  return out.join("\n\n");
+}
+
+/** The fiche's text: its body, its highlights, then each fragment under its
+ *  own summary. */
 export function ficheText(memberId: string, id: string, withFragments = true): string {
   const meta = getFiche(memberId, id);
   if (!meta) return "";
@@ -223,6 +273,8 @@ export function ficheText(memberId: string, id: string, withFragments = true): s
     return "";
   }
   const parts = [`# ${meta.title}\n\n${bodyOf(raw)}`];
+  const highlights = highlightsText(memberId, String(id), meta, raw);
+  if (highlights) parts.push(highlights);
   if (withFragments) {
     for (const f of fragmentFiles(meta.file)) {
       let fr: string;

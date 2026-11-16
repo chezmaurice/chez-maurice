@@ -23,9 +23,13 @@ export type BookScope =
   // book keeps pace with the reader instead of needing a refresh.
   | { mode: "progress" };
 
+/** Where a conversation opened from Carnet's reader starts: the chapter open
+ *  there, or a passage just highlighted in it (a highlight id). */
+export interface BookFocus { chapter?: string; highlight?: number }
+
 export type ComposerItem =
   | { type: "note"; id: string; recurse?: boolean; include_archived?: boolean; exclude?: string[] }
-  | { type: "book"; id: number; representation?: "summary" | "full"; scope?: BookScope }
+  | { type: "book"; id: number; representation?: "summary" | "full"; scope?: BookScope; focus?: BookFocus }
   | { type: "fiche"; id: string; include_fragments?: boolean }
   // A conversation past SUMMARY_THRESHOLD is loaded as a summary unless
   // `representation: "full"` pins the transcript.

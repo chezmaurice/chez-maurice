@@ -144,14 +144,17 @@ function quote(text: string): string {
   return text.trim().split("\n").map((l) => (l ? `> ${l}` : ">")).join("\n");
 }
 
-function highlightBlock(h: { quote: string; note: string | null; color: string; view: string; created_at: string }): string {
+function highlightBlock(h: { quote: string; note: string | null; color: string; view: string; created_at: string; conversation_id?: string | null }): string {
   const meta = [iso(h.created_at)?.slice(0, 10), h.color, h.view === "summary" ? "summary" : null].filter(Boolean).join(" · ");
-  return [quote(h.quote), h.note?.trim() ? `\n${h.note.trim()}` : "", `\n*${meta}*`].join("\n").replace(/\n{3,}/g, "\n\n");
+  // A passage talked over with Maurice leads to that conversation.
+  const talk = h.conversation_id ? `\n*([Conversation avec Maurice](maurice://conversations/${h.conversation_id}))*` : "";
+  return [quote(h.quote), h.note?.trim() ? `\n${h.note.trim()}` : "", `\n*${meta}*`, talk].join("\n").replace(/\n{3,}/g, "\n\n").trimEnd();
 }
 
 async function bookHighlights(files: Files, life: Database, memberId: string, garden: GardenRef, locale: string, deps: ExportDeps) {
+  const talked = (life.query(`PRAGMA table_info(highlights)`).all() as { name: string }[]).some((c) => c.name === "conversation_id");
   const rows = life.query(
-    `SELECT book_id, chapter_slug, quote, note, color, start_offset, view, created_at, id
+    `SELECT book_id, chapter_slug, quote, note, color, start_offset, view, created_at, id${talked ? ", conversation_id" : ""}
        FROM highlights WHERE member_id = ? ORDER BY book_id, id`,
   ).all(memberId) as any[];
   if (!rows.length) return;

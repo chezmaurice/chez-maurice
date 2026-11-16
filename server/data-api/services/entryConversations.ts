@@ -190,6 +190,28 @@ function describe(stored: StoredFragment, hash: string): ConversationSummaryFrag
   };
 }
 
+/**
+ * What a conversation held from an entry came to, read off that entry's fiche:
+ * its title, and the summary once one is written (null before). Null when the
+ * conversation is gone or not the member's — a highlight still pointing at it
+ * shows nothing then.
+ */
+export function heldConversationOutcome(
+  memberId: string, conversationId: string,
+): { id: string; title: string | null; summary: string | null } | null {
+  const convo = getConversation(conversationId, memberId);
+  if (!convo || !isParticipant(conversationId, memberId)) return null;
+  const [collection, locale, slug] = (convo.entry_ref ?? "").split("/");
+  const garden = gardenFor(memberId);
+  const fiche = garden && collection && locale && slug ? ficheFile(garden, { collection, locale, slug }) : null;
+  const stored = fiche ? summaryFragments(fiche).get(conversationId) : undefined;
+  return {
+    id: conversationId,
+    title: convo.title,
+    summary: stored?.hash ? stored.body.replace(PROVENANCE, "").trim() || null : null,
+  };
+}
+
 function currentHash(conversationId: string): string {
   return transcriptHash(transcriptText(transcriptRows(conversationId)));
 }
