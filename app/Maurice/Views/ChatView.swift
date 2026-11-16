@@ -2411,21 +2411,26 @@ private let kMaxPhotosPerMessage = 10
 /// `onPaste`; everything else goes to the original implementation.
 private struct ImagePasteEnabler: UIViewRepresentable {
     let onPaste: () -> Void
+    /// A hardware keyboard's plain Return (see ImagePasteTextView).
+    let onReturn: () -> Void
 
     func makeUIView(context: Context) -> Probe {
         let probe = Probe()
         probe.isUserInteractionEnabled = false
         probe.onPaste = onPaste
+        probe.onReturn = onReturn
         return probe
     }
     func updateUIView(_ probe: Probe, context: Context) {
         probe.onPaste = onPaste
+        probe.onReturn = onReturn
         probe.attach()
     }
 
     /// Sits behind the field; once in a window, finds the nearest text view.
     final class Probe: UIView {
         var onPaste: () -> Void = {}
+        var onReturn: () -> Void = {}
         override func didMoveToWindow() {
             super.didMoveToWindow()
             guard window != nil else { return }
@@ -2435,7 +2440,9 @@ private struct ImagePasteEnabler: UIViewRepresentable {
             var node = superview
             while let view = node {
                 if let textView = Self.firstTextView(in: view) {
-                    ImagePasteTextView.enable(textView) { [weak self] in self?.onPaste() }
+                    ImagePasteTextView.enable(textView,
+                                              onPaste: { [weak self] in self?.onPaste() },
+                                              onReturn: { [weak self] in self?.onReturn() })
                     return
                 }
                 node = view.superview
@@ -2452,10 +2459,18 @@ private struct ImagePasteEnabler: UIViewRepresentable {
 private enum ImagePasteTextView {
     private static let prefix = "MauriceImagePaste_"
     private static var handlerKey: UInt8 = 0
-    private final class Handler { let run: () -> Void; init(_ run: @escaping () -> Void) { self.run = run } }
+    private final class Handler {
+        let paste: () -> Void
+        let send: () -> Void
+        init(paste: @escaping () -> Void, send: @escaping () -> Void) { self.paste = paste; self.send = send }
+    }
+    /// Returns whose press began during a composition, left to the text view
+    /// to the end so it sees the whole press.
+    private static var composing: Set<ObjectIdentifier> = []
 
-    static func enable(_ textView: UITextView, onPaste: @escaping () -> Void) {
-        objc_setAssociatedObject(textView, &handlerKey, Handler(onPaste), .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+    static func enable(_ textView: UITextView, onPaste: @escaping () -> Void, onReturn: @escaping () -> Void) {
+        objc_setAssociatedObject(textView, &handlerKey, Handler(paste: onPaste, send: onReturn),
+                                 .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
         guard let current = object_getClass(textView),
               !NSStringFromClass(current).hasPrefix(prefix),
               let subclass = subclass(of: current) else { return }
@@ -2486,7 +2501,7 @@ private enum ImagePasteTextView {
         let superPaste = unsafeBitCast(class_getMethodImplementation(base, paste), to: Paste.self)
         let pasteBlock: @convention(block) (AnyObject, Any?) -> Void = { this, sender in
             if imageOnly, let handler = objc_getAssociatedObject(this, &handlerKey) as? Handler {
-                handler.run()
+                handler.paste()
                 return
             }
             superPaste(this, paste, sender)
@@ -2496,18 +2511,36 @@ private enum ImagePasteTextView {
 
         // A hardware keyboard's Return (or the keypad's Enter) reaches the text
         // view as a press SwiftUI turns into a submit, which ends editing: on
-        // an iPad the field lost focus. Without ⌘ it types a line break at
-        // the caret instead; ⌘Return goes on to the ➤ button's shortcut.
+        // an iPad the field lost focus. We take it: it sends to the default
+        // button, or with Shift types a line break at the caret; ⌘Return goes
+        // on to the ➤ button's shortcut. A Return that validates a
+        // composition (an input method, a dead key) is the text view's. The
+        // on-screen keyboard's Return is typed text, not a press: it never
+        // comes here and still breaks the line.
         for selector in [#selector(UIResponder.pressesBegan(_:with:)), #selector(UIResponder.pressesEnded(_:with:))] {
             typealias Presses = @convention(c) (AnyObject, Selector, Set<UIPress>, UIPressesEvent?) -> Void
             let superPresses = unsafeBitCast(class_getMethodImplementation(base, selector), to: Presses.self)
             let began = selector == #selector(UIResponder.pressesBegan(_:with:))
             let pressesBlock: @convention(block) (AnyObject, Set<UIPress>, UIPressesEvent?) -> Void = { this, presses, event in
+                let textView = this as? UITextView
                 let returns = presses.filter { press in
-                    guard let key = press.key, !key.modifierFlags.contains(.command) else { return false }
-                    return key.keyCode == .keyboardReturnOrEnter || key.keyCode == .keypadEnter
+                    guard let key = press.key, !key.modifierFlags.contains(.command),
+                          key.keyCode == .keyboardReturnOrEnter || key.keyCode == .keypadEnter else { return false }
+                    let id = ObjectIdentifier(press)
+                    if began, textView?.markedTextRange != nil { composing.insert(id) }
+                    if composing.contains(id) {
+                        if !began { composing.remove(id) }
+                        return false
+                    }
+                    return true
                 }
-                if began, !returns.isEmpty { (this as? UITextView)?.insertText("\n") }
+                if began, let key = returns.first?.key {
+                    if key.modifierFlags.contains(.shift) {
+                        textView?.insertText("\n")
+                    } else if let handler = objc_getAssociatedObject(this, &handlerKey) as? Handler {
+                        handler.send()
+                    }
+                }
                 let rest = presses.subtracting(returns)
                 if !rest.isEmpty { superPresses(this, selector, rest, event) }
             }
@@ -2928,6 +2961,14 @@ private struct ComposerBar: View {
         action()
     }
 
+    /// A hardware keyboard's Return: the draft goes to the default button —
+    /// 💬 in a room, ➤ with Maurice. An empty draft, or a reply still being
+    /// written, and it does nothing.
+    private func sendOnReturn() {
+        guard canSend else { return }
+        submit(chat.isRoom ? onPostBubble : onSend)
+    }
+
     /// The phone puts its keyboard away at the send (ChatView.dismissKeyboard);
     /// the iPad and the Mac keep theirs.
     private var keepsKeyboardOnSend: Bool {
@@ -3169,11 +3210,12 @@ private struct ComposerBar: View {
                 .font(.system(size: kBodyFont + 2))
                 .lineLimit(2...10)
                 .focused($isFocused)
-                // Return breaks the line, everywhere: the on-screen keyboard's
-                // (which wears the plain return arrow to say so) and a hardware
-                // keyboard's on iPad and the Mac, with or without Shift. Sending
-                // is the ➤ / 💬 buttons, and ⌘Return for ➤. A Return that sent
-                // made a formatted, multi-line message impossible to type.
+                // A hardware keyboard's Return sends, as in every chat on a
+                // computer: to the default button (💬 in a room, ➤ with
+                // Maurice); Shift-Return breaks the line (Option-Return too on
+                // the Mac), ⌘Return is always ➤. The on-screen keyboard's
+                // Return still breaks the line — it wears the plain return
+                // arrow to say so — and the buttons send.
                 #if os(iOS)
                 .submitLabel(.return)
                 #endif
@@ -3196,22 +3238,31 @@ private struct ComposerBar: View {
                 }
                 // The field's own Paste (the edit menu on a touch) takes an
                 // image too, as a pending photo.
-                .background(ImagePasteEnabler { pasteImageFromClipboard() })
+                .background(ImagePasteEnabler(onPaste: { pasteImageFromClipboard() },
+                                              onReturn: { sendOnReturn() }))
                 #endif
                 // macOS: a Return (and the keypad's Enter) reaches SwiftUI's
-                // vertical TextField as a submit, not a newline. We take the key
-                // and type the line break into the field editor, at the caret.
+                // vertical TextField as a submit, not a newline. We take the key:
+                // it sends, or with Shift or Option types the line break into
+                // the field editor, at the caret. A Return that validates a
+                // composition (an input method, a dead key) is the field's.
                 // (iPad: the field's text view does it, see ImagePasteTextView.)
                 #if os(macOS)
                 .onKeyPress(phases: .down) { press in
                     guard press.key == .return || press.characters == "\u{3}" else { return .ignored }
+                    if let editor = NSApp.keyWindow?.firstResponder as? NSTextView,
+                       editor.hasMarkedText() { return .ignored }
                     // ⌘Return summons Maurice, as the ➤ button's shortcut;
                     // taken here because the field would otherwise eat it.
                     if press.modifiers.contains(.command) {
-                        submit(onSend)
+                        if canSend { submit(onSend) }
                         return .handled
                     }
-                    breakLine()
+                    if !press.modifiers.isDisjoint(with: [.shift, .option]) {
+                        breakLine()
+                        return .handled
+                    }
+                    sendOnReturn()
                     return .handled
                 }
                 #endif
@@ -3371,7 +3422,7 @@ private struct ComposerBar: View {
                     // ➤ ask Maurice · 💬 just say it to the room.
                     // In a room 💬 is the default: it sits last, under the thumb
                     // and at the end of the line and wears the accent; ➤ keeps
-                    // ⌘Return. Return itself only ever breaks the line.
+                    // ⌘Return; a hardware keyboard's Return goes to the default.
                     HStack(spacing: 8) {
                         if chat.isStreaming {
                             // ➤ has run into a square ⏹ — cancel the generation.
