@@ -175,7 +175,8 @@ describe("the people layer, a lookup on its own scale", () => {
   });
 
   test("two close candidates are both handed over, for the summaries to tell apart", () => {
-    const results = [person("melanie", 0.41), person("cyrielle-debaix", 0.41), person("barbara", 0.378), person("paola", 0.33)];
-    expect(narrowCorpusResults({ results }, "raw", { people: true }).rows.map((r: any) => r.title)).toEqual(["melanie", "cyrielle-debaix", "barbara"]);
+    // "Mon comptable" on Qwen3-Embedding 8B, 17 November 2026.
+    const results = [person("melanie", 0.530), person("safaa-chergui", 0.516), person("barbara", 0.475), person("paola", 0.43)];
+    expect(narrowCorpusResults({ results }, "raw", { people: true }).rows.map((r: any) => r.title)).toEqual(["melanie", "safaa-chergui", "barbara"]);
   });
 });

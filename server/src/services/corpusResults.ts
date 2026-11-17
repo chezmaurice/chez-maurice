@@ -31,28 +31,30 @@
  *  questions against Candide's index through the gateway, eight the corpus
  *  holds an answer to and eight it does not, each against both layers, and
  *  every pair is labelled on the title of its best hit rather than on the
- *  question. On Qwen3-Embedding 0.6B at 1024 dimensions, the two families do
- *  not overlap:
+ *  question. On Qwen3-Embedding 8B at 1024 dimensions (Scaleway, since 17
+ *  November 2026):
  *
- *    a real answer  0.540 … 0.782   (lowest: "US Politics and Corruption",
- *                                    asked which books on American democracy)
- *    nothing to say 0.389 … 0.516   (highest: "Itinéraire du voyage en Chine",
- *                                    asked how to change a timing belt)
+ *    a real answer  0.581 … 0.759   (lowest: the garden's "Trains" note,
+ *                                    asked what a Belgian rail pass costs)
+ *    nothing to say 0.352 … 0.526   (highest: a flashcards conversation,
+ *                                    asked what marketplace error 0020 means)
  *
- *  0.35 sat far below both, so a question the index knew nothing about still
- *  came back with five sources: asked about Scoodle and Plantyn on 21 September
- *  2026, it answered with April's agendas and a conversation about dreams, all
- *  between 0.411 and 0.514. The floor now sits in the gap.
+ *  Two rows sit in between and were read as noise: asked how the fleet's
+ *  backup works, the garden answers 0.548 with the domains note and the
+ *  conversations 0.566 with an unrelated one. The floor sits above them.
  *
- *  The gap is 0.024 wide on this sample and on one member's index. It is the
- *  measurement that matters, not the number: re-run the script after an
- *  embedding-model change — the scale moves with the model — and after the
- *  index grows enough to be a different thing.
+ *  On Qwen3-Embedding 0.6B (September 2026) the same bench gave 0.540 … 0.782
+ *  against 0.389 … 0.516, and the floor was 0.53; 0.35 before that let a
+ *  question the index knew nothing about (Scoodle and Plantyn, 21 September
+ *  2026) come back with five sources. It is the measurement that matters, not
+ *  the number: re-run the script after an embedding-model change — the scale
+ *  moves with the model — and after the index grows enough to be a different
+ *  thing.
  *
  *  The conversation layer scores systematically higher than the garden, noise
- *  included (0.46–0.52 against 0.39–0.45), which is why a floor per layer was
- *  considered. It buys nothing: one floor above both separates them already. */
-const SCORE_FLOOR = 0.53;
+ *  included, which is why a floor per layer was considered. It buys nothing:
+ *  one floor above both separates them already. */
+const SCORE_FLOOR = 0.55;
 
 /** And no further than this below the best hit: a search that found something
  *  good should not also carry what it merely brushed against. */
@@ -79,12 +81,19 @@ export interface NarrowOptions {
  *  against a fiche scores lower than a question against a passage, and the
  *  general floor threw the answer away — Thomas's fiche at 0.487, the
  *  accountant's at 0.410, dropped under 0.53 (27 September 2026; the model
- *  said there was no fiche and went to the mailbox). Measured on the owner's
- *  140 fiches: the right person scores 0.38 to 0.54 (Jonathan 0.384, the
- *  violin teacher 0.539); a role nobody holds tops out at 0.30 (a dentist)
- *  to 0.35 (a plumber). And close to the best only: a hit carries its fiche's
- *  summary, from which the model tells a namesake apart. */
-const PEOPLE_FLOOR = 0.37;
+ *  said there was no fiche and went to the mailbox).
+ *
+ *  On Qwen3-Embedding 8B (17 November 2026, the owner's fiches) the two
+ *  families overlap, and no floor separates them: a name finds its person at
+ *  0.42 to 0.53 (Jonathan 0.419, Coleen 0.420, Thomas 0.508, the accountant
+ *  0.530), while a role nobody holds still brings someone at 0.36 to 0.47 (a
+ *  dentist 0.364, a plumber 0.409, a car mechanic 0.471). The floor keeps
+ *  every name; what keeps a namesake or a stranger from being taken for the
+ *  answer is the spread — close to the best only — and the fiche's summary
+ *  each hit carries, from which the model tells them apart. Roles rank worse
+ *  than on the 0.6B: Adriano's violin teacher comes second (0.467) behind
+ *  someone who is not. */
+const PEOPLE_FLOOR = 0.40;
 const PEOPLE_SPREAD = 0.06;
 
 export interface NarrowedCorpus {
