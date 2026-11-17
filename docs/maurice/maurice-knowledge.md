@@ -1,6 +1,6 @@
 ---
 title: Knowledge capabilities
-date: '2026-11-16'
+date: '2026-11-17'
 flags: []
 locale: en
 description: 'What Maurice can do with knowledge: a member's notes (Markdown notes, media, journal),
@@ -74,7 +74,7 @@ Reading them back — list, one article, its full text, highlights, a note — i
 
 Reading a book chapter or an article in Carnet, you can **highlight** a passage (with a note and a colour; stored in SQLite, per member, anchored to the chapter or the fiche, and to the view — full text or summary — the offsets belong to), and you can file a **résonance**: "this feeds my *Sugar* fiche." A résonance is a dated block written under `## Résonances` on the *target's* working face, with a literal `[[wiki-link]]` back to the source — so Obsidian resolves it natively, computes the backlink and the graph, and the site renders the same syntax. There is no link table; the markdown is the truth.
 
-**Maurice reads them, and is asked about them** (16 November 2026). Highlights live in `life.db`, not in the garden (which gets them only from the nightly export), so a conversation held from a fiche used not to see them. The fiche as the model reads it (`ficheText`, `composer/fiches.ts`) now carries a `## Highlights` section — the member's passages on that book or article, in reading order, each with its note and, when it has one, the conversation it was talked over in; the member's own fiches only, a shared entry's highlights being its owner's reading. From Carnet's book reader a passage can be talked over with Maurice: the highlight records that conversation (`highlights.conversation_id`), the list of highlights returns its title and, once the conversation has settled, the summary written on the fiche, and the export links it. Articles have no such button yet.
+**Maurice reads them, and is asked about them** (16 November 2026). Highlights live in `life.db`, not in the garden (which gets them only from the nightly export), so a conversation held from a fiche used not to see them. The fiche as the model reads it (`ficheText`, `composer/fiches.ts`) now carries a `## Highlights` section — the member's passages on that book or article, in reading order, each with its note and, when it has one, the conversation it was talked over in; the member's own fiches only, a shared entry's highlights being its owner's reading. From Carnet's book reader a passage can be talked over with Maurice: the highlight records that conversation (`highlights.conversation_id`), the list of highlights returns its title and, once the conversation has settled, the summary written on the fiche, and the export links it. The article reader does the same since 17 November 2026 (`article_highlights.conversation_id`): the conversation is held from the article's entry, its fiche loaded, with the passage and its note as *Where this conversation starts*; not on an article another member owns.
 
 ## Flashcards *(ships, September 2026)*
 
