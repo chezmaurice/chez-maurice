@@ -107,4 +107,39 @@ counting.sizes.clear()
 result = asyncio.run(provider.embed_batch(["mot " * 60_000]))
 assert len(result.vectors) == 1 and counting.sizes[0] <= embedder._REQUEST_TOKENS, counting.sizes
 
+# The provider's tokeniser weighs more than ours: a refusal for length splits
+# the request, and the vectors still come back in the texts' order.
+from openai import BadRequestError  # noqa: E402
+
+
+class Strict:
+    """Refuses any request past 1 000 characters, as Scaleway refuses past
+    its context; each vector carries its text's length to check the order."""
+
+    def __init__(self) -> None:
+        self.refused = 0
+
+    async def create(self, **kwargs):
+        if sum(len(t) for t in kwargs["input"]) > 1000:
+            self.refused += 1
+            request = httpx.Request("POST", "https://api.scaleway.ai/v1/embeddings")
+            raise BadRequestError(
+                "This model's maximum context length is 40960 tokens.",
+                response=httpx.Response(400, request=request),
+                body=None,
+            )
+        return SimpleNamespace(data=[SimpleNamespace(embedding=[float(len(t)), 0.0, 0.0, 0.0]) for t in kwargs["input"]])
+
+
+strict = Strict()
+provider.client = SimpleNamespace(embeddings=strict)
+texts = [("x" * n) for n in (300, 200, 400, 100, 250)]
+result = asyncio.run(provider.embed_batch(texts))
+assert strict.refused > 0
+assert [v[0] for v in result.vectors] == [300.0, 200.0, 400.0, 100.0, 250.0], [v[0] for v in result.vectors]
+
+# One text too long alone is halved until it passes.
+result = asyncio.run(provider.embed_batch(["y" * 3000]))
+assert len(result.vectors) == 1 and result.vectors[0][0] <= 1000, result.vectors
+
 print("ok")

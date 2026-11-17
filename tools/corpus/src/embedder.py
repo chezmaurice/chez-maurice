@@ -31,7 +31,7 @@ from dataclasses import dataclass
 from typing import Iterable, List, Literal, Optional
 from urllib.parse import urlparse
 
-from openai import AsyncOpenAI, RateLimitError
+from openai import AsyncOpenAI, BadRequestError, RateLimitError
 
 from .config import EmbeddingConfig
 
@@ -164,11 +164,7 @@ class Embedder:
             return EmbeddingResult(vectors=[], model=self.config.model)
         vectors: List[List[float]] = []
         for group in self._requests([self._fit(self.prefixed(t, kind)) for t in cleaned]):
-            kwargs: dict = {"model": self.config.model, "input": group}
-            if self.dimensions:
-                kwargs["dimensions"] = self.dimensions
-            response = await self._create(kwargs, kind)
-            vectors.extend(item.embedding for item in response.data)
+            vectors.extend(await self._embed_group(group, kind))
         expected = self.config.vector_size
         if vectors and expected and len(vectors[0]) != expected:
             raise RuntimeError(
@@ -206,6 +202,28 @@ class Embedder:
                 groups.append([text])
                 size = tokens
         return groups
+
+    async def _embed_group(self, group: List[str], kind: Kind) -> List[List[float]]:
+        """One request; refused as too long, two halves of it. The count above
+        is cl100k's, and Qwen's own tokeniser can weigh a text half again as
+        much (48 683 tokens for a request counted at under 30 000, 17 November
+        2026): the provider's refusal is the only exact measure. A single text
+        refused alone is halved in length."""
+        kwargs: dict = {"model": self.config.model, "input": group}
+        if self.dimensions:
+            kwargs["dimensions"] = self.dimensions
+        try:
+            response = await self._create(kwargs, kind)
+        except BadRequestError as err:
+            if "context length" not in str(err):
+                raise
+            if len(group) > 1:
+                half = len(group) // 2
+                return await self._embed_group(group[:half], kind) + await self._embed_group(group[half:], kind)
+            if len(group[0]) < 2:
+                raise
+            return await self._embed_group([group[0][: len(group[0]) // 2]], kind)
+        return [item.embedding for item in response.data]
 
     async def _create(self, kwargs: dict, kind: Kind):
         """The request, waiting out the provider's per-minute quota.
