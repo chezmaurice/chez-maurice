@@ -41,6 +41,10 @@ logger = logging.getLogger(__name__)
 # window to reopen, a few times over; a query only briefly (see `_create`).
 _INDEX_WAIT_SECONDS = 600.0
 _QUERY_WAIT_SECONDS = 3.0
+# How much input one request may carry, counted with cl100k (the embedder's
+# tiktoken) against qwen3-embedding-8b's 40 960-token context: the margin
+# covers the two tokenisers disagreeing on French.
+_REQUEST_TOKENS = 30_000
 _DURATION = re.compile(r"(\d+(?:\.\d+)?)(ms|s|m|h)")
 _UNIT = {"ms": 0.001, "s": 1.0, "m": 60.0, "h": 3600.0}
 
@@ -158,11 +162,13 @@ class Embedder:
         cleaned = [t.strip() for t in texts if t.strip()]
         if not cleaned:
             return EmbeddingResult(vectors=[], model=self.config.model)
-        kwargs: dict = {"model": self.config.model, "input": [self.prefixed(t, kind) for t in cleaned]}
-        if self.dimensions:
-            kwargs["dimensions"] = self.dimensions
-        response = await self._create(kwargs, kind)
-        vectors = [item.embedding for item in response.data]
+        vectors: List[List[float]] = []
+        for group in self._requests([self._fit(self.prefixed(t, kind)) for t in cleaned]):
+            kwargs: dict = {"model": self.config.model, "input": group}
+            if self.dimensions:
+                kwargs["dimensions"] = self.dimensions
+            response = await self._create(kwargs, kind)
+            vectors.extend(item.embedding for item in response.data)
         expected = self.config.vector_size
         if vectors and expected and len(vectors[0]) != expected:
             raise RuntimeError(
@@ -174,6 +180,32 @@ class Embedder:
         # store pins and what it checks against the config at every open, so the
         # two have to be the same string.
         return EmbeddingResult(vectors=vectors, model=self.config.model)
+
+    def _fit(self, text: str) -> str:
+        """One text the provider will take: Scaleway refuses a request whose
+        input passes the model's context (40 960 tokens for
+        qwen3-embedding-8b), and a single message pasted whole can. The tail
+        goes; the opening is what a search would match on anyway."""
+        tokens = self.count_tokens(text)
+        if tokens <= _REQUEST_TOKENS:
+            return text
+        return text[: int(len(text) * _REQUEST_TOKENS / tokens)]
+
+    def _requests(self, texts: List[str]) -> List[List[str]]:
+        """The texts cut into requests that each stay under the context: the
+        limit counts the whole input, not each text. Fifty conversation chunks
+        came to 53 926 tokens on 17 November 2026, and the batch was refused."""
+        groups: List[List[str]] = []
+        size = 0
+        for text in texts:
+            tokens = self.count_tokens(text)
+            if groups and size + tokens <= _REQUEST_TOKENS:
+                groups[-1].append(text)
+                size += tokens
+            else:
+                groups.append([text])
+                size = tokens
+        return groups
 
     async def _create(self, kwargs: dict, kind: Kind):
         """The request, waiting out the provider's per-minute quota.

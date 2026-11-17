@@ -85,4 +85,26 @@ assert slept == [], slept
 provider.client = SimpleNamespace(embeddings=Embeddings(refusals=1, reset="1s"))
 assert asyncio.run(provider.embed_query("q")) is not None and slept == [1.5], slept
 
+# Requests stay under the model's context: the limit counts the whole input.
+class Counting:
+    def __init__(self) -> None:
+        self.sizes: list[int] = []
+
+    async def create(self, **kwargs):
+        self.sizes.append(sum(provider.count_tokens(t) for t in kwargs["input"]))
+        return SimpleNamespace(data=[SimpleNamespace(embedding=[0.0] * 4) for _ in kwargs["input"]])
+
+
+counting = Counting()
+provider.client = SimpleNamespace(embeddings=counting)
+paragraph = "Une phrase de conversation, assez longue pour peser. " * 80
+result = asyncio.run(provider.embed_batch([paragraph] * 50))
+assert len(result.vectors) == 50, len(result.vectors)
+assert len(counting.sizes) > 1 and max(counting.sizes) <= embedder._REQUEST_TOKENS, counting.sizes
+
+# A single text past the context is cut, not refused.
+counting.sizes.clear()
+result = asyncio.run(provider.embed_batch(["mot " * 60_000]))
+assert len(result.vectors) == 1 and counting.sizes[0] <= embedder._REQUEST_TOKENS, counting.sizes
+
 print("ok")
