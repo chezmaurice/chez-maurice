@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional
 
 from tools.shared.ai_consent import allowed as ai_allowed
 
+from .calibre_meta import book_identity
 from .chunker import Chunk, paragraph_chunks, fixed_chunks, heading_chunks, semantic_chunks
 from .config import SourceConfig
 from .embedder import Embedder, remote_provider
@@ -94,8 +95,22 @@ async def process_file(
     base_metadata["source"] = source_name
     base_metadata["source_type"] = metadata_cfg.source_type
 
+    # A book's chapters answer to `title` and `author` like every other
+    # document, and carry them in their head, so a question naming the book
+    # lands on its chapters and not on its title page (calibre_meta.py).
+    is_book = metadata_cfg.source_type == "book" and bool(base_metadata.get("book_uuid"))
+    if is_book:
+        identity = await asyncio.to_thread(
+            book_identity,
+            str(base_metadata["book_uuid"]),
+            str(base_metadata.get("book_title") or ""),
+            source_config.path,
+        )
+        for key, value in identity.items():
+            base_metadata.setdefault(key, value)
+
     from_frontmatter = metadata_cfg.extract_from_frontmatter
-    head = build_metadata_head(base_metadata) if from_frontmatter else ""
+    head = build_metadata_head(base_metadata) if from_frontmatter or is_book else ""
     prose = build_metadata_prose(base_metadata) if from_frontmatter else ""
 
     # A blank chunk is never useful and is actively harmful: the embedder drops

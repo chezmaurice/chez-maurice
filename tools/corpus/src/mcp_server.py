@@ -85,7 +85,9 @@ class CorpusMCPServer:
                         "articles | movies | games | music | series | podcasts | people), author, "
                         "publication, title, tags, year, published_at, status, locale. A "
                         "conversation chunk also carries conversation_id, conversation_title, "
-                        "message_id, role and date.\n\n"
+                        "message_id, role and date. A book chunk (source_type book) carries "
+                        "title, author, book_title and chapter — {\"source_type\": \"book\", "
+                        "\"title\": \"Being You\"} reads one book's chapters.\n\n"
                         'Examples: {"source_type": "fiche", "collection": "books"} — only book '
                         'fiches. {"author": "Seth"} — anything by an author whose name contains '
                         'Seth. {"collection": ["articles", "podcasts"], "publication": "Monde"}. '
