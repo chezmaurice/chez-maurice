@@ -1,4 +1,4 @@
-import { api, connect, ext, followColorScheme, forget, isConfigured, isSafari, loadConfig, originPattern, parseConnectInput } from "./ext.js";
+import { api, ext, followColorScheme, forget, holdConnect, isConfigured, isSafari, loadConfig, originPattern, parseConnectInput, pendingConnect } from "./ext.js";
 import { lang, t } from "./strings.js";
 
 /**
@@ -76,37 +76,67 @@ function showConnect() {
       }
     });
   }
+  resumeConnect();
+}
+
+/**
+ * A connection begun in an earlier popup — the one the permission question
+ * closed. Allowed since: finish it. Refused, unanswered or failed: the
+ * address and the code are back in their fields, and one press retries.
+ */
+async function resumeConnect() {
+  const pending = await pendingConnect().catch(() => null);
+  if (!pending) return;
+  el("address").value = new URL(pending.serverUrl).host;
+  el("code").value = pending.code;
+  if (pending.failed) return setStatus("connect-status", connectError(pending.failed), "bad");
+  const granted = ext.permissions?.contains
+    ? await ext.permissions.contains({ origins: [originPattern(pending.serverUrl)] }).catch(() => false)
+    : true;
+  if (granted) finishConnect(Promise.resolve(true));
 }
 
 function connectClicked() {
   const { serverUrl, code } = parseConnectInput(el("address").value, el("code").value);
   if (!serverUrl) return setStatus("connect-status", t("needAddress"), "bad");
   if (!code) return setStatus("connect-status", t("needCode"), "bad");
+  // Set aside before the question: in Chrome and Firefox it closes this popup,
+  // and the background finishes the connection when the answer is yes.
+  const holding = holdConnect(serverUrl, code);
   // Asked for here, synchronously inside the click: browsers grant a host
   // permission only from a user gesture, and an await before it spends it.
   const asked = ext.permissions?.request
     ? ext.permissions.request({ origins: [originPattern(serverUrl)] })
     : Promise.resolve(true);
-  finishConnect(asked, serverUrl, code);
+  finishConnect(holding.then(() => asked));
 }
 
-async function finishConnect(asked, serverUrl, code) {
+async function finishConnect(asked) {
   if (!(await asked.catch(() => false))) return setStatus("connect-status", t("permissionDenied"), "bad");
   el("connect-button").disabled = true;
   setStatus("connect-status", t("connecting"), "muted");
+  // The background does the trading, so that it happens once whether this
+  // popup lived through the question or not.
+  let reply;
   try {
-    config = await connect(serverUrl, code);
+    reply = await ext.runtime.sendMessage({ type: "finish-connect" });
   } catch (err) {
-    el("connect-button").disabled = false;
-    const message =
-      err.message === "not-maurice" ? t("notMaurice")
-      : err.status === 401 || err.status === 400 ? t("badCode")
-      : err.status ? `${t("unreachable")} (${err.status})`
-      : t("unreachable");
-    return setStatus("connect-status", message, "bad");
+    reply = { ok: false, error: String(err?.message ?? err) };
   }
-  setStatus("connect-status", "", "");
-  await showMain();
+  config = await loadConfig();
+  if (isConfigured(config)) {
+    setStatus("connect-status", "", "");
+    return showMain();
+  }
+  el("connect-button").disabled = false;
+  setStatus("connect-status", reply?.ok ? t("permissionDenied") : connectError({ message: reply?.error, status: reply?.status }), "bad");
+}
+
+function connectError({ message, status }) {
+  return message === "not-maurice" ? t("notMaurice")
+    : status === 401 || status === 400 ? t("badCode")
+    : status ? `${t("unreachable")} (${status})`
+    : t("unreachable");
 }
 
 // ── Account ──────────────────────────────────────────────────────

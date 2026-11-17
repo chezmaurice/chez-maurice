@@ -37,8 +37,12 @@ a link, `https://<household>/join?code=ABCD-EFGH`, good once for ten minutes.
 Paste it into the extension (or type the address and the code) and press
 **Connect**. The code is traded for a session of this browser's own
 (`POST /api/auth/enroll`); the browser asks once for permission to reach that
-one address. **Disconnect**, in the extension's account view, ends that
-session (`POST /api/auth/logout`).
+one address. That question closes the popup in Chrome and Firefox, so the
+address and the code are set aside first (`storage.session`) and the
+background finishes the connection when the answer is yes — the badge says
+✓; a popup opened before that picks it up, with the fields filled in again.
+**Disconnect**, in the extension's account view, ends that session
+(`POST /api/auth/logout`).
 
 ## Use it
 

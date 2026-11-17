@@ -135,6 +135,51 @@ export async function connect(serverUrl, code) {
   return config;
 }
 
+/**
+ * A connection waiting on the browser's permission.
+ *
+ * The question about the household's address closes the popup in Chrome and
+ * Firefox — a popup dies the moment it loses focus — so the popup that asked
+ * is gone by the time the member says yes. The address and the code are set
+ * aside first; the background finishes the connection when the permission
+ * arrives, and a popup opened later picks up whatever is left. In
+ * `storage.session` where there is one: the code is good once, for ten
+ * minutes, and has no business on disk.
+ */
+const held = () => ext.storage.session ?? ext.storage.local;
+
+export function holdConnect(serverUrl, code) {
+  return held().set({ pendingConnect: { serverUrl, code } });
+}
+
+export async function pendingConnect() {
+  const { pendingConnect } = await held().get("pendingConnect");
+  return pendingConnect ?? null;
+}
+
+/**
+ * Trade the held code if the address is now allowed. Returns the new config,
+ * or null when there is nothing to do; a failure stays held, with its reason,
+ * for the next popup to show beside the address and the code.
+ */
+export async function finishHeldConnect() {
+  const pending = await pendingConnect();
+  if (!pending || pending.failed) return null;
+  const granted = ext.permissions?.contains
+    ? await ext.permissions.contains({ origins: [originPattern(pending.serverUrl)] }).catch(() => false)
+    : true;
+  if (!granted) return null;
+  try {
+    const config = await connect(pending.serverUrl, pending.code);
+    await held().remove("pendingConnect");
+    return config;
+  } catch (err) {
+    const failed = { message: err.message, status: err.status ?? null };
+    await held().set({ pendingConnect: { ...pending, failed } });
+    throw err;
+  }
+}
+
 /** A request to Maurice with the member's session. */
 export function api(config, pathname, options) {
   return request(config.serverUrl, config.token, pathname, options);

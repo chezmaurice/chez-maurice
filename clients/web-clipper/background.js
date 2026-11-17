@@ -11,11 +11,35 @@
  * manifest names this file for both.
  */
 
-import { api, ext, followColorScheme, loadConfig } from "./ext.js";
+import { api, ext, finishHeldConnect, followColorScheme, loadConfig } from "./ext.js";
 
 followColorScheme();
 
+/**
+ * The connection the popup set aside, finished here: the permission question
+ * closed the popup that asked it. One attempt at a time — the popup, if it
+ * survived, asks for the same thing, and the code is good only once.
+ */
+let finishing = null;
+
+function finishConnect() {
+  finishing ??= finishHeldConnect().finally(() => { finishing = null; });
+  return finishing;
+}
+
+ext.permissions?.onAdded?.addListener(() => {
+  finishConnect()
+    .then((config) => { if (config) flashBadge("✓", "#2b7a3d"); })
+    .catch(() => flashBadge("!", "#c0362c"));
+});
+
 ext.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (message?.type === "finish-connect") {
+    finishConnect()
+      .then((config) => sendResponse({ ok: true, connected: Boolean(config) }))
+      .catch((error) => sendResponse({ ok: false, error: String(error?.message ?? error), status: error?.status ?? null }));
+    return true;
+  }
   if (message?.type !== "save-article") return false;
 
   saveArticle(message.payload)
