@@ -257,10 +257,11 @@ Each member has folders and files (5 GB each), in **Settings**: text, images, PD
 - In a turn Maurice searches each layer in the same round, weighted in this order: what the member **kept**, what they **said**, what they **read**. A question about a person (by name or by role, "my accountant") opens that person's fiche first.
 - Weak results are dropped rather than padded; the current conversation is excluded; source cards show what Maurice read.
 - Kept current as notes are written, after each reply, and by a nightly reconcile (03:00) that prunes deleted material.
-- Embeddings: Qwen3-Embedding (multilingual) — locally through Ollama at home, on Scaleway for hosted households. Changing the model means a full re-index.
+- A book is found by its **title** and its **author**, as a filter or in the question; each passage names its chapter.
+- Embeddings: **Qwen3-Embedding 8B on Scaleway** (multilingual), at home as on hosted households — so the text of notes and conversations goes to Scaleway to be encoded, and the AI-provider consent covers it; a member who declined Scaleway has nothing of theirs indexed or searched. A home install can still run the small Qwen3-Embedding locally through Ollama. Changing the model means a full re-index.
 - Never used in rooms; a model is only ever given its reading tools.
 
-*Gaps:* if indexing a note fails, only a log knows; mail is not in the corpus.
+*Gaps:* if indexing a note fails, only a log knows; mail is not in the corpus; a person sought by role ("my plumber") can bring back someone who is not, whom the fiche's summary has to rule out.
 
 *Detail:* `knowledge`, `tools`.
 
