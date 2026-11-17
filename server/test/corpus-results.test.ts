@@ -50,6 +50,17 @@ describe("what reaches the model", () => {
     expect(n.text).not.toContain("member_id");
   });
 
+  test("a book passage names its book, its author and its chapter", () => {
+    const n = narrowCorpusResults({ results: [hit({
+      source_type: "book", title: "Being You : A New Science of Consciousness", author: "Anil Seth",
+      book_title: "Being You : A New Science of Consciousness (9780571337736)", chapter: "0012-3_ Phi", date: undefined,
+    })] }, "raw");
+    const [row] = parse(n.text).results;
+    expect(row.source).toBe("Being You : A New Science of Consciousness");
+    expect(row.who).toBe("Anil Seth");
+    expect(row.chapter).toBe("0012-3_ Phi");
+  });
+
   test("a passage is cut, not carried whole", () => {
     const long = "phrase. ".repeat(400);
     const [row] = parse(narrowCorpusResults({ results: [hit({ text: long })] }, "raw").text).results;

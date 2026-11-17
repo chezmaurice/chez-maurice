@@ -129,6 +129,10 @@ function forModel(row: any): Record<string, unknown> {
   if (when) out.when = when;
   const who = first(row, ["author", "publication", "host", "director"]);
   if (who) out.who = who;
+  // A book passage names its chapter, so an answer can say where it is
+  // ("0012-3_ Phi" reads as chapter 3, "Phi").
+  const chapter = kind === "book" ? str(row?.chapter) : "";
+  if (chapter) out.chapter = chapter;
   const text = str(row?.text).replace(/\s+/g, " ");
   out.passage = text.length > PASSAGE_CHARS ? text.slice(0, PASSAGE_CHARS).trimEnd() + "…" : text;
   if (typeof row?.score === "number") out.score = Math.round(row.score * 100) / 100;

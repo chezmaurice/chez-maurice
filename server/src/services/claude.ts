@@ -7,7 +7,7 @@ import { hasWebSearch, webSearch, formatWebSearch } from "./webSearch";
 import { READ_WEB_PAGE_TOOL, readWebPage, formatWebPage, webPageCard } from "./webPage";
 import { corpusSourceCard, webSourceCard } from "./sourceCards";
 import { narrowCorpusResults } from "./corpusResults";
-import { newSearchLedger, allowSearch, recordSearch, type SearchLedger } from "./searchBudget";
+import { newSearchLedger, allowSearch, recordSearch, filterMissNotice, type SearchLedger } from "./searchBudget";
 import { McpSession, type McpTool } from "./mcpClient";
 import { resolveToText, resolveAttachments, getSpec } from "./composer/specs";
 import { noteComposer, noteTool, startReview } from "./reviewFooter";
@@ -256,7 +256,8 @@ export function corpusNotice(toolNames: string[]): string {
     `Look at the people before the mailbox, never in the same round: a mail tool called beside this search is not run${toolNames.includes("garden__get_fiche") ? `; for more than the summary, open the fiche (garden__get_fiche, resource_collection "people")` : ""}.\n` +
     `- their notes, what they chose to keep on a subject: filters {"source_type": ["note", "fiche", "card", "fragment"]}\n` +
     `- what they have already said to you: filters {"source_type": "conversation"}\n` +
-    `- what they have only read or gathered, and rarely needs asking: filters {"source_type": ["book", "dossier", "thought"]}\n` +
+    `- what they have only read or gathered, and rarely needs asking: filters {"source_type": ["book", "dossier", "thought"]}; ` +
+    `for one book, {"source_type": "book", "title": "<its title>"} with the question itself as the query — the book's name in the query finds its title page\n` +
     `Their notes and the conversations are the usual pair; the people join them whenever someone is involved. Weigh what comes back in that same order — what they wrote down themselves outranks what they once said in passing, which outranks a page from someone else's book. ` +
     `Say where something came from when it matters, and say when something comes from a brief rather than from a search you just ran.\n` +
     `A result may carry "people": who someone its passage mentions is to them now, from that person's fiche, dated (since → until). A passage can be years old — a colleague it places at a company may have left since — so where the two differ, the person's line is what holds today; say so. A line marked [not confirmed yet] is Maurice's reading of their mail: use it, and say it is unconfirmed.\n` +
@@ -725,7 +726,13 @@ async function executeTool(
         // cards the app draws are built from the same surviving rows, so what
         // the member sees under the reply is what the model actually read.
         if (!r.isError && name === "corpus__search") {
-          ctx.searches && recordSearch(ctx.searches, "corpus", input?.query || "", input?.filters);
+          // Nothing back at all, before any narrowing, means the filters
+          // matched no document — not that no text answers (searchBudget.ts).
+          const raw = (data as any)?.results;
+          const filtered = !!input?.filters && typeof input.filters === "object" && Object.keys(input.filters).length > 0;
+          const missed = filtered && Array.isArray(raw) && raw.length === 0;
+          ctx.searches && recordSearch(ctx.searches, "corpus", input?.query || "", input?.filters, !missed);
+          if (missed) return { text: filterMissNotice(input.filters), isError: false, data };
           const narrowed = narrowCorpusResults(data, text, { conversationId: ctx.conversationId, people: wantsPeople(name, input) });
           const card = narrowed.rows.length ? corpusSourceCard({ results: narrowed.rows }, input?.query) : null;
           // A hit in a person fiche the member has not confirmed: the model

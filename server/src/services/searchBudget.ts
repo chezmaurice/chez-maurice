@@ -62,14 +62,21 @@ const EMPTY = new Set(
     "it its this that these those do does did i you we they my your our their").split(" "),
 );
 
+/** Corpus searches that matched nothing *because of their filters* and are
+ *  not charged, per turn. Past this, a miss costs like any search: a model
+ *  guessing keys one after another is circling too. */
+const FREE_MISSES = 2;
+
 export interface SearchLedger {
   spent: Record<SearchFamily, number>;
+  /** Filter misses let through without charge (see FREE_MISSES). */
+  misses: number;
   /** One entry per search actually run this turn, newest last. */
   past: { family: SearchFamily; words: Set<string>; query: string; scope: string }[];
 }
 
 export function newSearchLedger(): SearchLedger {
-  return { spent: { web: 0, corpus: 0 }, past: [] };
+  return { spent: { web: 0, corpus: 0 }, misses: 0, past: [] };
 }
 
 /** The content words of a query: lowercased, unaccented, punctuation gone,
@@ -131,10 +138,37 @@ export function allowSearch(ledger: SearchLedger, family: SearchFamily, query: s
 }
 
 /** Called once a search has actually run. Kept separate from `allowSearch` so
- *  a refused call never counts against the budget it was refused by. */
-export function recordSearch(ledger: SearchLedger, family: SearchFamily, query: string, filters?: unknown): void {
+ *  a refused call never counts against the budget it was refused by.
+ *
+ *  `found` is whether anything at all came back, before any narrowing. A
+ *  semantic search with no filters always returns its nearest chunks, so an
+ *  empty answer means the filters matched no document: the question was never
+ *  asked of any text. On 17 November 2026 a turn after the exact passages of
+ *  *Being You* filtered three times on keys the book's chunks did not carry,
+ *  got three empty lists, and had spent its budget before asking once with
+ *  the right key. Such a miss is remembered — the same search again is still
+ *  a repeat — but not charged, up to FREE_MISSES a turn. */
+export function recordSearch(ledger: SearchLedger, family: SearchFamily, query: string, filters?: unknown, found = true): void {
+  const scope = scopeOf(filters);
+  ledger.past.push({ family, words: words(query), query, scope });
+  if (!found && scope && ledger.misses < FREE_MISSES) {
+    ledger.misses += 1;
+    return;
+  }
   ledger.spent[family] += 1;
-  ledger.past.push({ family, words: words(query), query, scope: scopeOf(filters) });
+}
+
+/** What the model reads after a corpus search its filters emptied: which
+ *  keys each kind of document carries, and that the miss was free. */
+export function filterMissNotice(filters: unknown): string {
+  return (
+    `Nothing in the corpus carries these filters: ${JSON.stringify(filters)}. No text was searched, ` +
+    `and this did not count against your searches. The keys each kind carries — ` +
+    `a book chapter (source_type "book"): title, author, book_title, chapter; ` +
+    `a note, fiche, card or fragment: its frontmatter (title, author, collection, tags, year…); ` +
+    `a conversation: conversation_id, conversation_title, date. ` +
+    `A string matches as a substring. Ask again with a key the kind carries, or drop the one that matched nothing.`
+  );
 }
 
 /** A search's filters as one comparable string: keys sorted, list values

@@ -140,3 +140,40 @@ test("a refused search does not spend the budget it was refused by", () => {
   expect(ledger.spent.web).toBe(1);
   expect(allowSearch(ledger, "web", "tout autre chose").run).toBe(true);
 });
+
+// "Est-ce que tu peux trouver les passages exacts dans Being You ?" (17
+// November 2026): one search, then three filtered on keys the book's chunks
+// did not carry — three empty lists — and the budget was gone.
+describe("a search its filters emptied", () => {
+  test("is not charged, twice a turn", () => {
+    const ledger = newSearchLedger();
+    recordSearch(ledger, "corpus", "unité de la conscience", { source_type: "book", author: "Seth" }, false);
+    recordSearch(ledger, "corpus", "rivalité binoculaire", { source_type: "book", title: "Being You" }, false);
+    expect(ledger.spent.corpus).toBe(0);
+    recordSearch(ledger, "corpus", "les couches du soi", { source_type: "book", author: "Anil" }, false);
+    expect(ledger.spent.corpus).toBe(1);
+  });
+
+  test("is still remembered, so the same miss again is a repeat", () => {
+    const ledger = newSearchLedger();
+    const filters = { source_type: "book", author: "Seth" };
+    recordSearch(ledger, "corpus", "unité de la conscience intégrée", filters, false);
+    expect(allowSearch(ledger, "corpus", "unité conscience intégrée", filters).run).toBe(false);
+    // With other filters it is another search.
+    expect(allowSearch(ledger, "corpus", "unité conscience intégrée", { source_type: "book", book_title: "Being You" }).run).toBe(true);
+  });
+
+  test("an unfiltered empty search is charged: there was nothing to blame", () => {
+    const ledger = newSearchLedger();
+    recordSearch(ledger, "corpus", "quoi que ce soit", undefined, false);
+    expect(ledger.spent.corpus).toBe(1);
+  });
+
+  test("the notice names the keys a book carries", async () => {
+    const { filterMissNotice } = await import("../src/services/searchBudget");
+    const text = filterMissNotice({ source_type: "book", author: "Seth" });
+    expect(text).toContain('"author":"Seth"');
+    expect(text).toContain("book_title");
+    expect(text).toContain("did not count");
+  });
+});
