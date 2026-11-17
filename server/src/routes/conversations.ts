@@ -40,6 +40,7 @@ import { linkOnFicheInBackground } from "../../data-api/services/entryConversati
 import { saveSpec } from "../services/composer/specs";
 import type { BookFocus } from "../services/composer/weights";
 import { attachConversation, getHighlight, type Highlight } from "../../data-api/services/highlights";
+import { attachArticleConversation, getArticleHighlight, type ArticleHighlight } from "../../data-api/services/articleHighlights";
 import { gardenFor } from "../../data-api/services/gardenFiche";
 import { entryForBook, EntryWriteError } from "../../data-api/services/gardenWrite";
 import { ConversationGiftError, exportConversation } from "../services/conversationGift";
@@ -122,7 +123,7 @@ conversations.get("/", (c) => {
 // ── POST /api/conversations ─────────────────────────────────────
 
 conversations.post("/", async (c) => {
-  const { maurice_id, entry, book, chapter, highlight } = await c.req.json().catch(() => ({}));
+  const { maurice_id, entry, book, chapter, highlight, article_highlight } = await c.req.json().catch(() => ({}));
   const uid = c.get("userId");
   // A Maurice is private to its creator — can't bind a thread to someone else's.
   if (!canUseMaurice(maurice_id ?? null, uid)) return c.json({ error: "Not found" }, 404);
@@ -159,13 +160,25 @@ conversations.post("/", async (c) => {
       return c.json({ error: (e as Error).message }, e instanceof EntryWriteError ? e.status : 500);
     }
   }
+  // Held from Carnet's article reader, on a passage just highlighted there:
+  // the member's own article, and a highlight of theirs on it (16 November
+  // 2026). An article given from another household is read in its owner's
+  // notes and has no highlights of the reader's here.
+  let articlePassage: ArticleHighlight | null = null;
+  if (article_highlight != null) {
+    articlePassage = getArticleHighlight(uid, Number(article_highlight));
+    if (!articlePassage || entryRef !== `articles/${articlePassage.locale}/${articlePassage.slug}`) {
+      return c.json({ error: "No such highlight" }, 404);
+    }
+  }
   // Carnet creates the conversation on the tap that opens the Maurice app; a
   // second tap before anything was said there reopens the same one rather
   // than leaving an empty thread behind each time. Not one opened on a
   // passage: that one is the passage's own.
-  const unused = entryRef && !passage ? emptyEntryConversation(uid, entryRef, maurice_id ?? null) : null;
+  const unused = entryRef && !passage && !articlePassage ? emptyEntryConversation(uid, entryRef, maurice_id ?? null) : null;
   const convo = unused ?? createConversation(uid, maurice_id ?? null, { entryRef });
   if (passage) attachConversation(uid, passage.id, convo.id);
+  if (articlePassage) attachArticleConversation(uid, articlePassage.id, convo.id);
   // The composer names a fiche by its file's stem, `-fiche` included: under
   // the entry's own ref it found nothing, and the turn went out with no
   // context at all (10 October 2026).
@@ -176,7 +189,7 @@ conversations.post("/", async (c) => {
   // From the reader the book comes whatever the progress says: the member is
   // in it, and the focus names the chapter.
   if (entryRef) {
-    const fiche = { type: "fiche", id: `${entryRef}-fiche` };
+    const fiche = { type: "fiche", id: `${entryRef}-fiche`, ...(articlePassage ? { focus: { article_highlight: articlePassage.id } } : {}) };
     const bookId = readerBook ?? startedBookOf(uid, entryRef);
     const withBook = bookId != null
       ? saveSpec(uid, convo.id, [fiche, {

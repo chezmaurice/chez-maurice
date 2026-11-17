@@ -6,12 +6,14 @@ import { resolveFileItem, resolveFolderItem, fileText, fileBinary, type FileAtta
 import { ficheText, resolveFicheItem } from "./fiches";
 import { conversationContext, type SummaryStatus } from "./conversationSummary";
 import { getHighlight } from "../../../data-api/services/highlights";
+import { getArticleHighlight } from "../../../data-api/services/articleHighlights";
 import {
   resolveBookItem,
   conversationWeight,
   validateItems,
   CTX_BUDGET,
   type BookFocus,
+  type FicheFocus,
   type ItemValidationError,
 } from "./weights";
 
@@ -297,6 +299,24 @@ function focusText(memberId: string, bookId: number, focus?: BookFocus): string 
   return out.join("\n\n");
 }
 
+/**
+ * Where a conversation opened from Carnet's article reader starts: the passage
+ * the member just highlighted. The article's text is already in the fiche.
+ * Empty without a focus, or when the highlight is not on this fiche's article.
+ */
+function ficheFocusText(memberId: string, ficheId: string, focus?: FicheFocus): string {
+  if (focus?.article_highlight == null) return "";
+  const h = getArticleHighlight(memberId, Number(focus.article_highlight));
+  if (!h || ficheId !== `articles/${h.locale}/${h.slug}-fiche`) return "";
+  const out = [
+    "# Where this conversation starts",
+    "The member opened it from Carnet's article reader, on a passage they had just highlighted in the article. It is what they want to talk about:",
+    h.quote.trim().split("\n").map((l) => `> ${l}`).join("\n"),
+  ];
+  if (h.note?.trim()) out.push(`Their note on it: ${h.note.trim()}`);
+  return out.join("\n\n");
+}
+
 // ── Resolution to the actual text payload Maurice loads ──
 
 export interface ResolvedItemText {
@@ -347,7 +367,8 @@ export function resolveSpecToText(memberId: string, spec: ContextSpec): Resolved
       return { type: "book", id: it.id, text, weight: estimateTokens(text) };
     }
     if (it.type === "fiche") {
-      const text = ficheText(memberId, String(it.id), it.include_fragments !== false);
+      const text = [ficheText(memberId, String(it.id), it.include_fragments !== false), ficheFocusText(memberId, String(it.id), it.focus)]
+        .filter(Boolean).join("\n\n---\n\n");
       return { type: "fiche", id: it.id, text, weight: estimateTokens(text) };
     }
     if (it.type === "file") {

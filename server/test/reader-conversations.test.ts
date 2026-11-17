@@ -42,6 +42,8 @@ const { getSpec } = await import("../src/services/composer/specs");
 const { ficheText } = await import("../src/services/composer/fiches");
 const conversations = (await import("../src/routes/conversations")).default;
 const hl = await import("../data-api/services/highlights");
+const ahl = await import("../data-api/services/articleHighlights");
+const { resolveSpecToText } = await import("../src/services/composer/specs");
 
 const ANNA = "rc-anna";
 const BEN = "rc-ben";
@@ -74,6 +76,40 @@ beforeAll(() => {
     "books/fr/humus-roman-fiche.md",
     `---\ntitle: Humus, roman\nresource_collection: books\nresource_id: humus-roman\ndate: '2026-08-23'\ntags: []\nlocale: fr\nmeta:\n  calibre_id: 7\n---\n\n## Commentaire\n\nLu à l'été.\n`,
   );
+});
+
+describe("a conversation opened from the article reader", () => {
+  test("on a passage: held from the article's entry, the passage in focus, and the passage leads to it", async () => {
+    write(
+      "articles/fr/sols-vivants-fiche.md",
+      `---\ntitle: Sols vivants\nresource_collection: articles\ndate: '2026-11-08'\nlocale: fr\n---\n\n## Commentaire\n\nÀ relire.\n`,
+    );
+    const h = ahl.createArticleHighlight(ANNA, "fr", "sols-vivants", { quote: "Un sol vivant respire.", note: "comme Humus" });
+    const res = await open({ entry: "articles/fr/sols-vivants", article_highlight: h.id });
+    expect(res.status).toBe(201);
+    const { id } = await res.json();
+    expect(getConversation(id, ANNA)?.entry_ref).toBe("articles/fr/sols-vivants");
+    const spec = getSpec(ANNA, id);
+    expect(spec.items[0]!.focus).toEqual({ article_highlight: h.id });
+    expect(ahl.getArticleHighlight(ANNA, h.id)?.conversation_id).toBe(id);
+    const text = resolveSpecToText(ANNA, spec).items.map((r) => r.text).join("\n");
+    expect(text).toContain("# Where this conversation starts");
+    expect(text).toContain("> Un sol vivant respire.");
+    expect(text).toContain("Their note on it: comme Humus");
+    expect(ficheText(ANNA, "articles/fr/sols-vivants-fiche", false)).toContain(`(Talked over with Maurice in conversation ${id}.)`);
+
+    // A second passage gets a conversation of its own.
+    const h2 = ahl.createArticleHighlight(ANNA, "fr", "sols-vivants", { quote: "Il se tait." });
+    const again = await (await open({ entry: "articles/fr/sols-vivants", article_highlight: h2.id })).json();
+    expect(again.id).not.toBe(id);
+  });
+
+  test("only the member's own highlight, on that article", async () => {
+    const ben = ahl.createArticleHighlight(BEN, "fr", "sols-vivants", { quote: "À Ben." });
+    expect((await open({ entry: "articles/fr/sols-vivants", article_highlight: ben.id })).status).toBe(404);
+    const elsewhere = ahl.createArticleHighlight(ANNA, "fr", "autre-article", { quote: "Ailleurs." });
+    expect((await open({ entry: "articles/fr/sols-vivants", article_highlight: elsewhere.id })).status).toBe(404);
+  });
 });
 
 describe("a book's fiche, as a conversation reads it", () => {

@@ -27,10 +27,14 @@ export type BookScope =
  *  there, or a passage just highlighted in it (a highlight id). */
 export interface BookFocus { chapter?: string; highlight?: number }
 
+/** Where a conversation opened from Carnet's article reader starts: a passage
+ *  just highlighted in the article (an article highlight id). */
+export interface FicheFocus { article_highlight?: number }
+
 export type ComposerItem =
   | { type: "note"; id: string; recurse?: boolean; include_archived?: boolean; exclude?: string[] }
   | { type: "book"; id: number; representation?: "summary" | "full"; scope?: BookScope; focus?: BookFocus }
-  | { type: "fiche"; id: string; include_fragments?: boolean }
+  | { type: "fiche"; id: string; include_fragments?: boolean; focus?: FicheFocus }
   // A conversation past SUMMARY_THRESHOLD is loaded as a summary unless
   // `representation: "full"` pins the transcript.
   | { type: "conversation"; id: string; representation?: "summary" | "full" }

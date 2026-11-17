@@ -40,6 +40,13 @@ function getDb(): Database {
       `CREATE INDEX IF NOT EXISTS idx_article_highlights_member_article
        ON article_highlights(member_id, locale, slug)`,
     );
+    // The conversation with Maurice opened from the highlight, in Carnet's
+    // article reader (16 November 2026), as for a book's.
+    try {
+      db.exec(`ALTER TABLE article_highlights ADD COLUMN conversation_id TEXT`);
+    } catch {
+      // already there
+    }
   }
   return db;
 }
@@ -54,6 +61,8 @@ export interface ArticleHighlight {
   start_offset: number | null;
   end_offset: number | null;
   view: HighlightView;
+  /** The conversation with Maurice opened from this passage, if any. */
+  conversation_id: string | null;
   created_at: string;
 }
 
@@ -65,7 +74,7 @@ export function listArticleHighlights(
 ): ArticleHighlight[] {
   return getDb()
     .query(
-      `SELECT id, locale, slug, quote, note, color, start_offset, end_offset, view, created_at
+      `SELECT id, locale, slug, quote, note, color, start_offset, end_offset, view, conversation_id, created_at
        FROM article_highlights WHERE member_id = ? AND locale = ? AND slug = ?
        ORDER BY created_at DESC`,
     )
@@ -81,6 +90,22 @@ export function countArticleHighlights(memberId: string): Map<string, number> {
     )
     .all(memberId) as { locale: string; slug: string; n: number }[];
   return new Map(rows.map((r) => [`${r.locale}/${r.slug}`, r.n]));
+}
+
+/** One of a member's article highlights, or null when it is not theirs. */
+export function getArticleHighlight(memberId: string, id: number): ArticleHighlight | null {
+  return getDb()
+    .query(
+      `SELECT id, locale, slug, quote, note, color, start_offset, end_offset, view, conversation_id, created_at
+       FROM article_highlights WHERE id = ? AND member_id = ?`,
+    )
+    .get(id, memberId) as ArticleHighlight | null;
+}
+
+/** The passage was talked over with Maurice in this conversation — the last
+ *  one opened from it, when there were several. */
+export function attachArticleConversation(memberId: string, id: number, conversationId: string): void {
+  getDb().run("UPDATE article_highlights SET conversation_id = ? WHERE id = ? AND member_id = ?", [conversationId, id, memberId]);
 }
 
 export interface NewArticleHighlight {
@@ -102,7 +127,7 @@ export function createArticleHighlight(
     .query(
       `INSERT INTO article_highlights (member_id, locale, slug, quote, note, color, start_offset, end_offset, view)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-       RETURNING id, locale, slug, quote, note, color, start_offset, end_offset, view, created_at`,
+       RETURNING id, locale, slug, quote, note, color, start_offset, end_offset, view, conversation_id, created_at`,
     )
     .get(
       memberId,
@@ -134,7 +159,7 @@ export function updateArticleHighlight(
   return db
     .query(
       `UPDATE article_highlights SET note = ?, color = ? WHERE id = ? AND member_id = ?
-       RETURNING id, locale, slug, quote, note, color, start_offset, end_offset, view, created_at`,
+       RETURNING id, locale, slug, quote, note, color, start_offset, end_offset, view, conversation_id, created_at`,
     )
     .get(note, color, id, memberId) as ArticleHighlight;
 }

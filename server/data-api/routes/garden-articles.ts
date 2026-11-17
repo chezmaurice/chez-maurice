@@ -48,6 +48,7 @@ import {
 } from "../services/articleSummary";
 import { cleanAndStore, readTextStyles } from "../services/articleCleanup";
 import { asHighlightView, HIGHLIGHT_VIEWS } from "../services/highlights";
+import { heldConversationOutcome } from "../services/entryConversations";
 import {
   countArticleHighlights,
   createArticleHighlight,
@@ -317,7 +318,12 @@ app.get("/:slug/highlights", (c) => {
   const memberId = c.get("userId") as string;
   try {
     const ref = findArticleBySlug(memberId, c.req.param("slug"), c.req.query("locale"));
-    return c.json(listArticleHighlights(memberId, ref.locale, ref.slug));
+    // A passage talked over with Maurice carries the conversation, and what
+    // it came to once that is written, as a book's does.
+    return c.json(listArticleHighlights(memberId, ref.locale, ref.slug).map((h) => ({
+      ...h,
+      conversation: h.conversation_id ? heldConversationOutcome(memberId, h.conversation_id) : null,
+    })));
   } catch (e) {
     if (e instanceof ArticleSaveError) return c.json({ error: e.message }, e.status);
     throw e;

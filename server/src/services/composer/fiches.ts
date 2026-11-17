@@ -237,7 +237,9 @@ function highlightsText(memberId: string, id: string, meta: FicheMeta, raw: stri
       }));
     } else if (meta.collection === "articles") {
       const slug = meta.slug.replace(/-fiche$/, "");
-      marked = listArticleHighlights(memberId, meta.locale, slug).map((h) => ({ quote: h.quote, note: h.note, at: h.start_offset ?? 0 }));
+      marked = listArticleHighlights(memberId, meta.locale, slug).map((h) => ({
+        quote: h.quote, note: h.note, at: h.start_offset ?? 0, conversation: h.conversation_id,
+      }));
     }
   } catch {
     return "";

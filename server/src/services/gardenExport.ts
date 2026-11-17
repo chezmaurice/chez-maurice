@@ -193,8 +193,9 @@ async function bookHighlights(files: Files, life: Database, memberId: string, ga
 }
 
 function articleHighlights(files: Files, life: Database, memberId: string, garden: GardenRef, locale: string) {
+  const talked = (life.query(`PRAGMA table_info(article_highlights)`).all() as { name: string }[]).some((c) => c.name === "conversation_id");
   const rows = life.query(
-    `SELECT locale, slug, quote, note, color, start_offset, view, created_at, id
+    `SELECT locale, slug, quote, note, color, start_offset, view, created_at, id${talked ? ", conversation_id" : ""}
        FROM article_highlights WHERE member_id = ? ORDER BY locale, slug, id`,
   ).all(memberId) as any[];
   if (!rows.length) return;
