@@ -24,14 +24,44 @@ callers should not have to:
 
 from __future__ import annotations
 
+import asyncio
+import logging
 import re
 from dataclasses import dataclass
 from typing import Iterable, List, Literal, Optional
 from urllib.parse import urlparse
 
-from openai import AsyncOpenAI
+from openai import AsyncOpenAI, RateLimitError
 
 from .config import EmbeddingConfig
+
+logger = logging.getLogger(__name__)
+
+# How long a rate-limited request may wait in all: an indexing batch for the
+# window to reopen, a few times over; a query only briefly (see `_create`).
+_INDEX_WAIT_SECONDS = 600.0
+_QUERY_WAIT_SECONDS = 3.0
+_DURATION = re.compile(r"(\d+(?:\.\d+)?)(ms|s|m|h)")
+_UNIT = {"ms": 0.001, "s": 1.0, "m": 60.0, "h": 3600.0}
+
+
+def _reset_seconds(headers) -> float:
+    """When the provider's window reopens, from `retry-after` or the
+    `x-ratelimit-reset-*` durations ("44s702ms", "200ms", "1m2s"): the longer
+    of the two windows, plus a margin. Ten seconds when nothing says."""
+    found: List[float] = []
+    retry_after = headers.get("retry-after")
+    if retry_after:
+        try:
+            found.append(float(retry_after))
+        except ValueError:
+            pass
+    for name in ("x-ratelimit-reset-tokens", "x-ratelimit-reset-requests"):
+        value = headers.get(name) or ""
+        parts = _DURATION.findall(value)
+        if parts:
+            found.append(sum(float(n) * _UNIT[u] for n, u in parts))
+    return (max(found) + 0.5) if found else 10.0
 
 
 def remote_provider(config: Optional[EmbeddingConfig]) -> Optional[str]:
@@ -131,7 +161,7 @@ class Embedder:
         kwargs: dict = {"model": self.config.model, "input": [self.prefixed(t, kind) for t in cleaned]}
         if self.dimensions:
             kwargs["dimensions"] = self.dimensions
-        response = await self.client.embeddings.create(**kwargs)
+        response = await self._create(kwargs, kind)
         vectors = [item.embedding for item in response.data]
         expected = self.config.vector_size
         if vectors and expected and len(vectors[0]) != expected:
@@ -144,6 +174,30 @@ class Embedder:
         # store pins and what it checks against the config at every open, so the
         # two have to be the same string.
         return EmbeddingResult(vectors=vectors, model=self.config.model)
+
+    async def _create(self, kwargs: dict, kind: Kind):
+        """The request, waiting out the provider's per-minute quota.
+
+        Scaleway meters each model by the minute (200 000 tokens, 300 requests
+        for qwen3-embedding-8b in November 2026) and says when the window
+        reopens in `x-ratelimit-reset-tokens` / `-requests` — not in the
+        `retry-after` the OpenAI client reads, so its own two quick retries
+        land inside the same window. A full reindex hit that wall on 17
+        November 2026 and lost 702 chapters and both conversation passes. An
+        indexing batch waits for the window; a query, which a member's turn is
+        waiting on, gives up after a short wait instead."""
+        budget = _QUERY_WAIT_SECONDS if kind == "query" else _INDEX_WAIT_SECONDS
+        waited = 0.0
+        while True:
+            try:
+                return await self.client.embeddings.create(**kwargs)
+            except RateLimitError as err:
+                pause = _reset_seconds(err.response.headers if err.response is not None else {})
+                if waited + pause > budget:
+                    raise
+                logger.warning("embedding quota reached; waiting %.1fs for the window to reopen", pause)
+                await asyncio.sleep(pause)
+                waited += pause
 
     async def embed_query(self, text: str) -> Optional[List[float]]:
         result = await self.embed_batch([text], kind="query")
