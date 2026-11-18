@@ -881,8 +881,9 @@ app.get("/join", (c) => {
   const opens = JOIN_APPS
     .map((a) => `<a class="btn open" href="${esc(`${a.scheme}://join?${query}`)}">${esc(t(lang, "join.open", a.name))}</a>`)
     .join("\n    ");
-  const note =
-    apple ? t(lang, "join.testflight_note") : platform === "android" ? t(lang, "join.obtainium_note") : "";
+  // On Apple devices the link is the App Store's, which needs no word; Android
+  // still goes through Obtainium.
+  const note = platform === "android" ? t(lang, "join.obtainium_note") : "";
 
   return c.html(`<!DOCTYPE html><html lang="${lang}"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">

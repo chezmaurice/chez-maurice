@@ -44,8 +44,10 @@ export const JOIN_APPS: JoinApp[] = [
     iosBundle: "eu.chezmaurice.maurice",
     androidPackage: "eu.chezmaurice.maurice",
     install: {
-      ios: process.env.MAURICE_INSTALL_URL || "https://testflight.apple.com/join/CS3ufwEd",
-      mac: process.env.MAURICE_INSTALL_URL || "https://testflight.apple.com/join/CS3ufwEd",
+      // The App Store since 1.0.1 (one app record for iPhone, iPad and Mac);
+      // TestFlight's public link until then.
+      ios: process.env.MAURICE_INSTALL_URL || "https://apps.apple.com/app/id6822024416",
+      mac: process.env.MAURICE_INSTALL_URL || "https://apps.apple.com/app/id6822024416",
       android: process.env.MAURICE_INSTALL_ANDROID_URL || obtainium("maurice-android-releases"),
     },
     androidReleases: "https://github.com/chezmaurice/maurice-android-releases/releases/latest",
@@ -57,7 +59,7 @@ export const JOIN_APPS: JoinApp[] = [
     iosBundle: "eu.chezmaurice.carnet.app",
     androidPackage: "eu.chezmaurice.carnet",
     install: {
-      ios: process.env.CARNET_INSTALL_URL || "https://testflight.apple.com/join/utR99CxB",
+      ios: process.env.CARNET_INSTALL_URL || "https://apps.apple.com/app/id6822163598",
       android: process.env.CARNET_INSTALL_ANDROID_URL || obtainium("carnet-android-releases"),
     },
     androidReleases: "https://github.com/chezmaurice/carnet-android-releases/releases/latest",
