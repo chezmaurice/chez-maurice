@@ -1,6 +1,6 @@
 ---
 title: Maurice — the digest
-date: '2026-11-17'
+date: '2026-11-18'
 flags: []
 locale: en
 description: 'The system documentation condensed to what a user needs: everything
@@ -16,7 +16,7 @@ parent: maurice-docs
 digest: true
 covers:
   maurice-applications: '2026-10-20'
-  maurice-architecture: '2026-11-16'
+  maurice-architecture: '2026-11-18'
   maurice-carnet: '2026-11-17'
   maurice-chat: '2026-11-17'
   maurice-composer: '2026-10-20'
@@ -69,7 +69,7 @@ The founding idea is **a memory you can see and shape** — the *apprivoisé* (t
 4. **The tools** — small MCP servers behind one gateway, which the server calls on every turn. They are how Maurice *does* things: read and write notes, search, read mail.
 5. **The site** — an Astro engine that renders each member's notes as a themeable website, privately for the member and publicly for what they publish.
 
-There is also a **browser extension**, *Save to Carnet* — one extension for Chrome and its kin (Brave, Edge, Arc), Firefox (desktop and Android) and Safari — that saves the page being read into the member's notes, as Carnet's share sheet does, with a note typed or dictated. It connects with a one-time code from the app (*Settings › Connect a browser*); in Safari on the Mac it comes with the Maurice app and uses its session. Once a page is saved, on a phone or a tablet, *See in Carnet* opens its fiche in Carnet. It is not yet in the browsers' catalogues.
+There is also a **browser extension**, *Save to Carnet* — one extension for Chrome and its kin (Brave, Edge, Arc), Firefox (140 or later on the desktop, 142 on Android) and Safari — that saves the page being read into the member's notes, as Carnet's share sheet does, with a note typed or dictated. It connects with a one-time code from the app (*Settings › Connect a browser*); in Safari on the Mac it comes with the Maurice app and uses its session. Once a page is saved, on a phone or a tablet, *See in Carnet* opens its fiche in Carnet. It is not yet in the browsers' catalogues.
 
 **Security boundary:** the server is the only door. The tool gateway, the web engine and Calibre-Web listen on loopback only and are reached through the server's authenticated proxy. The admin console answers only on the machine itself.
 
