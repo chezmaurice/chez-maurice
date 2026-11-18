@@ -21,6 +21,18 @@ TAG="${2:-$(date +%Y%m%d-%H%M%S)}"
 REMOTE_DIR="${MAURICE_REMOTE_DIR:-/opt/maurice}"
 COMPOSE="$REPO/infra/container/compose.prod.yml"
 
+# Production ships from main, and only main. The Mac mini's checkout runs the
+# `experimental` branch (features Candide tinkers with at home), and the image
+# below is built from whatever tree this script sits in: deploying from there
+# would put the experiments on every hosted household. An already-built tag is
+# not affected — it was checked when it was built.
+BRANCH="$(git -C "$REPO" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "?")"
+if [[ "$BRANCH" != "main" && "${MAURICE_DEPLOY_ANY_BRANCH:-}" != "1" ]] && ! docker image inspect "maurice:$TAG" >/dev/null 2>&1; then
+  echo "✗ This checkout is on '$BRANCH', not main: production is built from main only." >&2
+  echo "  Deploy from a worktree of main, or set MAURICE_DEPLOY_ANY_BRANCH=1 if you really mean it." >&2
+  exit 1
+fi
+
 echo "▸ Deploying to $HOST  (tag $TAG)"
 
 # 1. Build ──────────────────────────────────────────────────────────────────
