@@ -24,7 +24,7 @@ covers:
   maurice-docs: '2026-10-20'
   maurice-domains: '2026-11-12'
   maurice-files: '2026-06-19'
-  maurice-households-rooms: '2026-11-12'
+  maurice-households-rooms: '2026-11-18'
   maurice-knowledge: '2026-11-17'
   maurice-life: '2026-10-20'
   maurice-personas-hats: '2026-09-19'
@@ -82,7 +82,7 @@ There is also a **browser extension**, *Save to Carnet* — one extension for Ch
 - **Hosted households** run on a rented Scaleway machine in Paris, several per machine, each with its own volume behind one Caddy. Scaleway supplies both the machine and the models under one restricted key, so a hosted household needs no API key of the member's, and its data and inference stay in the EU. A hosted household can be paused from outside (its container stays stopped and is skipped by backups). Its owner has an **account page** on account.chezmaurice.eu, reached by the link in the mails it sends: the address, a QR code to scan with the phone's camera to come in as administrator, the administrator password until noted, the trial or subscription, the thinking left, the invoices, the whole archive — and **erasing the whole Maurice**, confirmed by a mailed link: the household, its backups, the subscription and the owner's name and address go; only the invoices stay, as the law requires.
 - **Self-hosting at home:** TLS and remote access are the operator's (Tailscale or Cloudflare Tunnel); Maurice only needs to be reachable. Behind a tunnel on the same machine, `MAURICE_BIND_HOST=127.0.0.1` keeps the server off the network entirely, in plain HTTP with no certificate to renew — how the developer's own Mac runs it, still as launchd agents.
 - **Backups:** hosted households are backed up nightly, encrypted, to Scaleway Object Storage (14 daily, 8 weekly, 12 monthly snapshots; a restore has been rehearsed). At home the databases are snapshotted nightly and the members' notes rely on git.
-- **The apps** — the Maurice app (iPhone, iPad, Mac) and Carnet — are distributed through **TestFlight**, as a public beta anyone can join from the links on chezmaurice.eu; the App Store versions (iPhone and iPad, and the Mac app) are in Apple's review. The apps contain **no payment, price or "pay elsewhere"** prompt; subscriptions to a hosted household are handled on the web.
+- **The apps** — the Maurice app (iPhone, iPad, Mac) and Carnet — are on the **App Store** (one Maurice for iPhone, iPad and Mac; Carnet for iPhone and iPad), free, linked from chezmaurice.eu; TestFlight carries the next versions for testers. The apps contain **no payment, price or "pay elsewhere"** prompt; subscriptions to a hosted household are handled on the web.
 
 *Detail:* `architecture`, `server`.
 
@@ -349,7 +349,7 @@ Each member has folders and files (5 GB each), in **Settings**: text, images, PD
 
 - **…join my household on a new phone?** Scan the invitation's QR code, or tap the link you were sent. With Maurice or Carnet installed, either opens the app (on a household under chezmaurice.eu). Without one, the page offers both apps for your device, then opens the invitation. You can also choose **Enter a code or an address** in the app. Then choose your PIN. Both apps accept the same invitation, and on an iPhone or iPad joining in one joins the other.
 - **…add another device of mine?** On a device where you are signed in: Settings → *Add one of my devices*, then scan the QR code with the new one (or send it the link). It works once, for ten minutes; no admin needed, no PIN to choose again.
-- **…come into a hosted Maurice the first time?** On your account page (the link in the *Your Maurice is ready* mail), install the app it names for your device — Maurice or Carnet, through TestFlight on Apple, Obtainium or the APK on Android — then scan the invitation's QR code with the phone's camera. On a computer, *Another way in* gives the household address and the invite code to type.
+- **…come into a hosted Maurice the first time?** On your account page (the link in the *Your Maurice is ready* mail), install the app it names for your device — Maurice or Carnet, from the App Store on Apple, Obtainium or the APK on Android — then scan the invitation's QR code with the phone's camera. On a computer, *Another way in* gives the household address and the invite code to type.
 - **…change the administrator password?** Settings → *Administrator password*: the current one, then the new one twice. Your other devices signed in as administrator must sign in again.
 - **…invite someone who is not a member yet?** As an admin: Settings → Members → invitation (QR code, code or link, single use, 7 days). The person picks a first name and colour and becomes a standard member. To have a friend in as **your guest**, who sees only you: Settings → *Invite a friend as a guest* (any member; also in Carnet's member sheet). Other guests are set up in the admin console.
 - **…help someone who forgot their PIN?** As an admin: Settings → Members → tap them → *New device*. They enter the code on their device, then choose a new PIN; they are told a code let a device in.
