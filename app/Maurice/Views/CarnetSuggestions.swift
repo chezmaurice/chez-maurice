@@ -742,6 +742,22 @@ private struct EpisodePicker: View {
     }
 }
 
+/// The ↗ of a row that opens its entry elsewhere (Carnet, or the garden).
+/// The whole row is the button; the mark, round and in ink, says so — a bare
+/// 11pt arrow read as a target too small to hit.
+private struct OpenMark: View {
+    @Environment(\.mauriceTheme) private var theme
+
+    var body: some View {
+        Image(systemName: "arrow.up.right")
+            .font(.system(size: 13, weight: .semibold))
+            .foregroundStyle(theme.ink)
+            .frame(width: 32, height: 32)
+            .background(Circle().fill(theme.surfaceAlt))
+            .overlay(Circle().strokeBorder(theme.rule, lineWidth: 1))
+    }
+}
+
 /// The entry the conversation is held from: its cover and title, opening it
 /// in Carnet — or, where Carnet is not, its page in the garden.
 private struct HeldEntryRow: View {
@@ -763,7 +779,7 @@ private struct HeldEntryRow: View {
                         .foregroundStyle(theme.inkSoft)
                 }
                 Spacer(minLength: 4)
-                Image(systemName: "arrow.up.right").font(.system(size: 11, weight: .medium)).foregroundStyle(theme.inkMute)
+                OpenMark()
             }
             .contentShape(Rectangle())
         }
@@ -803,9 +819,7 @@ private struct KeptRow: View {
                 }
                 Spacer(minLength: 4)
                 Image(systemName: "checkmark.circle.fill").font(.system(size: 13)).foregroundStyle(theme.inkMute)
-                if row.web_path != nil {
-                    Image(systemName: "arrow.up.right").font(.system(size: 11, weight: .medium)).foregroundStyle(theme.inkMute)
-                }
+                if row.web_path != nil { OpenMark() }
             }
             .contentShape(Rectangle())
         }
