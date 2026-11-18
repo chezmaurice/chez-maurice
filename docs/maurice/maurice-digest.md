@@ -31,7 +31,7 @@ covers:
   maurice-server: '2026-11-09'
   maurice-shared-gardens: '2026-11-12'
   maurice-tools: '2026-11-05'
-  maurice-web-garden: '2026-11-06'
+  maurice-web-garden: '2026-11-18'
 ---
 
 # Maurice — the digest
@@ -322,16 +322,16 @@ Each member has folders and files (5 GB each), in **Settings**: text, images, PD
 
 ## 21. The site, publishing and shared notes
 
-- **Private view:** each member's site at `/g/<member>/` shows all their notes, rendered from disk on every request, live-reloading when a note changes, in English and French. Wiki-links resolve the way Obsidian does. The owner sees drafts, fiches and a toolbar (public/private/encrypted, delete, reorder, open in Obsidian or Working Copy). Unreviewed notes Maurice wrote carry a *Keep / Throw away* banner; mail person fiches a review panel.
-- **Public, private, encrypted:** a note is published **only with the `public` flag**. An `encrypted` note is encrypted in the page (AES-256-GCM, the password typed in the browser) or withheld. Fiches, drafts, unopened articles, person fiches and other members' content never enter a published build — checked by an automated leak test.
+- **Private view:** each member's site at `/g/<member>/` shows all their notes, rendered from disk on every request, live-reloading when a note changes, in English and French. Wiki-links resolve the way Obsidian does, by file name, and keep their label (`[[slug|label]]`). The owner sees drafts, fiches and a toolbar (public/private/encrypted, delete, reorder, open in Obsidian or Working Copy). Unreviewed notes Maurice wrote carry a *Keep / Throw away* banner; mail person fiches a review panel.
+- **Public, private, encrypted:** a note is published **only with the `public` flag**. An `encrypted` note is encrypted in the page (AES-256-GCM, the password typed in the browser) or withheld. Fiches, drafts, unopened articles, person fiches and other members' content never enter a published build — checked by an automated leak test. A link from a public page to a private note or a fiche is published as written, though: it leads nowhere, and its address names what it pointed at.
 - **What a note may contain:** its HTML is cleaned before it is shown — layout, inline drawings, code and links stay; scripts, embedded frames and event handlers are removed — so a note written by someone else, clipped from a page or drawn from a mail cannot act with the reader's session.
 - **A member's site:** the household's public pages at `/@<member>/`, a static build every member may publish to at any time (a child once the admin allows it); or a domain of one's own (today only at home, through Cloudflare Pages).
 - **A shared link shows a card:** every published page carries Open Graph and Twitter-card tags — title, the entry's description or its opening words, its picture (a note's image, a cover, a poster) as a large card, else the site's avatar as a small one. A domain of one's own needs its address (`GARDEN_SITE_URL`) for the picture and the link to appear; an encrypted note shows neither its words nor its picture.
-- **Themes:** manuscript (default), botanical, newsprint, terminal, chosen in the app (Settings → *Your site*).
+- **Themes:** manuscript (default), botanical, newsprint, terminal, chosen in the app (Settings → *Your site*). A theme is a folder of the site's engine, so whoever runs the server can add one (every theme present is offered; the owner's candide.me look is one, kept private); a member cannot bring a theme or a stylesheet from their notes. A page's layout follows what it is — note, essay, card, fiche — not anything written in the note's header. Previewing a draft shows it in the look it will be published in, except on a member's `/@<member>/` pages, which are built in the plain base theme.
 - **The notes as a git address:** `https://<household>/git/<member>.git`, for `git clone`, Obsidian (the *Git* plugin) or Working Copy. HTTP Basic: any username, the member's git key as the password; a member clones only their own notes; a push is refused. Notes not yet versioned become a repository at their first clone. The clone is a vault and a near-complete backup (see §6); flashcards, mail and the search index are not in it.
 - **Shared notes:** sharing is a property of a note — its audience. The app lists *My notes*, then one set per audience (*You & Paola / notes*): simply the notes sharing that audience; members can see who reads a note, share it, or leave its audience. A shared note is read inside its owner's site, in the owner's theme.
 
-*Gaps:* the git clone is read-only (writing back from Obsidian is not built), and untested so far on an iPad with Obsidian Git or Working Copy; English-only site search; translation and social sharing unavailable in the container; shared notes have no roles (read-only vs co-editor), and a theme set for a shared audience is stored but not used; a public host's duties (reporting, takedown) are not defined; the private view's pages carry no Content-Security-Policy yet; a private map note's title can show on public pages that belong to it, and a public encrypted note's title is in the site search; a share cannot be withdrawn.
+*Gaps:* the git clone is read-only (writing back from Obsidian is not built), and untested so far on an iPad with Obsidian Git or Working Copy; English-only site search; translation and social sharing unavailable in the container; shared notes have no roles (read-only vs co-editor), and a theme set for a shared audience is stored but not used; a public host's duties (reporting, takedown) are not defined; the private view's pages carry no Content-Security-Policy yet; a private map note's title can show on public pages that belong to it, and a public encrypted note's title is in the site search; a share cannot be withdrawn; `/@<member>/` pages ignore the member's theme; since 5 November wiki-links have lost their styling and a map note no longer turns its links into cards.
 
 *Detail:* `web-garden`, `shared-gardens`.
 
@@ -379,7 +379,7 @@ Each member has folders and files (5 GB each), in **Settings**: text, images, PD
 
 ## 24. Not built, and known gaps
 
-- **Not built:** writing back to the notes from an Obsidian clone (push); a web chat client; OAuth for mail (Outlook.com, Google contacts); mail in the corpus; flashcard review in Carnet; demo servers for trying the apps without a household (designed, deferred); a hosted member's own domain; on-device inference.
+- **Not built:** writing back to the notes from an Obsidian clone (push); a web chat client; OAuth for mail (Outlook.com, Google contacts); mail in the corpus; flashcard review in Carnet; demo servers for trying the apps without a household (designed, deferred); a hosted member's own domain; on-device inference; page layouts chosen per note, RSS feeds, margin notes or link previews, and dated editions of a published site.
 - **Not intended:** Maurice proposing notes from patterns he notices; automatic periodic reviews.
 - **Rough edges:** sessions never expire (only revoked); a reply in progress is lost on a server restart; no provider failover; external MCP clients see every mounted tool; some member-triggered background calls are not on the ledger; a member's erasure cannot reach off-site backups or exported archives (erasing a whole hosted Maurice does forget its backups); the databases are snapshot, not versioned (the notes are); after a household import the search index and git remotes are fixed by hand; the web does not ask the AI-provider question yet (a member who never answered is let through), and in a room a member who declined still has their messages read when someone else summons Maurice; the experimental tools are partly documented and absent from hosted households.
 
