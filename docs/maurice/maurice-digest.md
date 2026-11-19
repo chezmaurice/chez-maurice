@@ -16,7 +16,7 @@ parent: maurice-docs
 digest: true
 covers:
   maurice-applications: '2026-10-20'
-  maurice-architecture: '2026-11-18'
+  maurice-architecture: '2026-11-19'
   maurice-carnet: '2026-11-17'
   maurice-chat: '2026-11-17'
   maurice-composer: '2026-10-20'
@@ -31,7 +31,7 @@ covers:
   maurice-server: '2026-11-09'
   maurice-shared-gardens: '2026-11-12'
   maurice-tools: '2026-11-05'
-  maurice-web-garden: '2026-11-18'
+  maurice-web-garden: '2026-11-19'
 ---
 
 # Maurice — the digest
@@ -69,7 +69,7 @@ The founding idea is **a memory you can see and shape** — the *apprivoisé* (t
 4. **The tools** — small MCP servers behind one gateway, which the server calls on every turn. They are how Maurice *does* things: read and write notes, search, read mail.
 5. **The site** — an Astro engine that renders each member's notes as a themeable website, privately for the member and publicly for what they publish.
 
-There is also a **browser extension**, *Save to Carnet* — one extension for Chrome and its kin (Brave, Edge, Arc), Firefox (140 or later on the desktop, 142 on Android) and Safari — that saves the page being read into the member's notes, as Carnet's share sheet does, with a note typed or dictated. It connects with a one-time code from the app (*Settings › Connect a browser*); in Safari on the Mac it comes with the Maurice app and uses its session. Once a page is saved, on a phone or a tablet, *See in Carnet* opens its fiche in Carnet. It is not yet in the browsers' catalogues.
+There is also a **browser extension**, *Save to Carnet* — one extension for Chrome and its kin (Brave, Edge, Arc), Firefox (140 or later on the desktop, 142 on Android) and Safari — that saves the page being read into the member's notes, as Carnet's share sheet does, with a note typed or dictated. It connects with a one-time code from the app (*Settings › Connect a browser*); in Safari on the Mac it comes with the Maurice app and uses its session. Once a page is saved, on a phone or a tablet, *See in Carnet* opens its fiche in Carnet. A save that has not finished after 10 seconds says it is still waiting; after 30 it gives up and asks to try again later. It is not yet in the browsers' catalogues.
 
 **Security boundary:** the server is the only door. The tool gateway, the web engine and Calibre-Web listen on loopback only and are reached through the server's authenticated proxy. The admin console answers only on the machine itself.
 
@@ -327,7 +327,7 @@ Each member has folders and files (5 GB each), in **Settings**: text, images, PD
 - **What a note may contain:** its HTML is cleaned before it is shown — layout, inline drawings, code and links stay; scripts, embedded frames and event handlers are removed — so a note written by someone else, clipped from a page or drawn from a mail cannot act with the reader's session.
 - **A member's site:** the household's public pages at `/@<member>/`, a static build every member may publish to at any time (a child once the admin allows it); or a domain of one's own (today only at home, through Cloudflare Pages).
 - **A shared link shows a card:** every published page carries Open Graph and Twitter-card tags — title, the entry's description or its opening words, its picture (a note's image, a cover, a poster) as a large card, else the site's avatar as a small one. A domain of one's own needs its address (`GARDEN_SITE_URL`) for the picture and the link to appear; an encrypted note shows neither its words nor its picture.
-- **Themes:** manuscript (default), botanical, newsprint, terminal, chosen in the app (Settings → *Your site*). A theme is a folder of the site's engine, so whoever runs the server can add one (every theme present is offered; the owner's candide.me look is one, kept private); a member cannot bring a theme or a stylesheet from their notes. A page's layout follows what it is — note, essay, card, fiche — not anything written in the note's header. Previewing a draft shows it in the look it will be published in, except on a member's `/@<member>/` pages, which are built in the plain base theme.
+- **Themes:** manuscript (default), botanical, newsprint, terminal, chosen in the app (Settings → *Your site*). A theme is a folder of the site's engine, so whoever runs the server can add one (every theme present is offered); a member cannot bring a theme or a stylesheet from their notes — an experimental atelier that lets them build their own on one of these, colours, typefaces, stylesheet and page templates, runs only at the owner's home and is not shipped. A page's layout follows what it is — note, essay, card, fiche — not anything written in the note's header. Previewing a draft shows it in the look it will be published in, except on a member's `/@<member>/` pages, which are built in the plain base theme.
 - **The notes as a git address:** `https://<household>/git/<member>.git`, for `git clone`, Obsidian (the *Git* plugin) or Working Copy. HTTP Basic: any username, the member's git key as the password; a member clones only their own notes; a push is refused. Notes not yet versioned become a repository at their first clone. The clone is a vault and a near-complete backup (see §6); flashcards, mail and the search index are not in it.
 - **Shared notes:** sharing is a property of a note — its audience. The app lists *My notes*, then one set per audience (*You & Paola / notes*): simply the notes sharing that audience; members can see who reads a note, share it, or leave its audience. A shared note is read inside its owner's site, in the owner's theme.
 
