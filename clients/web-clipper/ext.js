@@ -180,7 +180,6 @@ export async function finishHeldConnect() {
   }
 }
 
-/** A request to Maurice with the member's session. */
 /**
  * A save takes a few seconds. Past SAVE_SLOW_MS the popup says it is still
  * waiting; at SAVE_TIMEOUT_MS the background gives up, so a connection that
@@ -189,6 +188,7 @@ export async function finishHeldConnect() {
 export const SAVE_SLOW_MS = 10_000;
 export const SAVE_TIMEOUT_MS = 30_000;
 
+/** A request to Maurice with the member's session. */
 export function api(config, pathname, options) {
   return request(config.serverUrl, config.token, pathname, options);
 }
