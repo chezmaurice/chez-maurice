@@ -11,7 +11,7 @@
  * manifest names this file for both.
  */
 
-import { api, ext, finishHeldConnect, followColorScheme, loadConfig } from "./ext.js";
+import { api, ext, finishHeldConnect, followColorScheme, loadConfig, SAVE_TIMEOUT_MS } from "./ext.js";
 
 followColorScheme();
 
@@ -49,7 +49,8 @@ ext.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     })
     .catch((error) => {
       flashBadge("!", "#c0362c");
-      sendResponse({ ok: false, error: String(error?.message ?? error) });
+      const timedOut = error?.name === "TimeoutError" || error?.name === "AbortError";
+      sendResponse({ ok: false, timedOut, error: String(error?.message ?? error) });
     });
 
   return true; // keep the message channel open for the async reply
@@ -57,7 +58,12 @@ ext.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
 async function saveArticle(payload) {
   const config = await loadConfig();
-  return api(config, "/api/v1/garden/articles", { method: "POST", body: payload });
+  return api(config, "/api/v1/garden/articles", {
+    method: "POST",
+    body: payload,
+    // Without a deadline a stalled upload never settles, and neither does the popup.
+    signal: AbortSignal.timeout(SAVE_TIMEOUT_MS),
+  });
 }
 
 function flashBadge(text, color) {

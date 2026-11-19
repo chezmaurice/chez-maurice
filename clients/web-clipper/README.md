@@ -86,6 +86,10 @@ are exempt from CORS, and the page sees nothing.
 **The save runs in the background.** A popup is destroyed the instant it loses
 focus; a save that took its request with it would abort mid-commit on the
 server. The background finishes either way and reports through the badge.
+A save has a deadline: past 10 seconds the popup says it is still waiting,
+and at 30 the background abandons the request and the popup says to try again
+later — a connection that drops mid-upload would otherwise leave "Saving…" on
+screen for ever.
 
 **The session lives in `storage.local`, not `sync`.** It is a credential to a
 machine the household owns; syncing it through a browser vendor's account

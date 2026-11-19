@@ -1,4 +1,4 @@
-import { api, ext, followColorScheme, forget, holdConnect, isConfigured, isSafari, loadConfig, originPattern, parseConnectInput, pendingConnect } from "./ext.js";
+import { api, ext, followColorScheme, SAVE_SLOW_MS, SAVE_TIMEOUT_MS, forget, holdConnect, isConfigured, isSafari, loadConfig, originPattern, parseConnectInput, pendingConnect } from "./ext.js";
 import { lang, t } from "./strings.js";
 
 /**
@@ -285,17 +285,27 @@ async function finishSave(asked) {
     source_client: isSafari ? "safari" : /Firefox\//.test(ua) ? "firefox" : "chrome",
   };
 
+  // Past a few seconds, say we are still waiting. And should the background
+  // never answer (a worker stopped mid-save), give up a little after it would.
+  const slow = setTimeout(() => setStatus("status", t("stillSaving"), "muted"), SAVE_SLOW_MS);
+  let giveUp;
+  const deadline = new Promise((resolve) => {
+    giveUp = setTimeout(() => resolve({ ok: false, timedOut: true }), SAVE_TIMEOUT_MS + 2_000);
+  });
   // Handed to the background so it survives this popup closing.
   let reply;
   try {
-    reply = await ext.runtime.sendMessage({ type: "save-article", payload });
+    reply = await Promise.race([ext.runtime.sendMessage({ type: "save-article", payload }), deadline]);
   } catch (err) {
     // The background could not start, or closed the channel before answering.
     reply = { ok: false, error: String(err?.message ?? err) };
+  } finally {
+    clearTimeout(slow);
+    clearTimeout(giveUp);
   }
 
   if (!reply?.ok) {
-    setStatus("status", `${t("saveFailed")} — ${reply?.error ?? ""}`, "bad");
+    setStatus("status", reply?.timedOut ? t("saveTimedOut") : `${t("saveFailed")} — ${reply?.error ?? ""}`, "bad");
     el("save").disabled = el("save-check").disabled = false;
     return;
   }
