@@ -50,6 +50,8 @@ struct MauriceApp: App {
                 .environment(\.locale, session.resolvedLocale)
                 // maurice://join?server=…&code=… — from an invitation page's
                 // "Open" button, or the camera app reading one.
+                // maurice://signup?code=… or the tower's own link — an access
+                // code, for a Maurice still to be made: on to the sign-up.
                 // maurice://conversations/<id> — the link a note kept from a
                 // conversation carries in the garden, and Carnet's "Reply in
                 // Maurice": opened the way a tapped notification is.
@@ -65,6 +67,10 @@ struct MauriceApp: App {
                         #endif
                     } else if let invitation = Invitation(url.absoluteString) {
                         session.receive(invitation)
+                    } else if let code = Tower.accessCode(in: url.absoluteString) {
+                        // A sign-up link: the tower's QR code read by the
+                        // camera, or its page's "Open" button.
+                        session.pendingAccessCode = code
                     }
                 }
                 #if os(macOS)

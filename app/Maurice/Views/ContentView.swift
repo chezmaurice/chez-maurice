@@ -36,6 +36,8 @@ struct ContentView: View {
     @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
     // Bumped on acknowledge so `body` re-evaluates `needsDisclosure`.
     @State private var disclosureAck = false
+    /// A sign-up link arrived while a household is paired (pendingAccessCode).
+    @State private var showSignupLink = false
 
     /// Show the connect disclosure once per server host for non-owner sessions.
     private var needsDisclosure: Bool {
@@ -119,6 +121,16 @@ struct ContentView: View {
         }
         .environment(\.mauriceTheme, theme)
         .preferredColorScheme(MauriceTheme.colorSchemeOverride(for: session.palette))
+        // A sign-up link opened on a device that already has a Maurice: the
+        // welcome screen as a sheet, which takes the code from there. (With
+        // no Maurice yet, the welcome screen is the root and takes it itself.)
+        .onChange(of: session.pendingAccessCode) { _, code in
+            if code != nil, session.isPaired { showSignupLink = true }
+        }
+        .sheet(isPresented: $showSignupLink) {
+            PairingView(onPaired: { showSignupLink = false })
+                .environment(session)
+        }
         // What the admin did in this account, told once (MyDataView.swift).
         .modifier(AccountEventsNotice())
         // The AI-provider question (AIConsentView): after sign-in, for every

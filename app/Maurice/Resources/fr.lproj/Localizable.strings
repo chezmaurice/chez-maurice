@@ -6,6 +6,7 @@
 "pairing.error.connect" = "Connexion impossible : %@";
 "pairing.error.invalid_url" = "Cette adresse ne semble pas valide. Exemple : https://martin.chezmaurice.eu";
 "pairing.error.unreachable" = "le serveur n'a pas répondu";
+"pairing.error.no_host" = "Aucun Maurice à l’adresse %@. Vérifiez-la auprès de la personne qui vous invite.";
 "pairing.error.https_hint" = "Les serveurs Maurice utilisent https — essayez https:// au lieu de http://.";
 "picker.title" = "Qui est là ?";
 "picker.empty" = "Pour rejoindre ce Maurice sur cet appareil, entrez le code d’invitation que vous avez reçu.";
@@ -1088,7 +1089,9 @@
 "welcome.paste_link" = "Coller le lien d’invitation";
 "welcome.enter_code" = "Entrer un code ou une adresse";
 "welcome.more_options" = "Autres options";
-"welcome.address_needed" = "Adresse de votre Maurice";
+"welcome.address_needed" = "Adresse du Maurice qui vous invite";
+"welcome.address_caption" = "Celle de la personne qui vous invite, pas une nouvelle : elle figure sur la page de l’invitation, sous le code.";
+"signup.with_code" = "Pas encore de Maurice ? En créer un avec ce code";
 "scanner.hint" = "Visez le QR de l’invitation";
 "scanner.camera_reason" = "L’appareil photo sert seulement à lire le QR de votre invitation.";
 "common.close" = "Fermer";
@@ -1189,6 +1192,11 @@
 "signup.wait.queue_detail" = "Il y a du monde : il sera fait dès qu’il y aura de la place. Vous pouvez fermer l’app, tout reprendra ici.";
 "signup.wait.making" = "Votre Maurice se prépare…";
 "signup.wait.making_detail" = "Cela prend quelques minutes. Vous entrerez dès qu’il sera prêt.";
+"signup.wait.address" = "Votre Maurice est fait.";
+"signup.wait.address_detail" = "Son adresse n’est pas encore connue de votre réseau : cela peut prendre quelques minutes, et vous entrerez dès qu’elle répondra. Passer du Wi-Fi au réseau mobile, ou l’inverse, accélère souvent les choses.";
+"pairing.error.not_yet" = "%@ ne répond pas encore sur ce réseau. Si ce Maurice vient d’être créé, cela peut prendre quelques minutes : l’app réessaie toute seule. Passer du Wi-Fi au réseau mobile, ou l’inverse, aide souvent.";
+"picker.invite_kept" = "Reprendre votre invitation";
+"picker.invite_waiting" = "Votre invitation chez ce Maurice vous attend.";
 "signup.wait.lost" = "Cette inscription n’a pas abouti. Vous pouvez recommencer.";
 
 /* A sealed push before the notification extension opens it (the push relay, APNs loc-key). */

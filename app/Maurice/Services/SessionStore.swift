@@ -42,6 +42,10 @@ struct Household: Codable, Identifiable, Hashable {
     /// Unread rooms for the active user here (from /api/users/me/unread).
     /// Optional so older persisted households still decode.
     var unread: Int? = nil
+    /// An invitation code received for this household and not yet used: the
+    /// user picker offers it again until it has let someone in, so that
+    /// closing the enrollment sheet loses nothing (20 November 2026).
+    var invite: String? = nil
 }
 
 /// An invitation into a household: its address and a code, carried by a QR
@@ -77,6 +81,13 @@ struct Invitation: Equatable {
         }
     }
 
+    /// The same code, however it was typed: dashes, spaces and case aside.
+    static func same(_ a: String, _ b: String?) -> Bool {
+        guard let b else { return false }
+        let bare = { (s: String) in s.uppercased().filter { $0.isLetter || $0.isNumber } }
+        return !bare(a).isEmpty && bare(a) == bare(b)
+    }
+
     /// The link a QR code carries: the household's own landing page, which
     /// works with or without the app installed.
     var link: String {
@@ -95,14 +106,28 @@ final class SessionStore {
     /// an open one.
     var pendingInvitation: Invitation?
 
+    /// An access code that arrived by a link (Tower.accessCode) and is not yet
+    /// used: the welcome screen picks it up and opens the sign-up with it.
+    var pendingAccessCode: String?
+
     /// Take an invitation from a scan or a link: select its household (pairing
     /// it if this device has never seen it), go to the user picker, and leave
     /// the code there to be used.
     func receive(_ invitation: Invitation) {
-        pair(serverURL: invitation.server)
+        let id = pair(serverURL: invitation.server)
+        updateHousehold(id: id) { $0.invite = invitation.code }
         activeUserId = nil
         pendingInvitation = invitation
         Task { await refreshFoyers() }
+    }
+
+    /// The invitation this household is still holding (Household.invite).
+    var keptInvite: String? { currentHousehold?.invite }
+
+    /// The kept invitation has served, or the household refused it for good.
+    func forgetInvite() {
+        guard let id = currentHouseholdId, currentHousehold?.invite != nil else { return }
+        updateHousehold(id: id) { $0.invite = nil }
     }
 
     /// Every household paired on this device.

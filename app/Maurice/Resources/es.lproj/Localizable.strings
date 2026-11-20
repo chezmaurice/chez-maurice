@@ -6,6 +6,7 @@
 "pairing.error.connect" = "No se pudo conectar: %@";
 "pairing.error.invalid_url" = "Esa dirección no parece válida. Ejemplo: https://martin.chezmaurice.eu";
 "pairing.error.unreachable" = "el servidor no respondió";
+"pairing.error.no_host" = "No hay ningún Maurice en %@. Comprueba la dirección con la persona que te invita.";
 "pairing.error.https_hint" = "Los servidores de Maurice usan https — prueba https:// en lugar de http://.";
 "picker.title" = "¿Quién anda por aquí?";
 "picker.empty" = "Para unirte a este Maurice en este dispositivo, introduce el código de invitación que has recibido.";
@@ -1088,7 +1089,9 @@
 "welcome.paste_link" = "Pegar el enlace de invitación";
 "welcome.enter_code" = "Escribir un código o una dirección";
 "welcome.more_options" = "Otras opciones";
-"welcome.address_needed" = "La dirección de tu Maurice";
+"welcome.address_needed" = "Dirección del Maurice que te invita";
+"welcome.address_caption" = "La de la persona que te invita, no una nueva: está en la página de la invitación, debajo del código.";
+"signup.with_code" = "¿Aún no tienes Maurice? Crea uno con este código";
 "scanner.hint" = "Apunta al código QR de la invitación";
 "scanner.camera_reason" = "La cámara solo sirve para leer el código QR de tu invitación.";
 "common.close" = "Cerrar";
@@ -1189,6 +1192,11 @@
 "signup.wait.queue_detail" = "Hay mucha gente: se creará en cuanto haya sitio. Puedes cerrar la app; seguirá aquí.";
 "signup.wait.making" = "Tu Maurice se está preparando…";
 "signup.wait.making_detail" = "Tarda unos minutos. Entrarás en cuanto esté listo.";
+"signup.wait.address" = "Tu Maurice está hecho.";
+"signup.wait.address_detail" = "Tu red aún no conoce su dirección: puede tardar unos minutos, y entrarás en cuanto responda. Pasar del wifi a los datos móviles, o al revés, suele acelerarlo.";
+"pairing.error.not_yet" = "%@ aún no responde en esta red. Si este Maurice se acaba de crear, puede tardar unos minutos: la app sigue intentándolo sola. Pasar del wifi a los datos móviles, o al revés, suele ayudar.";
+"picker.invite_kept" = "Retomar tu invitación";
+"picker.invite_waiting" = "Tu invitación a este Maurice te espera.";
 "signup.wait.lost" = "Este registro no ha salido bien. Puedes empezar de nuevo.";
 
 /* A sealed push before the notification extension opens it (the push relay, APNs loc-key). */

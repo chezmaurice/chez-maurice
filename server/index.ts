@@ -915,6 +915,7 @@ app.get("/join", (c) => {
   .step h2 { font-size: 1.05rem; font-weight: 600; margin: 0 0 .25rem; font-family: ui-sans-serif, system-ui, sans-serif; color: var(--ink); }
   .note { font-size: .85rem; margin: .5rem 0 0; }
   .code { font-family: ui-monospace, monospace; font-size: 1.6rem; letter-spacing: .2rem; background: var(--well); padding: .5rem 1rem; border-radius: 8px; display: inline-block; }
+  .addr { font-family: ui-monospace, monospace; font-size: 1.05rem; background: var(--well); padding: .5rem 1rem; border-radius: 8px; display: inline-block; overflow-wrap: anywhere; user-select: all; -webkit-user-select: all; }
 </style></head><body><main>
   <h1>${esc(t(lang, "join.title", householdName()))}</h1>
   <p class="sub">Chez Maurice</p>
@@ -931,6 +932,8 @@ app.get("/join", (c) => {
     ${opens}
     <p>${esc(t(lang, "join.code"))}</p>
     <div class="code">${esc(formatInviteCode(code))}</div>
+    <p>${esc(t(lang, "join.address"))}</p>
+    <div class="addr">${esc(server.replace(/^https:\/\//, ""))}</div>
   </div>` : ""}
 </main></body></html>`);
 });

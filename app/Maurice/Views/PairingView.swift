@@ -22,6 +22,12 @@ struct PairingView: View {
     /// « Créer mon Maurice »: the sign-up, or the wait for one under way.
     @State private var showSignup = false
     @State private var signupPending = SignupPoll.saved != nil
+    /// What the sign-up form starts with: an access code that came in where an
+    /// invitation's was expected, and the address wished for with it.
+    @State private var signupCode = ""
+    @State private var signupName = ""
+    /// The sign-up asked for from the entry sheet: opened once that one has closed.
+    @State private var signupAfterEntry = false
 
     var body: some View {
         ZStack {
@@ -70,7 +76,7 @@ struct PairingView: View {
 
                         // No Maurice yet: make one. A sign-up under way is
                         // picked up again here, even after quitting the app.
-                        Button { error = nil; showSignup = true } label: {
+                        Button { error = nil; signupCode = ""; signupName = ""; showSignup = true } label: {
                             Text(session.localized(signupPending ? "signup.resume" : "signup.open"))
                                 .font(.callout.weight(.medium))
                         }
@@ -108,8 +114,23 @@ struct PairingView: View {
         .frame(width: onPaired != nil ? 480 : nil, height: onPaired != nil ? 640 : nil)
         #endif
         .sheet(isPresented: $showSignup, onDismiss: { signupPending = SignupPoll.saved != nil }) {
-            SignupSheet(onJoined: { showSignup = false; onPaired?() })
+            SignupSheet(onJoined: { showSignup = false; onPaired?() }, code: signupCode, name: signupName)
                 .environment(session)
+        }
+        // An access code that came by a link: the sign-up, with it filled in.
+        .task(id: session.pendingAccessCode) {
+            guard let code = session.pendingAccessCode else { return }
+            signupCode = code
+            signupName = ""
+            showEntry = false
+            showScanner = false
+            // Not awaited here: forgetting the code changes this task's id,
+            // and SwiftUI would cancel it before the sheet opens.
+            Task {
+                try? await Task.sleep(for: .milliseconds(500))
+                showSignup = true
+            }
+            session.pendingAccessCode = nil
         }
         // Back after quitting mid-sign-up: straight to the wait.
         // (A beat later: a sheet asked for while the root is still settling is dropped.)
@@ -118,8 +139,16 @@ struct PairingView: View {
             try? await Task.sleep(for: .milliseconds(500))
             showSignup = true
         }
-        .sheet(isPresented: $showEntry) {
-            EntrySheet(prefill: entryPrefill, onDone: { showEntry = false; onPaired?() })
+        .sheet(isPresented: $showEntry, onDismiss: {
+            if signupAfterEntry { signupAfterEntry = false; showSignup = true }
+        }) {
+            EntrySheet(prefill: entryPrefill, onDone: { showEntry = false; onPaired?() },
+                       onSignup: { code, name in
+                           signupCode = code
+                           signupName = name
+                           signupAfterEntry = true
+                           showEntry = false
+                       })
                 .environment(session)
         }
         #if os(iOS)
@@ -128,6 +157,15 @@ struct PairingView: View {
                 showScanner = false
                 if let invitation = Invitation(text) {
                     accept(invitation)
+                } else if let code = Tower.accessCode(in: text) {
+                    // The tower's code, not a household's: it makes a Maurice.
+                    // (A beat later: the scanner is still closing.)
+                    signupCode = code
+                    signupName = ""
+                    Task {
+                        try? await Task.sleep(for: .milliseconds(500))
+                        showSignup = true
+                    }
                 } else {
                     error = session.localized("invite.scan.not_invitation")
                 }
@@ -178,6 +216,10 @@ struct PairingView: View {
         #endif
         if let invitation = Invitation(text) {
             accept(invitation)
+        } else if let code = Tower.accessCode(in: text) {
+            signupCode = code
+            signupName = ""
+            showSignup = true
         } else {
             entryPrefill = text.trimmingCharacters(in: .whitespacesAndNewlines)
             showEntry = true
@@ -205,10 +247,24 @@ struct PairingView: View {
         return s
     }
 
+    /// The network knows no such name. For an address just made this is not a
+    /// refusal: a resolver asked before the name existed keeps its "no such
+    /// name" for up to half an hour (the zone's negative TTL).
+    static func isNoHost(_ error: Error) -> Bool {
+        let ns = error as NSError
+        return ns.domain == NSURLErrorDomain
+            && [NSURLErrorCannotFindHost, NSURLErrorDNSLookupFailed].contains(ns.code)
+    }
+
     /// A human error that never renders "(null)": prefer a concrete reason, fall
     /// back to a generic one, and nudge toward https when a plain-http address
     /// (the usual cause) was used.
     static func friendlyConnectError(_ error: Error, url: String, session: SessionStore) -> String {
+        // No such name: an address mistyped, or made up by someone who took
+        // the field for the place to name a new Maurice (20 November 2026).
+        if isNoHost(error) {
+            return session.localized("pairing.error.no_host", URL(string: url)?.host ?? url)
+        }
         var reason = (error as? LocalizedError)?.errorDescription ?? ""
         if reason.isEmpty { reason = (error as NSError).localizedDescription }
         if reason.isEmpty { reason = session.localized("pairing.error.unreachable") }
@@ -243,6 +299,9 @@ private struct EntrySheet: View {
     @Environment(\.dismiss) private var dismiss
     let prefill: String
     let onDone: () -> Void
+    /// The code is the tower's, for a Maurice still to be made: on to the
+    /// sign-up with it, and with the address typed here as the one wished for.
+    let onSignup: (_ code: String, _ name: String) -> Void
     @State private var text = ""
     @State private var address = ""
     /// Set once the field holds a bare code: the address is then needed.
@@ -267,7 +326,7 @@ private struct EntrySheet: View {
                     Text(session.localized("pairing.instructions"))
                 }
                 if pendingCode != nil {
-                    Section(session.localized("welcome.address_needed")) {
+                    Section {
                         TextField("monfoyer.chezmaurice.eu", text: $address)
                             .autocorrectionDisabled()
                             #if os(iOS)
@@ -276,6 +335,19 @@ private struct EntrySheet: View {
                             #endif
                             .submitLabel(.go)
                             .onSubmit { Task { await go() } }
+                    } header: {
+                        Text(session.localized("welcome.address_needed"))
+                    } footer: {
+                        // The inviter's address, not one to invent: an access
+                        // code typed here belongs to the sign-up (20 November 2026).
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(session.localized("welcome.address_caption"))
+                            Button(session.localized("signup.with_code")) {
+                                onSignup(text.trimmingCharacters(in: .whitespacesAndNewlines), wishedName)
+                            }
+                            .font(.footnote.weight(.medium))
+                            .buttonStyle(.borderless)
+                        }
                     }
                 }
                 if let error {
@@ -317,6 +389,24 @@ private struct EntrySheet: View {
         return code.count == 8 ? code : nil
     }
 
+    /// The address typed, as a name to ask the tower for: "aline" from
+    /// "aline.chezmaurice.eu". Empty when it is some other kind of address.
+    private var wishedName: String { Self.hostedName(address) ?? "" }
+
+    /// The name an address has under the hosted zone: "aline" from
+    /// "aline.chezmaurice.eu", from "https://aline.chezmaurice.eu/", or from
+    /// "aline" alone. Nil for any other address.
+    static func hostedName(_ raw: String) -> String? {
+        var s = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        for scheme in ["https://", "http://"] where s.hasPrefix(scheme) { s.removeFirst(scheme.count) }
+        while s.hasSuffix("/") { s.removeLast() }
+        let zone = "." + Tower.zone
+        if s.hasSuffix(zone) { s.removeLast(zone.count) }
+        guard !s.isEmpty, s != "localhost",
+              !s.contains("."), !s.contains("/"), !s.contains(":") else { return nil }
+        return s
+    }
+
     private func go() async {
         guard !busy else { return }
         error = nil
@@ -325,17 +415,37 @@ private struct EntrySheet: View {
             onDone()
             return
         }
+        if let code = Tower.accessCode(in: text) {
+            onSignup(code, "")
+            return
+        }
         if pendingCode == nil, let code = Self.bareCode(text) {
             pendingCode = code
             return
         }
         let raw = pendingCode != nil ? address : text
-        guard let url = PairingView.normalizedURL(raw) else {
+        guard var url = PairingView.normalizedURL(raw) else {
             error = session.localized("pairing.error.invalid_url")
             return
         }
         busy = true
         defer { busy = false }
+        // A hosted address is asked of the tower before it is asked of the
+        // network: a name looked up before it exists stays "not found" on
+        // this network for half an hour, and would still be when someone
+        // then makes a Maurice of that very name (20 November 2026).
+        if let name = Self.hostedName(raw) {
+            let hosted = "\(name).\(Tower.zone)"
+            let path = "/api/names/" + (name.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? name)
+            if let answer: Tower.NameAnswer = try? await TowerClient(baseURL: Tower.baseURL).get(path) {
+                if answer.ok {
+                    // Free: nobody lives there.
+                    error = session.localized("pairing.error.no_host", hosted)
+                    return
+                }
+                if answer.reason == "taken" { url = "https://" + hosted }
+            }
+        }
         do {
             let health: HealthResponse = try await APIClient(baseURL: url).get("/api/health")
             guard health.status == "ok" else {

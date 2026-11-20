@@ -22,6 +22,30 @@ enum Tower {
         let labels = host.split(separator: ".")
         return labels.count > 2 ? labels.dropFirst().joined(separator: ".") : host
     }
+
+    /// GET /api/names/<name>: free (`ok`), or why not — `taken` when a Maurice
+    /// holds it, `reserved`, `shape`.
+    struct NameAnswer: Decodable {
+        let ok: Bool
+        let name: String?
+        let reason: String?
+    }
+
+    /// The access code a sign-up link carries: what makes a Maurice, not what
+    /// enters one. Either a link to the tower with `?code=…` (the QR code the
+    /// operator shows, read by the camera or pasted), or `maurice://signup?code=…`
+    /// (the "Open" button of the tower's page). Nil for anything else.
+    static func accessCode(in text: String) -> String? {
+        guard let parts = URLComponents(string: text.trimmingCharacters(in: .whitespacesAndNewlines)),
+              let host = parts.host?.lowercased(),
+              let code = parts.queryItems?.first(where: { $0.name == "code" })?.value, !code.isEmpty
+        else { return nil }
+        switch parts.scheme?.lowercased() {
+        case "maurice": return host == "signup" ? code : nil
+        case "https", "http": return host == URL(string: baseURL)?.host?.lowercased() ? code : nil
+        default: return nil
+        }
+    }
 }
 
 /// A refusal from the tower: its code (`error`) and, when it gave one, a

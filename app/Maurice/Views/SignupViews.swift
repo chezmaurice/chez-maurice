@@ -19,6 +19,10 @@ struct SignupSheet: View {
     @Environment(SessionStore.self) private var session
     @Environment(\.dismiss) private var dismiss
     let onJoined: () -> Void
+    /// An access code already in hand (typed where an invitation's goes, or
+    /// read off a tower link), and the address wished for, to start the form with.
+    var code = ""
+    var name = ""
     @State private var poll: String? = SignupPoll.saved
 
     var body: some View {
@@ -30,7 +34,7 @@ struct SignupSheet: View {
                         self.poll = nil
                     })
                 } else {
-                    SignupForm { secret in
+                    SignupForm(code: code, name: name) { secret in
                         SignupPoll.saved = secret
                         poll = secret
                     }
@@ -73,9 +77,9 @@ private struct SignupForm: View {
     let onSent: (String) -> Void
 
     @State private var firstName = ""
-    @State private var name = ""
+    @State private var name: String
     @State private var email = ""
-    @State private var code = ""
+    @State private var code: String
     @State private var terms = false
 
     /// The address as the tower last judged it: nil while unasked.
@@ -84,6 +88,12 @@ private struct SignupForm: View {
     @State private var suggestions: [String] = []
     @State private var busy = false
     @State private var error: String?
+
+    init(code: String = "", name: String = "", onSent: @escaping (String) -> Void) {
+        self.onSent = onSent
+        _code = State(initialValue: code)
+        _name = State(initialValue: name)
+    }
 
     private var tower: TowerClient {
         TowerClient(baseURL: Tower.baseURL, language: session.localeIdentifier ?? Locale.preferredLanguages.first)
@@ -266,6 +276,8 @@ private struct SignupWaitView: View {
     @State private var state: String?
     /// The tower no longer knows the sign-up, or gave up on it.
     @State private var lost = false
+    /// Made, the tower says, but its address does not answer from here yet.
+    @State private var unanswered = false
 
     var body: some View {
         VStack(spacing: 22) {
@@ -302,6 +314,7 @@ private struct SignupWaitView: View {
 
     private var headline: String {
         if lost { return "signup.wait.lost" }
+        if unanswered { return "signup.wait.address" }
         switch state {
         case nil, "unverified": return "signup.wait.confirm"
         case "waiting": return "signup.wait.queue"
@@ -311,6 +324,7 @@ private struct SignupWaitView: View {
 
     private var detail: String? {
         if lost { return nil }
+        if unanswered { return "signup.wait.address_detail" }
         switch state {
         case nil, "unverified": return "signup.wait.confirm_detail"
         case "waiting": return "signup.wait.queue_detail"
@@ -327,10 +341,18 @@ private struct SignupWaitView: View {
                 state = s.state
                 if s.state == "live", let server = s.server, let code = s.invite_code,
                    let url = PairingView.normalizedURL(server) {
-                    SignupPoll.saved = nil
-                    session.receive(Invitation(server: url, code: code))
-                    onJoined()
-                    return
+                    // Made, the tower says. It is ready when it answers from
+                    // here: a network that was asked for the name before it
+                    // existed goes on saying "no such site" for a while, and
+                    // the next screen would open on that error (20 November 2026).
+                    let health: HealthResponse? = try? await APIClient(baseURL: url).get("/api/health")
+                    if health?.status == "ok" {
+                        SignupPoll.saved = nil
+                        session.receive(Invitation(server: url, code: code))
+                        onJoined()
+                        return
+                    }
+                    unanswered = true
                 }
                 if ["failed", "closed"].contains(s.state) { forget(); return }
             } catch let e as TowerError where e.status == 404 {

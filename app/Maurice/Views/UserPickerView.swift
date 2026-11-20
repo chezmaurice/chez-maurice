@@ -39,6 +39,8 @@ struct UserPickerView: View {
     @State private var showEnroll = false
     @State private var enrollCode = ""
     @State private var enrollError: String?
+    /// Said while waiting, not an error: the address does not answer yet.
+    @State private var enrollNotice: String?
     @State private var enrollBusy = false
     /// An open invitation: the code is good and the server asks who is joining.
     @State private var enrollNeedsProfile = false
@@ -75,14 +77,14 @@ struct UserPickerView: View {
                     .padding(40)
             } else if users.isEmpty {
                 VStack(spacing: 14) {
-                    Text(session.localized("picker.empty"))
+                    Text(session.localized(session.keptInvite != nil ? "picker.invite_waiting" : "picker.empty"))
                         .font(.callout)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
-                    Button { openEnroll() } label: {
+                    Button { if session.keptInvite != nil { resumeInvite() } else { openEnroll() } } label: {
                         // Ink button: its label in the card's own ground colour.
-                        Text(session.localized("enroll.cta"))
+                        Text(session.localized(session.keptInvite != nil ? "picker.invite_kept" : "enroll.cta"))
                             .foregroundStyle(Color.platformBackground)
                             .frame(maxWidth: 320)
                     }
@@ -99,6 +101,12 @@ struct UserPickerView: View {
                             handleUserTap(user)
                         }
                     }
+                }
+                // An invitation received here and not used yet: still on offer.
+                if session.keptInvite != nil {
+                    Button(session.localized("picker.invite_kept")) { resumeInvite() }
+                        .font(.callout.weight(.medium))
+                        .buttonStyle(.borderless)
                 }
             }
 
@@ -164,11 +172,14 @@ struct UserPickerView: View {
             )
         }
         .sheet(isPresented: $showEnroll, onDismiss: {
-            enrollCode = ""; enrollError = nil; enrollNeedsProfile = false; enrollName = ""
+            // The household keeps a received invitation (Household.invite):
+            // closing this loses nothing, the picker offers it again.
+            enrollCode = ""; enrollError = nil; enrollNotice = nil; enrollNeedsProfile = false; enrollName = ""
         }) {
             InviteEnrollSheet(
                 code: $enrollCode,
                 error: $enrollError,
+                notice: enrollNotice,
                 needsProfile: enrollNeedsProfile,
                 name: $enrollName,
                 color: $enrollColor,
@@ -262,12 +273,53 @@ struct UserPickerView: View {
         showEnroll = true
     }
 
+    /// The invitation the household kept, used as when it first arrived.
+    private func resumeInvite() {
+        guard let code = session.keptInvite else { return }
+        enrollCode = code
+        enrollError = nil
+        enrollNeedsProfile = false
+        showEnroll = true
+        Task { await enrollWithCode() }
+    }
+
+    /// Enroll with the code in the sheet. An address the network does not know
+    /// yet is waited for, not refused: a household just made can stay "not
+    /// found" for minutes on a network that asked for its name too early.
     private func enrollWithCode() async {
-        guard let url = session.serverURL else { return }
-        let api = APIClient(baseURL: url)
+        guard !enrollBusy, let url = session.serverURL else { return }
         enrollError = nil
         enrollBusy = true
-        defer { enrollBusy = false }
+        defer { enrollBusy = false; enrollNotice = nil }
+        let code = enrollCode
+        for _ in 0..<120 {
+            do {
+                try await enrollOnce(url)
+                return
+            } catch let err as APIError {
+                if case .server(let status, let msg) = err {
+                    enrollError = msg
+                    // Refused for good: stop offering it.
+                    if status == 401, Invitation.same(code, session.keptInvite) { session.forgetInvite() }
+                } else {
+                    enrollError = err.localizedDescription
+                }
+                return
+            } catch {
+                guard PairingView.isNoHost(error) else {
+                    enrollError = error.localizedDescription
+                    return
+                }
+                enrollNotice = session.localized("pairing.error.not_yet", URL(string: url)?.host ?? url)
+                try? await Task.sleep(for: .seconds(5))
+                guard showEnroll, session.serverURL == url, enrollCode == code else { return }
+            }
+        }
+        enrollError = session.localized("pairing.error.no_host", URL(string: url)?.host ?? url)
+    }
+
+    private func enrollOnce(_ url: String) async throws {
+        let api = APIClient(baseURL: url)
         do {
             var body: [String: String] = ["code": enrollCode.trimmingCharacters(in: .whitespacesAndNewlines)]
             if let deviceId = session.deviceId { body["device_id"] = deviceId }
@@ -288,6 +340,8 @@ struct UserPickerView: View {
                 return
             }
             let me: ServerUser = try await api.get("/api/users/me", token: token)
+            // It has served: nothing left to offer again.
+            session.forgetInvite()
             showEnroll = false
             enrollCode = ""
             enrollNeedsProfile = false
@@ -299,10 +353,6 @@ struct UserPickerView: View {
                 // Guest: sign in now; the device stays locked to this account.
                 finishEnroll(userId: userId, token: token, user: DeviceUser(from: me))
             }
-        } catch let err as APIError {
-            if case .server(_, let msg) = err { enrollError = msg } else { enrollError = err.localizedDescription }
-        } catch {
-            enrollError = error.localizedDescription
         }
     }
 
@@ -632,6 +682,8 @@ enum MemberColors {
 private struct InviteEnrollSheet: View {
     @Binding var code: String
     @Binding var error: String?
+    /// A wait being explained (the address does not answer yet): not in red.
+    var notice: String? = nil
     /// Second step of an open invitation: the newcomer names themselves.
     let needsProfile: Bool
     @Binding var name: String
@@ -673,6 +725,7 @@ private struct InviteEnrollSheet: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(L("enroll.profile.subtitle"))
                         SheetError(text: error)
+                        if let notice { Text(notice) }
                     }
                 }
             } else {
@@ -690,6 +743,7 @@ private struct InviteEnrollSheet: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(L("enroll.subtitle"))
                         SheetError(text: error)
+                        if let notice { Text(notice) }
                     }
                 }
             }

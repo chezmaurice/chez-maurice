@@ -6,6 +6,7 @@
 "pairing.error.connect" = "Could not connect: %@";
 "pairing.error.invalid_url" = "That doesn't look like a valid address. Example: https://martin.chezmaurice.eu";
 "pairing.error.unreachable" = "the server didn't respond";
+"pairing.error.no_host" = "There is no Maurice at %@. Check the address with the person inviting you.";
 "pairing.error.https_hint" = "Maurice servers use https — try https:// instead of http://.";
 "picker.title" = "Who's here?";
 "picker.empty" = "To join this Maurice on this device, enter the invitation code you were given.";
@@ -1088,7 +1089,9 @@
 "welcome.paste_link" = "Paste the invitation link";
 "welcome.enter_code" = "Enter a code or an address";
 "welcome.more_options" = "Other options";
-"welcome.address_needed" = "Your Maurice’s address";
+"welcome.address_needed" = "Address of the Maurice inviting you";
+"welcome.address_caption" = "The address of the person inviting you, not a new one: it is on the invitation page, under the code.";
+"signup.with_code" = "No Maurice yet? Create one with this code";
 "scanner.hint" = "Point at the invitation’s QR code";
 "scanner.camera_reason" = "The camera is only used to read your invitation’s QR code.";
 "common.close" = "Close";
@@ -1189,6 +1192,11 @@
 "signup.wait.queue_detail" = "It’s busy: it will be made as soon as there is room. You can close the app; it picks up here.";
 "signup.wait.making" = "Your Maurice is on its way…";
 "signup.wait.making_detail" = "It takes a few minutes. You’ll be let in as soon as it’s ready.";
+"signup.wait.address" = "Your Maurice is made.";
+"signup.wait.address_detail" = "Your network does not know its address yet: this can take a few minutes, and you’ll be let in as soon as it answers. Switching from Wi-Fi to mobile data, or back, often speeds things up.";
+"pairing.error.not_yet" = "%@ does not answer on this network yet. If this Maurice has just been made, this can take a few minutes: the app keeps trying. Switching from Wi-Fi to mobile data, or back, often helps.";
+"picker.invite_kept" = "Pick up your invitation";
+"picker.invite_waiting" = "Your invitation to this Maurice is waiting for you.";
 "signup.wait.lost" = "This sign-up didn’t go through. You can start over.";
 
 /* A sealed push before the notification extension opens it (the push relay, APNs loc-key). */

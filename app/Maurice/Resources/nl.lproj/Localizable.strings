@@ -6,6 +6,7 @@
 "pairing.error.connect" = "Verbinden mislukt: %@";
 "pairing.error.invalid_url" = "Dat lijkt geen geldig adres. Voorbeeld: https://martin.chezmaurice.eu";
 "pairing.error.unreachable" = "de server reageerde niet";
+"pairing.error.no_host" = "Er is geen Maurice op %@. Controleer het adres bij wie je uitnodigt.";
 "pairing.error.https_hint" = "Maurice-servers gebruiken https — probeer https:// in plaats van http://.";
 "picker.title" = "Wie is er?";
 "picker.empty" = "Om je op dit apparaat bij deze Maurice aan te sluiten, voer je de uitnodigingscode in die je hebt gekregen.";
@@ -1075,7 +1076,9 @@
 "welcome.paste_link" = "Uitnodigingslink plakken";
 "welcome.enter_code" = "Code of adres invoeren";
 "welcome.more_options" = "Andere opties";
-"welcome.address_needed" = "Adres van je Maurice";
+"welcome.address_needed" = "Adres van de Maurice die je uitnodigt";
+"welcome.address_caption" = "Het adres van wie je uitnodigt, geen nieuw adres: het staat op de uitnodigingspagina, onder de code.";
+"signup.with_code" = "Nog geen Maurice? Maak er een met deze code";
 "scanner.hint" = "Richt op de QR-code van de uitnodiging";
 "scanner.camera_reason" = "De camera dient alleen om de QR-code van je uitnodiging te lezen.";
 "common.close" = "Sluiten";
@@ -1190,6 +1193,11 @@
 "signup.wait.queue_detail" = "Het is druk: hij wordt gemaakt zodra er plaats is. Je kunt de app sluiten; het gaat hier verder.";
 "signup.wait.making" = "Je Maurice wordt klaargemaakt…";
 "signup.wait.making_detail" = "Dat duurt een paar minuten. Je komt binnen zodra hij klaar is.";
+"signup.wait.address" = "Je Maurice is gemaakt.";
+"signup.wait.address_detail" = "Je netwerk kent het adres nog niet: dat kan een paar minuten duren, en je komt binnen zodra het antwoordt. Overschakelen van wifi naar mobiele data, of omgekeerd, versnelt het vaak.";
+"pairing.error.not_yet" = "%@ antwoordt nog niet op dit netwerk. Als deze Maurice net is gemaakt, kan dat een paar minuten duren: de app blijft het zelf proberen. Overschakelen van wifi naar mobiele data, of omgekeerd, helpt vaak.";
+"picker.invite_kept" = "Ga verder met je uitnodiging";
+"picker.invite_waiting" = "Je uitnodiging voor deze Maurice wacht op je.";
 "signup.wait.lost" = "Deze aanmelding is niet gelukt. Je kunt opnieuw beginnen.";
 
 /* A sealed push before the notification extension opens it (the push relay, APNs loc-key). */

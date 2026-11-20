@@ -6,6 +6,7 @@
 "pairing.error.connect" = "Verbindung fehlgeschlagen: %@";
 "pairing.error.invalid_url" = "Das sieht nicht nach einer gültigen Adresse aus. Beispiel: https://martin.chezmaurice.eu";
 "pairing.error.unreachable" = "der Server hat nicht geantwortet";
+"pairing.error.no_host" = "Unter %@ gibt es keinen Maurice. Frag die Person, die dich einlädt, nach der Adresse.";
 "pairing.error.https_hint" = "Maurice-Server verwenden https — versuche https:// statt http://.";
 "picker.title" = "Wer ist da?";
 "picker.empty" = "Um diesem Maurice auf diesem Gerät beizutreten, gib den Einladungscode ein, den du bekommen hast.";
@@ -1088,7 +1089,9 @@
 "welcome.paste_link" = "Einladungslink einfügen";
 "welcome.enter_code" = "Code oder Adresse eingeben";
 "welcome.more_options" = "Weitere Optionen";
-"welcome.address_needed" = "Adresse deines Maurice";
+"welcome.address_needed" = "Adresse des Maurice, der dich einlädt";
+"welcome.address_caption" = "Die Adresse der Person, die dich einlädt, keine neue: Sie steht auf der Einladungsseite unter dem Code.";
+"signup.with_code" = "Noch keinen Maurice? Mit diesem Code einen erstellen";
 "scanner.hint" = "Richte die Kamera auf den QR-Code der Einladung";
 "scanner.camera_reason" = "Die Kamera dient nur dazu, den QR-Code deiner Einladung zu lesen.";
 "common.close" = "Schließen";
@@ -1189,6 +1192,11 @@
 "signup.wait.queue_detail" = "Gerade ist viel los: Er wird eingerichtet, sobald Platz ist. Du kannst die App schließen, es geht hier weiter.";
 "signup.wait.making" = "Dein Maurice wird eingerichtet …";
 "signup.wait.making_detail" = "Das dauert ein paar Minuten. Du kommst rein, sobald er fertig ist.";
+"signup.wait.address" = "Dein Maurice ist fertig.";
+"signup.wait.address_detail" = "Dein Netzwerk kennt seine Adresse noch nicht: Das kann ein paar Minuten dauern, und du kommst rein, sobald sie antwortet. Von WLAN auf mobile Daten zu wechseln, oder umgekehrt, beschleunigt es oft.";
+"pairing.error.not_yet" = "%@ antwortet in diesem Netzwerk noch nicht. Wurde dieser Maurice gerade erst erstellt, kann das ein paar Minuten dauern: Die App versucht es von selbst weiter. Von WLAN auf mobile Daten zu wechseln, oder umgekehrt, hilft oft.";
+"picker.invite_kept" = "Einladung fortsetzen";
+"picker.invite_waiting" = "Deine Einladung zu diesem Maurice wartet auf dich.";
 "signup.wait.lost" = "Diese Anmeldung hat nicht geklappt. Du kannst neu beginnen.";
 
 /* A sealed push before the notification extension opens it (the push relay, APNs loc-key). */
