@@ -3173,8 +3173,20 @@ private struct ComposerBar: View {
                             // bubble as a paste would be — it is in the
                             // context; a tap shows the tray that holds it.
                             if let heldEntry {
-                                Button(action: onToggleTray) { HeldEntryTile(entry: heldEntry) }
-                                    .buttonStyle(.plain)
+                                Button(action: onToggleTray) {
+                                    HeldEntryTile(entry: heldEntry, inContext: composer.items.contains {
+                                        $0.type == .fiche && $0.rawId == "\(heldEntry.ref)-fiche"
+                                    })
+                                }
+                                .buttonStyle(.plain)
+                                // Taken off like a paste: the conversation
+                                // is then held from nothing, and the fiche
+                                // leaves its context.
+                                .overlay(alignment: .topTrailing) {
+                                    removeButton {
+                                        Task { if await chat.releaseEntry() { await composer.loadSpec() } }
+                                    }
+                                }
                             }
                             if let readingArticle {
                                 ReadingArticleTile(label: readingArticle)
@@ -4116,6 +4128,8 @@ struct ReportsReviewView: View {
 private struct HeldEntryTile: View {
     @Environment(\.mauriceTheme) private var theme
     let entry: ConversationEntry
+    /// Whether its fiche is still in the tray: the member may have taken it out.
+    var inContext = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
@@ -4129,10 +4143,12 @@ private struct HeldEntryTile: View {
                 .lineLimit(2)
                 .multilineTextAlignment(.leading)
             Spacer(minLength: 0)
-            Label(L("chat.entry.in_context"), systemImage: "suitcase")
-                .font(.system(size: 9, weight: .medium))
-                .foregroundStyle(theme.inkMute)
-                .lineLimit(1)
+            if inContext {
+                Label(L("chat.entry.in_context"), systemImage: "suitcase")
+                    .font(.system(size: 9, weight: .medium))
+                    .foregroundStyle(theme.inkMute)
+                    .lineLimit(1)
+            }
         }
         .padding(6)
         .frame(width: 128, height: 60, alignment: .topLeading)

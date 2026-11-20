@@ -820,6 +820,26 @@ final class ChatService {
         }
     }
 
+    /// Let go of the entry a new conversation is held from — the × on its
+    /// tile in the composer. The server takes the fiche (and the book that
+    /// came with it) out of the context too; true when it is done, so the
+    /// tray can be read again.
+    func releaseEntry() async -> Bool {
+        guard let api, let token, let id = activeConversationId, activeEntry != nil else { return false }
+        do {
+            try await api.delete("/api/conversations/\(id)/entry", token: token)
+            guard activeConversationId == id else { return false }
+            activeEntry = nil
+            if let i = conversations.firstIndex(where: { $0.id == id }) {
+                conversations[i].entry_ref = nil
+            }
+            return true
+        } catch {
+            report(error)
+            return false
+        }
+    }
+
     func startNewConversation() async {
         // A reply still streaming belongs to the thread being left. Left running
         // it keeps writing — and on completion appends the finished answer into

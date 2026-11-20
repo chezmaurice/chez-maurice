@@ -168,3 +168,36 @@ describe("a conversation opened from the reader", () => {
     expect((await open({ book: 999 })).status).toBe(404);
   });
 });
+
+describe("letting go of the entry a conversation is held from", () => {
+  const release = (id: string, as = auth) => conversations.request(`/${id}/entry`, { method: "DELETE", headers: { Authorization: as } });
+
+  test("before anything is said: no longer held, the fiche and its book out of the context, the rest kept", async () => {
+    const { id } = await (await open({ book: 7 })).json();
+    expect(getConversation(id, ANNA)?.entry_ref).toBe("books/fr/humus-roman");
+    const before = getSpec(ANNA, id).items;
+    expect(before.map((i) => i.type).sort()).toEqual(["book", "fiche"]);
+    // Something the member added on their own stays.
+    const mine = { ...before.find((i) => i.type === "fiche")!, id: "articles/fr/sols-vivants-fiche" };
+    db.run(`UPDATE composer_specs SET spec_json = ? WHERE conversation_id = ? AND account_id = ?`,
+      [JSON.stringify({ items: [...before, mine], resolved_at: "2026-11-20T00:00:00Z" }), id, ANNA]);
+
+    const res = await release(id);
+    expect(res.status).toBe(200);
+    expect(getConversation(id, ANNA)?.entry_ref ?? null).toBeNull();
+    expect(getSpec(ANNA, id).items.map((i) => String(i.id))).toEqual(["articles/fr/sols-vivants-fiche"]);
+    const detail = await (await conversations.request(`/${id}`, { headers: { Authorization: auth } })).json();
+    expect(detail.entry).toBeNull();
+    // Again is the same answer.
+    expect((await release(id)).status).toBe(200);
+  });
+
+  test("not once it has started, and not someone else's", async () => {
+    const { id } = await (await open({ entry: "books/fr/humus-roman" })).json();
+    expect((await release("no-such-conversation")).status).toBe(404);
+    db.run(`INSERT INTO messages (id, conversation_id, role, content) VALUES (?, ?, 'user', 'Bonjour')`, [`m-${id}`, id]);
+    expect((await release(id)).status).toBe(409);
+    expect(getConversation(id, ANNA)?.entry_ref).toBe("books/fr/humus-roman");
+    db.run(`DELETE FROM messages WHERE id = ?`, [`m-${id}`]);
+  });
+});

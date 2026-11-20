@@ -24,6 +24,7 @@ import { aiAllowed, providerInfo } from "./aiConsent";
 import { recordSpend, verdict } from "./budget";
 import { getModel } from "./models";
 import { countParticipants, getConversation } from "./conversations";
+import { getSpec } from "./composer/specs";
 import { McpSession } from "./mcpClient";
 import { publishToUser } from "./roomBus";
 import { getUser, isGuest } from "./users";
@@ -237,6 +238,42 @@ export function heldEntry(viewerId: string, conversationId: string): {
     image: openImage(garden, entry.image),
     web_path: mine ? entry.card?.web_path ?? entry.fiche?.web_path ?? null : null,
   };
+}
+
+/**
+ * Let go of the entry a conversation is held from (20 November 2026): the
+ * member takes the entry's tile off the composer before saying anything. The
+ * conversation becomes an ordinary one — nothing of it will be kept on the
+ * fiche — and what holding it had put in its context goes too: the fiche,
+ * and the book that came with it on the member's progress. Anything else the
+ * member attached stays.
+ *
+ * Only the member's own conversation, and only while nothing was said: a
+ * conversation that has gone on is already part of the entry's history.
+ */
+export function releaseEntry(memberId: string, conversationId: string): "released" | "not_found" | "started" {
+  const convo = getConversation(conversationId, memberId);
+  if (!convo || convo.user_id !== memberId) return "not_found";
+  const ref = convo.entry_ref;
+  if (!ref) return "released";
+  if (db.query(`SELECT 1 FROM messages WHERE conversation_id = ? LIMIT 1`).get(conversationId)) return "started";
+  const own = ref.startsWith("@") ? null : ref;
+  const book = own ? startedBookOf(memberId, own) : null;
+  const items = getSpec(memberId, conversationId).items;
+  const kept = items.filter((it) => {
+    if (it.type === "fiche" && String(it.id) === `${ref}-fiche`) return false;
+    if (it.type === "book" && (it.scope?.mode === "progress" || (book != null && String(it.id) === String(book)))) return false;
+    return true;
+  });
+  db.transaction(() => {
+    db.run(`UPDATE conversations SET entry_ref = NULL WHERE id = ?`, [conversationId]);
+    if (kept.length !== items.length) {
+      const spec = { items: kept, resolved_at: new Date().toISOString() };
+      db.run(`UPDATE composer_specs SET spec_json = ?, updated_at = datetime('now') WHERE conversation_id = ? AND account_id = ?`,
+        [JSON.stringify(spec), conversationId, memberId]);
+    }
+  })();
+  return "released";
 }
 
 /** The entry a conversation is held from, when it is and the entry is still there. */

@@ -35,7 +35,7 @@ import { pushToUser } from "../services/push";
 import { indexConversationInBackground } from "../services/mcpClient";
 import { searchConversations } from "../services/conversationSearch";
 import { takeReview } from "../services/reviewFooter";
-import { heldEntry, offerSharedArticle, ownEntryRef, startedBookOf, suggestInBackground } from "../services/entrySuggestions";
+import { heldEntry, offerSharedArticle, ownEntryRef, releaseEntry, startedBookOf, suggestInBackground } from "../services/entrySuggestions";
 import { linkOnFicheInBackground } from "../../data-api/services/entryConversations";
 import { saveSpec } from "../services/composer/specs";
 import type { BookFocus } from "../services/composer/weights";
@@ -257,6 +257,17 @@ conversations.get("/:id/export", (c) => {
 
 conversations.post("/:id/read", (c) => {
   markConversationRead(c.get("userId"), c.req.param("id"));
+  return c.json({ ok: true });
+});
+
+// ── DELETE /api/conversations/:id/entry — let go of the entry it is held from ──
+// The × on the entry's tile in the composer. Only before the first message:
+// 409 { error: "started" } afterwards.
+
+conversations.delete("/:id/entry", (c) => {
+  const done = releaseEntry(c.get("userId"), c.req.param("id"));
+  if (done === "not_found") return c.json({ error: "Not found" }, 404);
+  if (done === "started") return c.json({ error: "started" }, 409);
   return c.json({ ok: true });
 });
 
