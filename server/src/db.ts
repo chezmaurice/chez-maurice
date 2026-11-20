@@ -1201,6 +1201,13 @@ db.run(`
     UNIQUE (member_id, url)
   )
 `);
+// Signing in (the same day, services/memberToolsOAuth.ts): `auth` says how the
+// server is reached — 'token' (one the member pasted, or none) or 'oauth' —
+// and `oauth` holds, sealed like `secret`, what renews the sign-in: the client
+// Maurice registered, the token endpoint, the refresh token, the expiry.
+// `secret` is then the access token.
+try { db.run(`ALTER TABLE member_tool_servers ADD COLUMN auth TEXT NOT NULL DEFAULT 'token'`); } catch {}
+try { db.run(`ALTER TABLE member_tool_servers ADD COLUMN oauth TEXT NOT NULL DEFAULT ''`); } catch {}
 
 // The cards those address books hold, as last read — replaced whole at every
 // read of an account, never edited here (nothing is written back to the

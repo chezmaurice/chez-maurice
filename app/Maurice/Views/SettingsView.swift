@@ -2943,6 +2943,8 @@ struct ToolServerRow: Decodable, Identifiable, Equatable {
     let name: String
     let url: String
     let has_token: Bool
+    /// "oauth" when the member signed in to it in a browser; "token" otherwise.
+    let auth: String?
     let enabled: Bool
     let state: String        // unchecked | ok | error
     let last_error: String?
@@ -2958,16 +2960,26 @@ private struct NewToolServer: Encodable {
     let url: String
     let token: String?
 }
+/// Asking where to send the member to sign in: a new server, or one of theirs again.
+private struct ToolSignInStart: Encodable {
+    var name: String?
+    var url: String?
+    var id: String?
+}
+private struct ToolSignInWhere: Decodable { let authorize_url: String }
 private struct ToolServerSwitch: Encodable { let enabled: Bool }
 private struct ToolServerToken: Encodable { let token: String }
 
 /// The member's own tools: MCP servers they connect themselves, by address.
 /// Only their conversations hold them, and never a shared one. Adding a
 /// server asks it for its tools first: one that does not answer, or refuses
-/// the token, is not kept, and its reason is shown here.
+/// the token, is not kept, and its reason is shown here. A server that wants
+/// a sign-in (the household answers 428) is signed in to in the browser: the
+/// pane waits, reading the list until the server appears.
 private struct ToolsPane: View {
     @Environment(SessionStore.self) private var session
     @Environment(\.mauriceTheme) private var theme
+    @Environment(\.openURL) private var openURL
     let accent: Color
     @Binding var servers: [ToolServerRow]?
 
@@ -2983,11 +2995,13 @@ private struct ToolsPane: View {
     @State private var newToken = ""
     @State private var open: Set<String> = []
     @State private var removing: ToolServerRow?
+    /// The sign-in under way in the browser, if any.
+    @State private var signingIn: Task<Void, Never>?
 
     private var api: APIClient? { session.serverURL.map { APIClient(baseURL: $0) } }
 
     private var canConnect: Bool {
-        !busy && !name.trimmingCharacters(in: .whitespaces).isEmpty
+        !busy && signingIn == nil && !name.trimmingCharacters(in: .whitespaces).isEmpty
             && !address.trimmingCharacters(in: .whitespaces).isEmpty
     }
 
@@ -2999,6 +3013,20 @@ private struct ToolsPane: View {
                     ForEach(servers) { server in serverCard(server) }
                 }
             }
+            if signingIn != nil {
+                SetCard {
+                    HStack(spacing: 10) {
+                        ProgressView().controlSize(.small)
+                        Text(session.localized("mytools.signin.waiting"))
+                            .font(.system(size: 12.5)).foregroundStyle(theme.inkSoft)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Spacer(minLength: 0)
+                        Button(L("common.cancel")) { signingIn?.cancel(); signingIn = nil }
+                            .glassBorderedButton().font(.system(size: 12))
+                    }
+                    .padding(13)
+                }
+            }
             if allowed {
                 SetGroup(session.localized("mytools.add")) { addForm }
                 SetCaption(session.localized("mytools.privacy"))
@@ -3007,6 +3035,7 @@ private struct ToolsPane: View {
             }
         }
         .task { await load() }
+        .onDisappear { signingIn?.cancel() }
         .confirmationDialog(session.localized("mail.remove"), isPresented: Binding(
             get: { removing != nil }, set: { if !$0 { removing = nil } }
         ), titleVisibility: .visible, presenting: removing) { server in
@@ -3075,11 +3104,18 @@ private struct ToolsPane: View {
                     .glassBorderedButton().disabled(server.tools.isEmpty)
                     Button(session.localized("contacts.sync")) { Task { await refresh(server) } }
                         .glassBorderedButton().disabled(busy)
-                    Button(session.localized("mytools.new_token")) {
-                        newToken = ""
-                        renewing = renewing == server.id ? nil : server.id
+                    if server.auth == "oauth" {
+                        Button(session.localized("mytools.signin.again")) {
+                            Task { await signIn(ToolSignInStart(id: server.id), until: { $0.contains { $0.id == server.id && $0.state == "ok" } }) }
+                        }
+                        .glassBorderedButton().disabled(busy || signingIn != nil)
+                    } else {
+                        Button(session.localized("mytools.new_token")) {
+                            newToken = ""
+                            renewing = renewing == server.id ? nil : server.id
+                        }
+                        .glassBorderedButton().disabled(busy)
                     }
-                    .glassBorderedButton().disabled(busy)
                     Spacer(minLength: 0)
                     Button(session.localized("mail.remove"), role: .destructive) { removing = server }
                         .glassBorderedButton().disabled(busy)
@@ -3176,9 +3212,45 @@ private struct ToolsPane: View {
             added = session.localized("mytools.added", row.tools.count)
             name = ""; address = ""; token = ""
             open.insert(row.id)
+        } catch APIError.server(428, _) {
+            // The server wants a sign-in, not a token: in the browser.
+            let known = Set((servers ?? []).map(\.id))
+            await signIn(ToolSignInStart(name: body.name, url: url), until: { $0.contains { !known.contains($0.id) && $0.url == url } })
         } catch {
             token = ""
             show(error)
+        }
+    }
+
+    /// Ask the household where to sign in, open it, and read the list until
+    /// the server is there (three minutes at most; the member may cancel).
+    private func signIn(_ start: ToolSignInStart, until done: @escaping ([ToolServerRow]) -> Bool) async {
+        guard let api, let auth = session.tokenForActiveUser else { return }
+        error = nil; detail = nil; added = nil
+        let whereTo: ToolSignInWhere
+        do {
+            whereTo = try await api.post("/api/tool-servers/oauth/start", body: start, token: auth, timeout: 40)
+        } catch { show(error); return }
+        guard let url = URL(string: whereTo.authorize_url), url.scheme == "https" || url.scheme == "http" else { return }
+        openURL(url)
+        signingIn?.cancel()
+        signingIn = Task {
+            for _ in 0..<90 {
+                try? await Task.sleep(for: .seconds(2))
+                if Task.isCancelled { return }
+                guard let r: ToolServersResponse = try? await api.get("/api/tool-servers", token: auth) else { continue }
+                if done(r.servers) {
+                    servers = r.servers
+                    if start.id == nil {
+                        added = session.localized("mytools.added", r.servers.last?.tools.count ?? 0)
+                        name = ""; address = ""; token = ""
+                    }
+                    signingIn = nil
+                    return
+                }
+            }
+            error = session.localized("mytools.signin.timeout")
+            signingIn = nil
         }
     }
 

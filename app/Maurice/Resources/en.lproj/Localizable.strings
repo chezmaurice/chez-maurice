@@ -1218,7 +1218,7 @@
 "mytools.name" = "Name (for example: Tasks)";
 "mytools.address" = "Server address (https://…)";
 "mytools.token" = "Token";
-"mytools.token.optional" = "Token (if the server asks for one)";
+"mytools.token.optional" = "Token (leave empty if the service has you sign in)";
 "mytools.new_token" = "New token";
 "mytools.show" = "Show tools";
 "mytools.hide" = "Hide tools";
@@ -1229,3 +1229,6 @@
 "mytools.state.error" = "Not answering";
 "mytools.state.off" = "Switched off";
 "mytools.dropped" = "%d more tools were left out (too many, or too large).";
+"mytools.signin.waiting" = "Finish signing in in your browser, then come back here.";
+"mytools.signin.again" = "Sign in again";
+"mytools.signin.timeout" = "The sign-in was not completed. Try again.";

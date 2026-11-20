@@ -1218,7 +1218,7 @@
 "mytools.name" = "Name (zum Beispiel: Aufgaben)";
 "mytools.address" = "Serveradresse (https://…)";
 "mytools.token" = "Token";
-"mytools.token.optional" = "Token (falls der Server eines verlangt)";
+"mytools.token.optional" = "Token (leer lassen, wenn der Dienst Sie anmelden lässt)";
 "mytools.new_token" = "Neues Token";
 "mytools.show" = "Werkzeuge anzeigen";
 "mytools.hide" = "Werkzeuge ausblenden";
@@ -1229,3 +1229,6 @@
 "mytools.state.error" = "Antwortet nicht";
 "mytools.state.off" = "Ausgeschaltet";
 "mytools.dropped" = "%d weitere Werkzeuge wurden ausgelassen (zu viele oder zu groß).";
+"mytools.signin.waiting" = "Schließen Sie die Anmeldung im Browser ab und kehren Sie dann hierher zurück.";
+"mytools.signin.again" = "Erneut anmelden";
+"mytools.signin.timeout" = "Die Anmeldung wurde nicht abgeschlossen. Versuchen Sie es erneut.";

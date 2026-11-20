@@ -1218,7 +1218,7 @@
 "mytools.name" = "Nom (par exemple : Tâches)";
 "mytools.address" = "Adresse du serveur (https://…)";
 "mytools.token" = "Jeton";
-"mytools.token.optional" = "Jeton (si le serveur en demande un)";
+"mytools.token.optional" = "Jeton (laissez vide si le service vous fait vous connecter)";
 "mytools.new_token" = "Nouveau jeton";
 "mytools.show" = "Voir les outils";
 "mytools.hide" = "Masquer les outils";
@@ -1229,3 +1229,6 @@
 "mytools.state.error" = "Ne répond pas";
 "mytools.state.off" = "Désactivé";
 "mytools.dropped" = "%d autres outils ont été laissés de côté (trop nombreux, ou trop volumineux).";
+"mytools.signin.waiting" = "Terminez la connexion dans votre navigateur, puis revenez ici.";
+"mytools.signin.again" = "Se reconnecter";
+"mytools.signin.timeout" = "La connexion n'a pas été terminée. Réessayez.";

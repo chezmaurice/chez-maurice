@@ -1218,7 +1218,7 @@
 "mytools.name" = "Nombre (por ejemplo: Tareas)";
 "mytools.address" = "Dirección del servidor (https://…)";
 "mytools.token" = "Token";
-"mytools.token.optional" = "Token (si el servidor lo pide)";
+"mytools.token.optional" = "Token (déjelo vacío si el servicio le hace iniciar sesión)";
 "mytools.new_token" = "Nuevo token";
 "mytools.show" = "Ver las herramientas";
 "mytools.hide" = "Ocultar las herramientas";
@@ -1229,3 +1229,6 @@
 "mytools.state.error" = "No responde";
 "mytools.state.off" = "Desactivado";
 "mytools.dropped" = "Se dejaron fuera %d herramientas más (demasiadas, o demasiado grandes).";
+"mytools.signin.waiting" = "Termine de iniciar sesión en el navegador y vuelva aquí.";
+"mytools.signin.again" = "Volver a iniciar sesión";
+"mytools.signin.timeout" = "El inicio de sesión no se completó. Inténtelo de nuevo.";

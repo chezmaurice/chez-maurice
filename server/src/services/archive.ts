@@ -190,6 +190,8 @@ export function withoutPasswords(snapshot: string): void {
       if (!exists) continue;
       db.run(`UPDATE ${table} SET secret = '', state = 'error', last_error = ?`, [RECONNECT_NOTE]);
     }
+    // What renews a member's sign-in to a tool server goes with its token.
+    if (hasColumn(db, "member_tool_servers", "oauth")) db.run(`UPDATE member_tool_servers SET oauth = ''`);
     // A member's Cloudflare token (their own domain) is theirs as well.
     if (hasColumn(db, "users", "cloudflare_token")) db.run(`UPDATE users SET cloudflare_token = NULL`);
   } finally {

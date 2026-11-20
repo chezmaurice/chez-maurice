@@ -4,6 +4,10 @@ import { assertPublicHttpUrl, safeFetch } from "../../data-api/services/articleE
 import { decryptSecret, encryptSecret } from "./mailAccounts";
 import { McpSession, type McpEndpoint, type McpTool } from "./mcpClient";
 import { getUser } from "./users";
+import {
+  OAuthError, authorizeUrl, discoverOAuth, exchangeCode, newSignIn, refreshTokens, registerClient,
+  type OAuthClient, type OAuthFetch, type TokenSet,
+} from "./memberToolsOAuth";
 
 // A member's own tools (20 November 2026).
 //
@@ -59,6 +63,8 @@ export interface MemberToolServer {
   url: string;
   /** The header the token goes in; null: `Authorization: Bearer …`. */
   auth_header: string | null;
+  /** How the server is reached: a token the member gave (or none), or a sign-in. */
+  auth: "token" | "oauth";
   has_token: boolean;
   enabled: boolean;
   state: "unchecked" | "ok" | "error";
@@ -80,7 +86,8 @@ export interface StoredTool {
 }
 
 export class MemberToolError extends Error {
-  constructor(message: string, readonly status: 400 | 403 | 404 | 409 | 422 = 400) {
+  /** 428: the server asks the member to sign in (startToolSignIn). */
+  constructor(message: string, readonly status: 400 | 403 | 404 | 409 | 422 | 428 = 400) {
     super(message);
   }
 }
@@ -134,7 +141,16 @@ async function assertAllowedUrl(memberId: string, raw: string): Promise<void> {
 interface Row {
   id: string; member_id: string; name: string; slug: string; url: string; auth_header: string | null;
   secret: string; enabled: number; state: string; last_error: string | null; checked_at: string | null;
-  created_at: string; tools: string; dropped: number;
+  created_at: string; tools: string; dropped: number; auth: string; oauth: string;
+}
+
+/** What renews a sign-in, sealed in `oauth`. */
+interface OAuthKept {
+  client: OAuthClient;
+  tokenEndpoint: string;
+  resource: string;
+  refreshToken: string | null;
+  expiresAt: number | null;
 }
 
 function parseTools(json: string): StoredTool[] {
@@ -149,6 +165,7 @@ function parseTools(json: string): StoredTool[] {
 function shape(r: Row): MemberToolServer {
   return {
     id: r.id, member_id: r.member_id, name: r.name, slug: r.slug, url: r.url, auth_header: r.auth_header,
+    auth: r.auth === "oauth" ? "oauth" : "token",
     has_token: !!r.secret, enabled: !!r.enabled, state: r.state as MemberToolServer["state"],
     last_error: r.last_error, checked_at: r.checked_at, created_at: r.created_at,
     tools: parseTools(r.tools), dropped: r.dropped,
@@ -243,7 +260,7 @@ function endpointOf(r: Row, timeoutMs: number): McpEndpoint {
   };
   if (r.secret) {
     const token = decryptSecret(r.secret);
-    if (r.auth_header) headers[r.auth_header] = token;
+    if (r.auth_header && r.auth !== "oauth") headers[r.auth_header] = token;
     else headers.Authorization = `Bearer ${token}`;
   }
   const guarded = !privateAllowed(r.member_id);
@@ -266,6 +283,7 @@ function reason(err: any): string {
   if (err?.name === "TimeoutError" || /timed out|timeout/i.test(m)) return "the server did not answer in time";
   const status = m.match(/^MCP \S+ failed: (\d{3})/)?.[1];
   if (status === "401" || status === "403") return `the server refused the token (it answered ${status})`;
+  if (err instanceof OAuthError) return `sign in again: ${m.slice(0, 250)}`;
   // A web page, or anything that is not an MCP endpoint: its HTML says nothing.
   if (status) return `this address did not answer as a tool server (it answered ${status})`;
   return m.slice(0, 300);
@@ -276,8 +294,9 @@ export async function refreshToolServer(memberId: string, id: string): Promise<M
   const r = rowOf(memberId, id);
   if (!r) return null;
   try {
-    const session = await McpSession.openAt(endpointOf(r, LIST_TIMEOUT_MS));
-    const { tools, dropped } = shapeTools(r.slug, await session.listTools());
+    const list = async (row: Row) => (await McpSession.openAt(endpointOf(row, LIST_TIMEOUT_MS))).listTools();
+    const listed = await withSignIn(r, list);
+    const { tools, dropped } = shapeTools(r.slug, listed);
     db.run(
       `UPDATE member_tool_servers SET tools = ?, dropped = ?, state = 'ok', last_error = NULL,
          checked_at = datetime('now'), updated_at = datetime('now') WHERE id = ?`,
@@ -293,7 +312,202 @@ export async function refreshToolServer(memberId: string, id: string): Promise<M
   return getToolServer(memberId, id);
 }
 
+// ── signing in (OAuth) ──────────────────────────────────────────────────
+//
+// A server that answers 401 to a member who gave no token wants a sign-in
+// (services/memberToolsOAuth.ts). The member's app asks where to send them
+// (startToolSignIn), opens that address in a browser, and the service sends
+// the browser back to this household's callback with a code
+// (finishToolSignIn): the code is exchanged, the server asked for its tools,
+// and only then kept. The access token is `secret`; what renews it is sealed
+// beside it, and renewed here before it lapses or when the server refuses it.
+
+const SIGN_IN_TTL_MS = 10 * 60 * 1000;
+const EARLY_MS = 60 * 1000;
+
+interface PendingSignIn {
+  memberId: string;
+  /** An existing server signing in again; null: a new one. */
+  serverId: string | null;
+  name: string;
+  url: string;
+  verifier: string;
+  client: OAuthClient;
+  tokenEndpoint: string;
+  resource: string;
+  redirectUri: string;
+  at: number;
+}
+// In memory: a sign-in lasts minutes, and one cut by a restart is started again.
+const signIns = new Map<string, PendingSignIn>();
+
+function oauthFetch(memberId: string): OAuthFetch {
+  return privateAllowed(memberId)
+    ? (url, init, redirects) => fetch(url, { ...init, redirect: redirects > 0 ? "follow" : "error" })
+    : (url, init, redirects) => safeFetch(url, init, redirects);
+}
+
+function keptOf(r: Row): OAuthKept | null {
+  if (r.auth !== "oauth" || !r.oauth) return null;
+  try {
+    return JSON.parse(decryptSecret(r.oauth)) as OAuthKept;
+  } catch {
+    return null;
+  }
+}
+
+function storeTokens(id: string, kept: OAuthKept, tokens: TokenSet): void {
+  const next: OAuthKept = { ...kept, refreshToken: tokens.refreshToken, expiresAt: tokens.expiresAt };
+  db.run(`UPDATE member_tool_servers SET auth = 'oauth', auth_header = NULL, secret = ?, oauth = ?, updated_at = datetime('now') WHERE id = ?`,
+    [encryptSecret(tokens.accessToken), encryptSecret(JSON.stringify(next)), id]);
+  sessions.delete(id);
+}
+
+// One renewal at a time per server: a refresh token is often good for one use.
+const renewing = new Map<string, Promise<Row>>();
+
+function renew(r: Row): Promise<Row> {
+  const running = renewing.get(r.id);
+  if (running) return running;
+  const kept = keptOf(r);
+  if (!kept?.refreshToken) return Promise.reject(new OAuthError("the sign-in has lapsed"));
+  const p = refreshTokens({ tokenEndpoint: kept.tokenEndpoint, resource: kept.resource, client: kept.client, refreshToken: kept.refreshToken }, oauthFetch(r.member_id))
+    .then((tokens) => {
+      storeTokens(r.id, kept, tokens);
+      return rowOf(r.member_id, r.id)!;
+    })
+    .finally(() => renewing.delete(r.id));
+  renewing.set(r.id, p);
+  return p;
+}
+
+/**
+ * Do something with a server, signed in: the token is renewed first when it
+ * is about to lapse, and once more when the server refuses it all the same.
+ */
+async function withSignIn<T>(r: Row, work: (row: Row) => Promise<T>): Promise<T> {
+  const kept = keptOf(r);
+  if (!kept) return work(r);
+  let row = r;
+  if (kept.expiresAt && kept.expiresAt - Date.now() < EARLY_MS && kept.refreshToken) row = await renew(row);
+  try {
+    return await work(row);
+  } catch (err: any) {
+    if (!/failed: 401\b/.test(String(err?.message)) || row !== r) throw err;
+    return work(await renew(row));
+  }
+}
+
+/** The household's address as the member's device reaches it, for the way back. */
+export function signInRedirect(origin: string): string {
+  return `${origin.replace(/\/+$/, "")}/api/tool-servers/oauth/callback`;
+}
+
+/**
+ * Where to send the member to sign in: `{ name, url }` for a new server, or
+ * `{ id }` for one of theirs whose sign-in lapsed. `origin` is this household
+ * as their device reaches it. Nothing is kept until they come back.
+ */
+export async function startToolSignIn(memberId: string, input: any, origin: string): Promise<{ authorize_url: string }> {
+  if (!mayAddTools(memberId)) throw new MemberToolError("adding tools is not available to this member", 403);
+  const existing = typeof input?.id === "string" ? rowOf(memberId, input.id) : null;
+  if (input?.id !== undefined && !existing) throw new MemberToolError("not found", 404);
+  const name = existing ? existing.name : cleanName(input?.name);
+  const url = existing ? existing.url : typeof input?.url === "string" ? input.url.trim() : "";
+  if (!url) throw new MemberToolError("an address is needed");
+  if (url.length > 500) throw new MemberToolError("the address is too long");
+  await assertAllowedUrl(memberId, url);
+  if (!existing) assertRoom(memberId, url);
+  const f = oauthFetch(memberId);
+  const allowHttp = privateAllowed(memberId);
+  // What the server says to someone who brings nothing: where to sign in.
+  let challenge: string | null = null;
+  try {
+    const probe = await f(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json, text/event-stream" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-03-26", capabilities: {}, clientInfo: { name: "maurice-server", version: "0.1.0" } } }),
+      signal: AbortSignal.timeout(LIST_TIMEOUT_MS),
+    }, 0);
+    probe.body?.cancel().catch(() => {});
+    if (probe.ok) throw new MemberToolError("this server asks for no sign-in: connect it as it is", 409);
+    if (probe.status !== 401) throw new MemberToolError(`this address did not answer as a tool server (it answered ${probe.status})`, 422);
+    challenge = probe.headers.get("www-authenticate");
+  } catch (err) {
+    if (err instanceof MemberToolError) throw err;
+    throw new MemberToolError(reason(err), 422);
+  }
+  try {
+    const redirectUri = signInRedirect(origin);
+    const plan = await discoverOAuth(url, f, challenge, allowHttp);
+    const client = await registerClient(plan, redirectUri, f);
+    const fresh = newSignIn();
+    for (const [k, v] of signIns) if (Date.now() - v.at > SIGN_IN_TTL_MS) signIns.delete(k);
+    signIns.set(fresh.state, {
+      memberId, serverId: existing?.id ?? null, name, url, verifier: fresh.verifier, client,
+      tokenEndpoint: plan.tokenEndpoint, resource: plan.resource, redirectUri, at: Date.now(),
+    });
+    return { authorize_url: authorizeUrl(plan, client, redirectUri, fresh.state, fresh.challenge) };
+  } catch (err: any) {
+    if (err instanceof MemberToolError) throw err;
+    throw new MemberToolError(err instanceof OAuthError ? err.message : reason(err), 422);
+  }
+}
+
+/**
+ * The browser came back with a code. The state names the sign-in — and the
+ * member, who is not otherwise known here: it was given to their app alone,
+ * is good once, and for ten minutes.
+ */
+export async function finishToolSignIn(state: string, code: string): Promise<MemberToolServer> {
+  const p = signIns.get(state);
+  signIns.delete(state);
+  if (!p || Date.now() - p.at > SIGN_IN_TTL_MS) throw new MemberToolError("this sign-in is no longer valid: start again from the app", 400);
+  if (!code) throw new MemberToolError("the service sent no code back", 400);
+  let tokens: TokenSet;
+  try {
+    tokens = await exchangeCode({ tokenEndpoint: p.tokenEndpoint, resource: p.resource, client: p.client, redirectUri: p.redirectUri, code, verifier: p.verifier }, oauthFetch(p.memberId));
+  } catch (err: any) {
+    throw new MemberToolError(err instanceof OAuthError ? err.message : reason(err), 422);
+  }
+  const kept: OAuthKept = { client: p.client, tokenEndpoint: p.tokenEndpoint, resource: p.resource, refreshToken: null, expiresAt: null };
+  if (p.serverId) {
+    if (!rowOf(p.memberId, p.serverId)) throw new MemberToolError("not found", 404);
+    storeTokens(p.serverId, kept, tokens);
+    const again = await refreshToolServer(p.memberId, p.serverId);
+    if (again?.state !== "ok") throw new MemberToolError(again?.last_error ?? "the server could not be reached", 422);
+    return again;
+  }
+  if (!mayAddTools(p.memberId)) throw new MemberToolError("adding tools is not available to this member", 403);
+  assertRoom(p.memberId, p.url);
+  const id = randomUUID();
+  db.run(`INSERT INTO member_tool_servers (id, member_id, name, slug, url, auth) VALUES (?, ?, ?, ?, ?, 'oauth')`,
+    [id, p.memberId, p.name, freeSlug(p.memberId, p.name), p.url]);
+  storeTokens(id, kept, tokens);
+  const checked = await refreshToolServer(p.memberId, id);
+  if (!checked || checked.state !== "ok") {
+    db.run(`DELETE FROM member_tool_servers WHERE id = ?`, [id]);
+    throw new MemberToolError(checked?.last_error ?? "the server could not be reached", 422);
+  }
+  return checked;
+}
+
+/** Tests only. */
+export function resetSignIns(): void {
+  signIns.clear();
+  renewing.clear();
+}
+
 // ── adding, changing, removing ──────────────────────────────────────────
+
+/** Room for one more, and not this address again. */
+function assertRoom(memberId: string, url: string): void {
+  const count = (db.query(`SELECT COUNT(*) AS n FROM member_tool_servers WHERE member_id = ?`).get(memberId) as { n: number }).n;
+  if (count >= MAX_SERVERS) throw new MemberToolError(`no more than ${MAX_SERVERS} servers`, 409);
+  if (db.query(`SELECT 1 FROM member_tool_servers WHERE member_id = ? AND url = ?`).get(memberId, url)) {
+    throw new MemberToolError("this server is already in your tools", 409);
+  }
+}
 
 function cleanName(v: unknown): string {
   const s = typeof v === "string" ? v.replace(/\s+/g, " ").trim() : "";
@@ -329,11 +543,7 @@ export async function addToolServer(memberId: string, input: any): Promise<Membe
   const token = cleanToken(input?.token);
   const header = cleanHeader(input?.auth_header);
   await assertAllowedUrl(memberId, url);
-  const count = (db.query(`SELECT COUNT(*) AS n FROM member_tool_servers WHERE member_id = ?`).get(memberId) as { n: number }).n;
-  if (count >= MAX_SERVERS) throw new MemberToolError(`no more than ${MAX_SERVERS} servers`, 409);
-  if (db.query(`SELECT 1 FROM member_tool_servers WHERE member_id = ? AND url = ?`).get(memberId, url)) {
-    throw new MemberToolError("this server is already in your tools", 409);
-  }
+  assertRoom(memberId, url);
   const id = randomUUID();
   db.run(
     `INSERT INTO member_tool_servers (id, member_id, name, slug, url, auth_header, secret) VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -342,6 +552,8 @@ export async function addToolServer(memberId: string, input: any): Promise<Membe
   const checked = await refreshToolServer(memberId, id);
   if (!checked || checked.state !== "ok") {
     db.run(`DELETE FROM member_tool_servers WHERE id = ?`, [id]);
+    // No token given and the server wants one: it may take a sign-in instead.
+    if (!token && /answered 401\b/.test(checked?.last_error ?? "")) throw new MemberToolError("this server asks you to sign in", 428);
     throw new MemberToolError(checked?.last_error ?? "the server could not be reached", 422);
   }
   return checked;
@@ -362,11 +574,12 @@ export async function updateToolServer(memberId: string, id: string, input: any)
   }
   if (input?.token !== undefined) {
     const token = cleanToken(input.token);
-    const before = { secret: r.secret, state: r.state, last_error: r.last_error };
-    db.run(`UPDATE member_tool_servers SET secret = ? WHERE id = ?`, [token ? encryptSecret(token) : "", id]);
+    const before = { secret: r.secret, state: r.state, last_error: r.last_error, auth: r.auth, oauth: r.oauth };
+    // A token pasted by hand replaces a sign-in, if there was one.
+    db.run(`UPDATE member_tool_servers SET secret = ?, auth = 'token', oauth = '' WHERE id = ?`, [token ? encryptSecret(token) : "", id]);
     const checked = await refreshToolServer(memberId, id);
     if (checked?.state !== "ok") {
-      db.run(`UPDATE member_tool_servers SET secret = ?, state = ?, last_error = ? WHERE id = ?`, [before.secret, before.state, before.last_error, id]);
+      db.run(`UPDATE member_tool_servers SET secret = ?, state = ?, last_error = ?, auth = ?, oauth = ? WHERE id = ?`, [before.secret, before.state, before.last_error, before.auth, before.oauth, id]);
       throw new MemberToolError(checked?.last_error ?? "the server could not be reached", 422);
     }
   }
@@ -451,7 +664,7 @@ export async function runMemberTool(name: string, input: any, memberId: string |
   const r = db.query(`SELECT * FROM member_tool_servers WHERE member_id = ? AND slug = ?`).get(memberId, slug) as Row | null;
   const tool = r && r.enabled ? parseTools(r.tools).find((t) => t.name === name) : null;
   if (!r || !tool) return { text: `Tool ${name} is unavailable: the member removed or switched off that server.`, isError: true };
-  const call = async () => (await sessionFor(r)).callTool(tool.remote, input || {});
+  const call = () => withSignIn(r, async (row) => (await sessionFor(row)).callTool(tool.remote, input || {}));
   try {
     let result: { text: string; isError: boolean };
     try {

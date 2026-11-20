@@ -1218,7 +1218,7 @@
 "mytools.name" = "Nome (per esempio: Attività)";
 "mytools.address" = "Indirizzo del server (https://…)";
 "mytools.token" = "Token";
-"mytools.token.optional" = "Token (se il server lo richiede)";
+"mytools.token.optional" = "Token (lasciate vuoto se il servizio vi fa accedere)";
 "mytools.new_token" = "Nuovo token";
 "mytools.show" = "Mostra gli strumenti";
 "mytools.hide" = "Nascondi gli strumenti";
@@ -1229,3 +1229,6 @@
 "mytools.state.error" = "Non risponde";
 "mytools.state.off" = "Disattivato";
 "mytools.dropped" = "Altri %d strumenti sono stati esclusi (troppi, o troppo grandi).";
+"mytools.signin.waiting" = "Completate l'accesso nel browser, poi tornate qui.";
+"mytools.signin.again" = "Accedere di nuovo";
+"mytools.signin.timeout" = "L'accesso non è stato completato. Riprovate.";

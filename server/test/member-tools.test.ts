@@ -47,6 +47,7 @@ beforeAll(() => {
     port: 0,
     async fetch(req) {
       if (redirect) return new Response(null, { status: 302, headers: { location: "http://127.0.0.1:1/elsewhere" } });
+      if (req.method !== "POST" || new URL(req.url).pathname !== "/mcp") return new Response("not found", { status: 404 });
       const body = (await req.json()) as any;
       calls.push({ method: body.method, auth: req.headers.get("authorization"), key: req.headers.get("x-api-key"), params: body.params });
       const given = req.headers.get("authorization") ?? (req.headers.get("x-api-key") ? `Bearer ${req.headers.get("x-api-key")}` : null);
@@ -297,4 +298,209 @@ test("the picker lists a member's servers as theirs, on while the server is", as
   expect(families.familyTitles(["x_notion__search", "web_search"])).toEqual(["Web search"]);
   await call(ADA, `/${row.id}`, { method: "PATCH", body: JSON.stringify({ enabled: false }) });
   expect((await families.listFamilies(ADA)).filter((f) => f.id.startsWith("x_"))).toEqual([]);
+});
+
+// ── signing in (OAuth) ───────────────────────────────────────────────────
+
+// A second fake: an MCP server that wants a sign-in, and its authorization
+// server on the same origin — metadata, registration, token endpoint.
+const { createHash } = await import("node:crypto");
+let as: ReturnType<typeof Bun.serve>;
+let asUrl = "";
+let access = "at-1";
+let lifetime: number | undefined = 3600;
+let metadata = true;
+let registered: any[] = [];
+let tokenCalls: Record<string, string>[] = [];
+let challenges = new Map<string, string>();   // code → code_challenge
+let refreshOk = true;
+
+beforeAll(() => {
+  as = Bun.serve({
+    port: 0,
+    async fetch(req) {
+      const u = new URL(req.url);
+      const origin = u.origin;
+      if (u.pathname === "/.well-known/oauth-protected-resource/mcp" && metadata) {
+        return Response.json({ resource: `${origin}/mcp`, authorization_servers: [origin], scopes_supported: ["read", "write"] });
+      }
+      if (u.pathname === "/.well-known/oauth-authorization-server" && metadata) {
+        return Response.json({ issuer: origin, authorization_endpoint: `${origin}/oauth/authorize`, token_endpoint: `${origin}/oauth/token`, registration_endpoint: `${origin}/oauth/register`, code_challenge_methods_supported: ["S256"] });
+      }
+      if ((u.pathname === "/oauth/register" || u.pathname === "/register") && req.method === "POST") {
+        const body = await req.json();
+        registered.push(body);
+        return Response.json({ client_id: `client-${registered.length}` }, { status: 201 });
+      }
+      if ((u.pathname === "/oauth/token" || u.pathname === "/token") && req.method === "POST") {
+        const f = Object.fromEntries(new URLSearchParams(await req.text()));
+        tokenCalls.push(f);
+        if (f.grant_type === "authorization_code") {
+          const challenge = challenges.get(f.code ?? "");
+          if (!challenge || createHash("sha256").update(f.code_verifier ?? "").digest("base64url") !== challenge) {
+            return Response.json({ error: "invalid_grant", error_description: "the verifier does not match" }, { status: 400 });
+          }
+          return Response.json({ access_token: access, token_type: "Bearer", refresh_token: "rt-1", ...(lifetime ? { expires_in: lifetime } : {}) });
+        }
+        if (f.grant_type === "refresh_token" && refreshOk && f.refresh_token?.startsWith("rt-")) {
+          access = `at-${Number(access.slice(3)) + 1}`;
+          return Response.json({ access_token: access, token_type: "bearer", refresh_token: `rt-${access.slice(3)}`, expires_in: 3600 });
+        }
+        return Response.json({ error: "invalid_grant" }, { status: 400 });
+      }
+      if (u.pathname === "/mcp" && req.method === "POST") {
+        const body = (await req.json()) as any;
+        if (req.headers.get("authorization") !== `Bearer ${access}`) {
+          return new Response("sign in", { status: 401, headers: { "www-authenticate": `Bearer resource_metadata="${origin}/.well-known/oauth-protected-resource/mcp"` } });
+        }
+        if (body.id === undefined) return new Response(null, { status: 202 });
+        const result = body.method === "initialize" ? { protocolVersion: "2025-03-26", capabilities: {} }
+          : body.method === "tools/list" ? { tools: [{ name: "whoami", description: "Who is signed in." }] }
+          : { content: [{ type: "text", text: `signed in with ${req.headers.get("authorization")!.slice(7)}` }] };
+        return Response.json(rpc(body.id, result));
+      }
+      return new Response("not found", { status: 404 });
+    },
+  });
+  asUrl = `http://127.0.0.1:${as.port}/mcp`;
+});
+afterAll(() => as.stop(true));
+
+beforeEach(() => {
+  svc.resetSignIns();
+  access = "at-1";
+  lifetime = 3600;
+  metadata = true;
+  refreshOk = true;
+  registered = [];
+  tokenCalls = [];
+  challenges = new Map();
+});
+
+const ORIGIN = { "x-forwarded-proto": "https", "x-forwarded-host": "home.example" };
+const start = (who: string, body: unknown) => call(who, "/oauth/start", { method: "POST", body: JSON.stringify(body), headers: ORIGIN });
+/** What the service's sign-in page would do: remember the challenge, hand back a code. */
+function approve(authorizeUrl: string, code = "code-1"): string {
+  const u = new URL(authorizeUrl);
+  challenges.set(code, u.searchParams.get("code_challenge")!);
+  return `/oauth/callback?code=${code}&state=${encodeURIComponent(u.searchParams.get("state")!)}`;
+}
+
+test("a server that wants a sign-in says so, and the sign-in connects it", async () => {
+  const plain = await add(ADA, { name: "Linear", url: asUrl });
+  expect(plain.status).toBe(428);
+  expect(db.query(`SELECT COUNT(*) AS n FROM member_tool_servers`).get()).toEqual({ n: 0 });
+
+  const res = await start(ADA, { name: "Linear", url: asUrl });
+  expect(res.status).toBe(200);
+  const u = new URL(((await res.json()) as any).authorize_url);
+  expect(u.origin + u.pathname).toBe(`http://127.0.0.1:${as.port}/oauth/authorize`);
+  expect(Object.fromEntries(u.searchParams)).toMatchObject({
+    response_type: "code", client_id: "client-1", code_challenge_method: "S256", resource: asUrl, scope: "read write",
+    redirect_uri: "https://home.example/api/tool-servers/oauth/callback",
+  });
+  expect(u.searchParams.get("state")!.length).toBeGreaterThan(30);
+  expect(registered[0]).toMatchObject({ client_name: "Maurice", redirect_uris: ["https://home.example/api/tool-servers/oauth/callback"], token_endpoint_auth_method: "none" });
+  // Nothing is kept until the member comes back.
+  expect(db.query(`SELECT COUNT(*) AS n FROM member_tool_servers`).get()).toEqual({ n: 0 });
+
+  // The browser comes back, with no session of its own.
+  const back = await routes.request(approve(u.toString()), { headers: { "accept-language": "fr-FR" } });
+  expect(back.status).toBe(200);
+  expect(await back.text()).toContain("Linear est connecté");
+  expect(tokenCalls[0]).toMatchObject({ grant_type: "authorization_code", code: "code-1", client_id: "client-1", resource: asUrl, redirect_uri: "https://home.example/api/tool-servers/oauth/callback" });
+
+  const listed = (await (await call(ADA, "/")).json()) as any;
+  expect(listed.servers).toHaveLength(1);
+  expect(listed.servers[0]).toMatchObject({ name: "Linear", auth: "oauth", state: "ok", has_token: true, tools: [{ name: "whoami", description: "Who is signed in." }] });
+  expect(JSON.stringify(listed)).not.toContain("at-1");
+  const row = db.query(`SELECT secret, oauth FROM member_tool_servers`).get() as { secret: string; oauth: string };
+  expect(row.secret.startsWith("v1:")).toBe(true);
+  expect(row.oauth.startsWith("v1:")).toBe(true);
+  expect(row.oauth).not.toContain("rt-1");
+  expect(await svc.runMemberTool("x_linear__whoami", {}, ADA)).toEqual({ text: "signed in with at-1", isError: false });
+});
+
+test("a sign-in is good once, for its own state, and a refusal is shown", async () => {
+  const u = ((await (await start(ADA, { name: "Linear", url: asUrl })).json()) as any).authorize_url;
+  const path = approve(u);
+  expect((await routes.request("/oauth/callback?code=code-1&state=made-up")).status).toBe(400);
+  expect((await routes.request(path)).status).toBe(200);
+  expect((await routes.request(path)).status).toBe(400);
+  const denied = await routes.request("/oauth/callback?error=access_denied&error_description=%3Cb%3Eno%3C/b%3E");
+  expect(denied.status).toBe(400);
+  expect(await denied.text()).toContain("&#60;b&#62;no");
+  expect(db.query(`SELECT COUNT(*) AS n FROM member_tool_servers`).get()).toEqual({ n: 1 });
+});
+
+test("a code that does not match the sign-in keeps nothing", async () => {
+  const u = new URL(((await (await start(ADA, { name: "Linear", url: asUrl })).json()) as any).authorize_url);
+  challenges.set("stolen", "someone-else's-challenge");
+  const back = await routes.request(`/oauth/callback?code=stolen&state=${encodeURIComponent(u.searchParams.get("state")!)}`);
+  expect(back.status).toBe(400);
+  expect(await back.text()).toContain("the verifier does not match");
+  expect(db.query(`SELECT COUNT(*) AS n FROM member_tool_servers`).get()).toEqual({ n: 0 });
+});
+
+test("the token is renewed before it lapses, and when the server refuses it", async () => {
+  lifetime = 30;                                  // lapses within the minute
+  const u = ((await (await start(ADA, { name: "Linear", url: asUrl })).json()) as any).authorize_url;
+  expect((await routes.request(approve(u))).status).toBe(200);
+  // Listing after the exchange already renewed it once: at-1 was about to lapse.
+  expect(access).toBe("at-2");
+  expect(await svc.runMemberTool("x_linear__whoami", {}, ADA)).toEqual({ text: "signed in with at-2", isError: false });
+  // The service drops the token early: one refusal, one renewal, the call again.
+  access = "at-7";
+  expect(await svc.runMemberTool("x_linear__whoami", {}, ADA)).toEqual({ text: "signed in with at-8", isError: false });
+  expect(tokenCalls.filter((c) => c.grant_type === "refresh_token").map((c) => c.refresh_token)).toEqual(["rt-1", "rt-2"]);
+  // A sign-in that cannot be renewed is said as such, and the server marked.
+  access = "at-20";
+  refreshOk = false;
+  const lost = await svc.runMemberTool("x_linear__whoami", {}, ADA);
+  expect(lost.isError).toBe(true);
+  expect(lost.text).toContain("sign in again");
+  const id = (db.query(`SELECT id FROM member_tool_servers`).get() as { id: string }).id;
+  const marked = (await (await call(ADA, `/${id}/refresh`, { method: "POST" })).json()) as any;
+  expect(marked).toMatchObject({ state: "error", auth: "oauth" });
+  expect(marked.last_error).toContain("sign in again");
+
+  // Signing in again, for the same server, puts it back.
+  refreshOk = true;
+  lifetime = 3600;
+  const again = await start(ADA, { id });
+  expect(again.status).toBe(200);
+  access = "at-30";
+  expect((await routes.request(approve(((await again.json()) as any).authorize_url, "code-2"))).status).toBe(200);
+  expect(await svc.runMemberTool("x_linear__whoami", {}, ADA)).toEqual({ text: "signed in with at-30", isError: false });
+  expect(db.query(`SELECT COUNT(*) AS n FROM member_tool_servers`).get()).toEqual({ n: 1 });
+});
+
+test("a server that publishes no metadata is signed in to at its own /authorize, /token and /register", async () => {
+  metadata = false;
+  const u = new URL(((await (await start(ADA, { name: "Old", url: asUrl })).json()) as any).authorize_url);
+  expect(u.pathname).toBe("/authorize");
+  expect(u.searchParams.get("scope")).toBeNull();
+  expect((await routes.request(approve(u.toString()))).status).toBe(200);
+  expect(await svc.runMemberTool("x_old__whoami", {}, ADA)).toEqual({ text: "signed in with at-1", isError: false });
+});
+
+test("who may sign in, and to what, is held to the same rules as a token", async () => {
+  expect((await start(GUS, { name: "Linear", url: asUrl })).status).toBe(403);
+  expect((await start(BEN, { name: "Linear", url: asUrl })).status).toBe(400);                       // http, not an admin's
+  expect((await start(BEN, { name: "Linear", url: "https://10.0.0.5/mcp" })).status).toBe(422);
+  expect((await start(ADA, { name: "Open", url })).status).toBe(422);                                // 401 without a way to sign in… a token server
+  token = "";
+  expect((await start(ADA, { name: "Open", url })).status).toBe(409);                                // asks for nothing
+  expect((await start(BEN, { id: "not-mine" })).status).toBe(404);
+  expect(registered).toHaveLength(0);
+});
+
+test("a token pasted by hand replaces a sign-in", async () => {
+  const u = ((await (await start(ADA, { name: "Linear", url: asUrl })).json()) as any).authorize_url;
+  await routes.request(approve(u));
+  const id = (db.query(`SELECT id FROM member_tool_servers`).get() as { id: string }).id;
+  access = "hand-made";
+  const res = await call(ADA, `/${id}`, { method: "PATCH", body: JSON.stringify({ token: "hand-made" }) });
+  expect(((await res.json()) as any).auth).toBe("token");
+  expect((db.query(`SELECT oauth FROM member_tool_servers`).get() as { oauth: string }).oauth).toBe("");
 });

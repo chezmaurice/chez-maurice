@@ -1219,7 +1219,7 @@
 "mytools.name" = "Naam (bijvoorbeeld: Taken)";
 "mytools.address" = "Serveradres (https://…)";
 "mytools.token" = "Token";
-"mytools.token.optional" = "Token (als de server erom vraagt)";
+"mytools.token.optional" = "Token (laat leeg als de dienst u laat aanmelden)";
 "mytools.new_token" = "Nieuw token";
 "mytools.show" = "Hulpmiddelen tonen";
 "mytools.hide" = "Hulpmiddelen verbergen";
@@ -1230,3 +1230,6 @@
 "mytools.state.error" = "Antwoordt niet";
 "mytools.state.off" = "Uitgeschakeld";
 "mytools.dropped" = "Nog %d hulpmiddelen zijn weggelaten (te veel, of te groot).";
+"mytools.signin.waiting" = "Rond het aanmelden af in uw browser en kom dan hier terug.";
+"mytools.signin.again" = "Opnieuw aanmelden";
+"mytools.signin.timeout" = "Het aanmelden is niet voltooid. Probeer het opnieuw.";
