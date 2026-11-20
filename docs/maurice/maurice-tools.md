@@ -1,6 +1,6 @@
 ---
 title: The MCP tool ecosystem
-date: '2026-11-05'
+date: '2026-11-20'
 flags: []
 locale: en
 description: 'The gateway that gives Maurice his capabilities: discovery, per-member
@@ -51,6 +51,24 @@ The [[maurice-server|chat engine]] holds a minimal MCP client (`server/src/servi
 Two gates sit on top of the families, both in `toolFamilies.ts`. Everything that isn't `web`, `signals`, `garden-notes` or `garden-journal` is **experimental**, and a member only sees it once an admin ticks *experimental tools* on their admin page (`users.experimental_tools`; admins always have it). The filter is applied twice — when listing families for the picker, and tool by tool just before the roster is handed to the model (`claude.ts`), so an ungated member can never be passed an experimental tool even through a stale conversation override.
 
 **The prompt says what it holds** (September 2026). The system prompt used to promise "tasks, calendar, contacts, notes, health, books, and more" in a hard-coded sentence, written before the families were resolved — so a member granted none of them was told they had all of them, and, asked what tools he had, Maurice recited the promise instead of his actual roster. The sentence is gone: `toolRosterNotice()` now names the families actually present in the turn's filtered roster (plus web search only when Tavily is configured, and reading a web page whenever the `web` family is there), and says plainly that nothing else is reachable. The image-generation directives are likewise appended only when a fal key exists, instead of teaching the model a `[IMAGE: …]` protocol that nothing downstream would honour.
+
+## A member's own tools — MCP servers they add themselves
+
+Since 20 November 2026 the gateway is no longer the only source of tools. A member adds an **MCP server of their own** — an address and, when the server wants one, a token — from the app's Settings → *Your own tools*, and its tools join their conversations (`server/src/services/memberTools.ts`, routes `/api/tool-servers`, table `member_tool_servers`). The chat engine's MCP client (`mcpClient.ts`) now takes any endpoint, not just the loopback gateway.
+
+- **Theirs alone.** Every route acts on the caller's servers only; another member's is not found. There is no admin path to them. Guests have none. The operator can switch the whole feature off with `MAURICE_MEMBER_TOOLS=0`.
+- **An address, never a command.** Only remote servers over Streamable HTTP: nothing a member adds runs on the household's machine. The address must be a public `https` one — the article extractor's SSRF guard (`assertPublicHttpUrl`), applied on every request — and a redirect is refused rather than followed, so the token never travels to another host. An admin may add a server on the household's own network when the operator set `MAURICE_MEMBER_TOOLS_PRIVATE=1`; nobody else.
+- **The token is sealed** with the household key, like a mail password, sent as `Authorization: Bearer …` (or in a header the member names, e.g. `X-Api-Key`), and never returned. A new token is tried before it replaces the old one.
+- **Checked before it is kept.** Adding a server performs `initialize` and `tools/list`; one that does not answer, refuses the token or is not an MCP endpoint is not kept, and the reason is returned (422).
+- **Named apart.** The tools are exposed to the model as `x_<server>__<tool>` (the server's name slugged, at most 64 characters in all), so nothing a member adds can pass for a household tool, and the turn routes that prefix to the member's server, never to the gateway. The call uses the server's own tool name.
+- **Bounded.** Eight servers per member, forty tools per server, descriptions cut at 1 000 characters, a tool whose schema exceeds 8 KB left out (the app says how many were), answers read up to 2 MB and handed to the model up to 20 000 characters, 60 seconds per call.
+- **No listing during a turn.** What a server offers is read when it is added, on *Refresh*, and in the background once a day; a turn takes the roster from the table, so its cached prompt prefix does not move and it never waits for a member's server to list. The tools are appended after every other tool.
+- **In private conversations only.** Each server is a family of its own, on in every conversation the member holds alone with Maurice while its switch is on (the picker lists it with the always-on ones), and withheld in a room: what a tool is handed goes to a third party the others present did not choose.
+- **Checked again at the call.** `runMemberTool` looks up the row: the server is the member's, still switched on, and still offers that tool — a stale roster reaches nothing else. A failure is said to the model as such, without the token.
+- **The prompt names them** (`memberToolsNotice`): whose they are, that what is passed to one leaves the household, and that what they return is a third party's data, never instructions.
+- **Erasure and archives.** A member's erasure removes their servers; the admin's archive without passwords blanks the tokens, as for mailboxes.
+
+*Gaps:* a token only — no OAuth, so services that sign in through a browser (most hosted connectors) cannot be added yet; no per-conversation choice, a server is on everywhere or off; only tools — no resources, prompts or sampling, and no images in results; no data card, results are text to the model; a tool's result is untrusted text and the only guard against an instruction hidden in it is the prompt; nothing meters or limits how often a server is called beyond the six tool rounds of a turn; the Android and desktop apps have no pane yet (the tools still work there once added from an Apple device); the name resolution is checked before each request but not pinned for it.
 
 ## Reading a web page — `read_web_page`
 

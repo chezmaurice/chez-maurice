@@ -1,6 +1,6 @@
 ---
 title: Maurice — the digest
-date: '2026-11-18'
+date: '2026-11-20'
 flags: []
 locale: en
 description: 'The system documentation condensed to what a user needs: everything
@@ -20,7 +20,7 @@ covers:
   maurice-carnet: '2026-11-17'
   maurice-chat: '2026-11-17'
   maurice-composer: '2026-10-20'
-  maurice-data-model: '2026-10-29'
+  maurice-data-model: '2026-11-20'
   maurice-docs: '2026-10-20'
   maurice-domains: '2026-11-12'
   maurice-files: '2026-06-19'
@@ -30,7 +30,7 @@ covers:
   maurice-personas-hats: '2026-09-19'
   maurice-server: '2026-11-09'
   maurice-shared-gardens: '2026-11-12'
-  maurice-tools: '2026-11-05'
+  maurice-tools: '2026-11-20'
   maurice-web-garden: '2026-11-19'
 ---
 
@@ -283,11 +283,12 @@ Each member has folders and files (5 GB each), in **Settings**: text, images, PD
 - **The gateway** mounts whatever tools are installed and scopes every call to the member asking. Tool names look like `garden__create_note`, `corpus__search`.
 - **Families:** a conversation holds only some tools (a model given a hundred tools does worse). Always on in a private conversation: web search (when a search key is set), reading a web page by its address (the server fetches it itself, no third party; paywalls, logins and pages built in the browser stay unreadable), the note-writing tools, the reading side of the corpus, email (once a mailbox is added) and the documentation tool. Other families are chosen per conversation or per domain. Corpus, email and mail triage are withdrawn as soon as a second person joins. Maurice's instructions list only the tools actually present, so "what can you do?" gets a true answer.
 - **Experimental gate:** everything beyond those core families needs an admin to tick *experimental tools* for the member.
+- **Your own tools:** a member can connect tool servers of their own (MCP, the open protocol many services now speak) from the app's Settings → *Your own tools*: a name, an `https` address and, if the server asks, a token. Maurice checks the server before keeping it and lists what it offers; the tools then ride in every conversation that member holds alone with Maurice, never in a shared one, until the server is switched off or removed. They belong to that member only — nobody else in the household, the admin included, sees the server or its token, which is kept encrypted. Only servers on the public internet can be added, nothing runs on the household's machine, and guests cannot add any. What Maurice passes to such a tool leaves the household for that service, so add only servers you trust; Maurice treats what they return as information, not as instructions. Limits: eight servers, forty tools each.
 - **External clients:** a member can add their Maurice as a **custom connector** in Claude Desktop, claude.ai or Claude Code (OAuth with a personal token) and use their notes and corpus there. The tool gateway never runs without a key, so no install answers anonymous callers, and a caller can never name another member. The sign-in page sends access only to Claude or to a client on the member's own machine; another client's address must be allowed by the operator (`MAURICE_OAUTH_REDIRECT_HOSTS`).
 - **The documentation tool** (`maurice_docs`) answers questions about Maurice himself from this documentation, on a strong cloud model of the household's provider, charged to the member who asks; it can also return any documentation note in full.
 - **The private overlay** (home only, experimental): health (from Apple Health exports), signals and coaching plans declared as notes, tasks, calendar (CalDAV), contacts lookup, Calibre chat tools, Readwise, captured thoughts, dashboard layouts for Carnet, research tracks, social scanning and publishing, and the owner's mail triage (it files messages from a closed list of actions and never sends or deletes).
 
-*Gaps:* an external client connected with a member's token sees every mounted tool, since families and the experimental gate are enforced by the server, not the gateway — the corpus's maintenance tools (forget, import, prune, reindex) among them; there is no per-tool sandbox.
+*Gaps:* an external client connected with a member's token sees every mounted tool, since families and the experimental gate are enforced by the server, not the gateway — the corpus's maintenance tools (forget, import, prune, reindex) among them; there is no per-tool sandbox. A member's own tool servers take a token only (no sign-in through a browser yet), are on in all of that member's private conversations or off, and can be added from the Apple apps only.
 
 *Detail:* `tools`, `life`.
 
@@ -376,10 +377,11 @@ Each member has folders and files (5 GB each), in **Settings**: text, images, PD
 - **…take my data with me, or leave?** Settings → *My data*: export an archive, erase your data, or delete your account (Carnet: member sheet → Privacy → *Delete my account*). The owner of a hosted Maurice can also take the whole household as one archive, or erase it entirely, from the account page.
 - **…move my household to another machine or address?** Export it from the console (at home) or the account page (hosted), and import it on the new machine. Keep the same name if you can and point it at the new machine: nothing changes for anyone. If the name changes, publish `_maurice.<old name>  TXT  "v=maurice1; moved=https://<new address>"` and keep the old domain for a few months; Apple devices and Android from Obtainium follow, others are paired again. With the hosted archive everyone signs in again with a code.
 - **…run Maurice myself?** Run the container on a machine of yours (Docker), make it reachable (Tailscale or Cloudflare Tunnel), and set the provider keys in the admin console. Or be hosted: a household on Maurice's own Scaleway machines, with models included.
+- **…give Maurice a tool of my own?** Settings → *Your own tools* → give the server a name, paste its address (it must start with `https://`) and its token if it has one, then *Connect*. Maurice lists the tools it found. Switch the server off to keep it without using it; *Remove* forgets it and its token.
 
 ## 24. Not built, and known gaps
 
-- **Not built:** writing back to the notes from an Obsidian clone (push); a web chat client; OAuth for mail (Outlook.com, Google contacts); mail in the corpus; flashcard review in Carnet; demo servers for trying the apps without a household (designed, deferred); a hosted member's own domain; on-device inference; page layouts chosen per note, RSS feeds, margin notes or link previews, and dated editions of a published site.
+- **Not built:** writing back to the notes from an Obsidian clone (push); a web chat client; OAuth for mail (Outlook.com, Google contacts); sign-in through a browser for a member's own tool servers; mail in the corpus; flashcard review in Carnet; demo servers for trying the apps without a household (designed, deferred); a hosted member's own domain; on-device inference; page layouts chosen per note, RSS feeds, margin notes or link previews, and dated editions of a published site.
 - **Not intended:** Maurice proposing notes from patterns he notices; automatic periodic reviews.
 - **Rough edges:** sessions never expire (only revoked); a reply in progress is lost on a server restart; no provider failover; external MCP clients see every mounted tool; some member-triggered background calls are not on the ledger; a member's erasure cannot reach off-site backups or exported archives (erasing a whole hosted Maurice does forget its backups); the databases are snapshot, not versioned (the notes are); after a household import the search index and git remotes are fixed by hand; the web does not ask the AI-provider question yet (a member who never answered is let through), and in a room a member who declined still has their messages read when someone else summons Maurice; the experimental tools are partly documented and absent from hosted households.
 
