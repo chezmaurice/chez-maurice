@@ -1175,6 +1175,33 @@ db.run(`
 `);
 db.run(`CREATE INDEX IF NOT EXISTS idx_contact_accounts_member ON contact_accounts(member_id)`);
 
+// A member's own MCP servers (20 November 2026, services/memberTools.ts): an
+// address on the internet and, when it wants one, a token — `secret`, sealed
+// with the household's key like a mail password and never returned by a
+// route. `tools` is what the server last said it offers, already named and
+// bounded as a turn will hold it: no turn waits for a member's server to list.
+db.run(`
+  CREATE TABLE IF NOT EXISTS member_tool_servers (
+    id          TEXT PRIMARY KEY,
+    member_id   TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name        TEXT NOT NULL,
+    slug        TEXT NOT NULL,
+    url         TEXT NOT NULL,
+    auth_header TEXT,
+    secret      TEXT NOT NULL DEFAULT '',
+    enabled     INTEGER NOT NULL DEFAULT 1,
+    state       TEXT NOT NULL DEFAULT 'unchecked' CHECK (state IN ('unchecked', 'ok', 'error')),
+    last_error  TEXT,
+    checked_at  TEXT,
+    tools       TEXT NOT NULL DEFAULT '[]',
+    dropped     INTEGER NOT NULL DEFAULT 0,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at  TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE (member_id, slug),
+    UNIQUE (member_id, url)
+  )
+`);
+
 // The cards those address books hold, as last read — replaced whole at every
 // read of an account, never edited here (nothing is written back to the
 // server). Only what a person fiche and the triage need: the names, the

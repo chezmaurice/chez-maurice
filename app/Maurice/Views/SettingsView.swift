@@ -13,7 +13,7 @@ struct SettingsView: View {
     @Environment(\.mauriceTheme) private var theme
     @Environment(\.dismiss) private var dismiss
 
-    enum Pane: Hashable { case appearance, language, household, members, adminPassword, garden, token, files, importChats, mail, contacts, myData, budget, subscription }
+    enum Pane: Hashable { case appearance, language, household, members, adminPassword, garden, token, files, importChats, mail, contacts, tools, myData, budget, subscription }
     @State private var pane: Pane? = nil
     @Environment(BudgetStore.self) private var budget
     @Environment(StoreStore.self) private var store
@@ -71,6 +71,8 @@ struct SettingsView: View {
     @State private var mailAccounts: [MailAccountRow]?
     /// The member's address books (ContactsPane); nil until loaded.
     @State private var contactAccounts: [ContactAccountRow]?
+    /// The member's own tool servers (ToolsPane); nil until loaded.
+    @State private var toolServers: [ToolServerRow]?
 
     private var locales: [(id: String?, label: String)] {
         [(nil, session.localized("settings.locale.system")),
@@ -101,6 +103,7 @@ struct SettingsView: View {
         .task { if !session.activeIsGuest { importSummary = await ImportSummary.load(session: session) } }
         .task { if !session.activeIsGuest { await loadMailAccounts() } }
         .task { if !session.activeIsGuest { await loadContactAccounts() } }
+        .task { if !session.activeIsGuest { await loadToolServers() } }
         .task { await store.refresh(session) }
         .onChange(of: avatarItem) { _, item in prepareCrop(item) }
         .confirmationDialog(session.localized("settings.avatar.hint"), isPresented: $showSourceDialog, titleVisibility: .hidden) {
@@ -235,6 +238,16 @@ struct SettingsView: View {
                                          value: contactsValue, accent: accent) { pane = .contacts }
                             }
                             SetCaption(session.localized("mail.caption"))
+                        }
+
+                        // Their own tools: MCP servers they connect themselves,
+                        // which only their conversations hold.
+                        SetGroup(session.localized("mytools.group")) {
+                            SetCard {
+                                IndexRow(icon: "puzzlepiece.extension", label: session.localized("mytools.title"),
+                                         value: toolsValue, accent: accent) { pane = .tools }
+                            }
+                            SetCaption(session.localized("mytools.caption"))
                         }
 
                         // Their history from other assistants — a setting, not a step
@@ -450,6 +463,7 @@ struct SettingsView: View {
                     case .importChats: ImportConversationsView(accent: accent, summary: $importSummary)
                     case .mail:       MailPane(accent: accent, accounts: $mailAccounts)
                     case .contacts:   ContactsPane(accent: accent, accounts: $contactAccounts)
+                    case .tools:      ToolsPane(accent: accent, servers: $toolServers)
                     case .myData:     MyDataView(accent: accent, close: { dismiss() })
 
                     case .budget:     BudgetPane(accent: accent, openSubscription: { pane = .subscription })
@@ -486,6 +500,19 @@ struct SettingsView: View {
             : session.localized("mail.value.count", contactAccounts.reduce(0) { $0 + $1.cards })
     }
 
+    private var toolsValue: String? {
+        guard let toolServers else { return nil }
+        return toolServers.isEmpty ? session.localized("contacts.value.none")
+            : session.localized("mail.value.count", toolServers.count)
+    }
+
+    private func loadToolServers() async {
+        guard let url = session.serverURL, let token = session.tokenForActiveUser else { return }
+        if let r: ToolServersResponse = try? await APIClient(baseURL: url).get("/api/tool-servers", token: token) {
+            toolServers = r.servers
+        }
+    }
+
     private func loadContactAccounts() async {
         guard let url = session.serverURL, let token = session.tokenForActiveUser else { return }
         if let r: ContactAccountsResponse = try? await APIClient(baseURL: url).get("/api/contact-accounts", token: token) {
@@ -513,6 +540,7 @@ struct SettingsView: View {
         case .importChats: return session.localized("settings.import.title")
         case .mail:       return session.localized("mail.title")
         case .contacts:   return session.localized("contacts.title")
+        case .tools:      return session.localized("mytools.title")
         case .myData:     return session.localized("mydata.title")
 
         case .budget:     return session.localized("budget.title")
@@ -2898,6 +2926,307 @@ private struct ContactsPane: View {
     private func replace(_ row: ContactAccountRow) {
         guard let i = accounts?.firstIndex(where: { $0.id == row.id }) else { return }
         accounts?[i] = row
+    }
+}
+
+// MARK: - The member's own tools (MCP servers)
+
+/// A server the member connected (`/api/tool-servers`): an address and, when
+/// it wants one, a token. The token never comes back.
+struct ToolServerRow: Decodable, Identifiable, Equatable {
+    struct Tool: Decodable, Equatable, Identifiable {
+        let name: String
+        let description: String
+        var id: String { name }
+    }
+    let id: String
+    let name: String
+    let url: String
+    let has_token: Bool
+    let enabled: Bool
+    let state: String        // unchecked | ok | error
+    let last_error: String?
+    let tools: [Tool]
+    let dropped: Int
+}
+struct ToolServersResponse: Decodable {
+    let servers: [ToolServerRow]
+    let allowed: Bool
+}
+private struct NewToolServer: Encodable {
+    let name: String
+    let url: String
+    let token: String?
+}
+private struct ToolServerSwitch: Encodable { let enabled: Bool }
+private struct ToolServerToken: Encodable { let token: String }
+
+/// The member's own tools: MCP servers they connect themselves, by address.
+/// Only their conversations hold them, and never a shared one. Adding a
+/// server asks it for its tools first: one that does not answer, or refuses
+/// the token, is not kept, and its reason is shown here.
+private struct ToolsPane: View {
+    @Environment(SessionStore.self) private var session
+    @Environment(\.mauriceTheme) private var theme
+    let accent: Color
+    @Binding var servers: [ToolServerRow]?
+
+    @State private var allowed = true
+    @State private var name = ""
+    @State private var address = ""
+    @State private var token = ""
+    @State private var busy = false
+    @State private var error: String?
+    @State private var detail: String?
+    @State private var added: String?
+    @State private var renewing: String?
+    @State private var newToken = ""
+    @State private var open: Set<String> = []
+    @State private var removing: ToolServerRow?
+
+    private var api: APIClient? { session.serverURL.map { APIClient(baseURL: $0) } }
+
+    private var canConnect: Bool {
+        !busy && !name.trimmingCharacters(in: .whitespaces).isEmpty
+            && !address.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            SetCaption(session.localized("mytools.intro"))
+            if let servers, !servers.isEmpty {
+                SetGroup(session.localized("mytools.yours")) {
+                    ForEach(servers) { server in serverCard(server) }
+                }
+            }
+            if allowed {
+                SetGroup(session.localized("mytools.add")) { addForm }
+                SetCaption(session.localized("mytools.privacy"))
+            } else {
+                SetCaption(session.localized("mytools.unavailable"))
+            }
+        }
+        .task { await load() }
+        .confirmationDialog(session.localized("mail.remove"), isPresented: Binding(
+            get: { removing != nil }, set: { if !$0 { removing = nil } }
+        ), titleVisibility: .visible, presenting: removing) { server in
+            Button(session.localized("mail.remove"), role: .destructive) { Task { await remove(server) } }
+            Button(L("common.cancel"), role: .cancel) {}
+        } message: { server in
+            Text(session.localized("mytools.remove.confirm", server.name))
+        }
+    }
+
+    private func serverCard(_ server: ToolServerRow) -> some View {
+        SetCard {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 11) {
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(accent.opacity(0.14)).frame(width: 26, height: 26)
+                        .overlay(Image(systemName: "puzzlepiece.extension").font(.system(size: 13))
+                            .foregroundStyle(accent.legible(onDark: theme.isDark)))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(server.name).font(.system(size: 13.5)).foregroundStyle(theme.ink).lineLimit(1)
+                        Text(URL(string: server.url)?.host ?? server.url)
+                            .font(.system(size: 11.5)).foregroundStyle(theme.inkMute)
+                            .lineLimit(1).truncationMode(.middle)
+                    }
+                    Spacer(minLength: 0)
+                    Toggle("", isOn: Binding(get: { server.enabled }, set: { on in Task { await set(server, enabled: on) } }))
+                        .labelsHidden().tint(accent).disabled(busy)
+                }
+                stateLine(server)
+                if server.state == "error", let reason = server.last_error {
+                    Text(reason).font(.system(size: 11, design: .monospaced)).foregroundStyle(theme.inkMute)
+                        .textSelection(.enabled)
+                }
+                if open.contains(server.id) {
+                    VStack(alignment: .leading, spacing: 7) {
+                        ForEach(server.tools) { tool in
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(tool.name).font(.system(size: 12, design: .monospaced)).foregroundStyle(theme.ink)
+                                if !tool.description.isEmpty {
+                                    Text(tool.description).font(.system(size: 11.5)).foregroundStyle(theme.inkSoft)
+                                        .lineLimit(3).fixedSize(horizontal: false, vertical: true)
+                                }
+                            }
+                        }
+                        if server.dropped > 0 {
+                            Text(session.localized("mytools.dropped", server.dropped))
+                                .font(.system(size: 11.5)).foregroundStyle(.orange)
+                        }
+                    }
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(theme.surfaceAlt, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                }
+                if renewing == server.id {
+                    HStack(spacing: 8) {
+                        SecureField(session.localized("mytools.token"), text: $newToken)
+                            .textFieldStyle(.roundedBorder)
+                        Button(session.localized("mail.save")) { Task { await renew(server) } }
+                            .glassProminentButton().disabled(busy)
+                    }
+                }
+                HStack(spacing: 8) {
+                    Button(session.localized(open.contains(server.id) ? "mytools.hide" : "mytools.show")) {
+                        if open.contains(server.id) { open.remove(server.id) } else { open.insert(server.id) }
+                    }
+                    .glassBorderedButton().disabled(server.tools.isEmpty)
+                    Button(session.localized("contacts.sync")) { Task { await refresh(server) } }
+                        .glassBorderedButton().disabled(busy)
+                    Button(session.localized("mytools.new_token")) {
+                        newToken = ""
+                        renewing = renewing == server.id ? nil : server.id
+                    }
+                    .glassBorderedButton().disabled(busy)
+                    Spacer(minLength: 0)
+                    Button(session.localized("mail.remove"), role: .destructive) { removing = server }
+                        .glassBorderedButton().disabled(busy)
+                }
+                .font(.system(size: 12))
+            }
+            .padding(13)
+        }
+    }
+
+    @ViewBuilder private func stateLine(_ server: ToolServerRow) -> some View {
+        if !server.enabled {
+            Text(session.localized("mytools.state.off")).font(.system(size: 11.5)).foregroundStyle(theme.inkMute)
+        } else if server.state == "error" {
+            Label(session.localized("mytools.state.error"), systemImage: "exclamationmark.triangle.fill")
+                .font(.system(size: 11.5)).foregroundStyle(.orange)
+        } else {
+            Label(session.localized("mytools.state.ok", server.tools.count), systemImage: "checkmark.circle.fill")
+                .font(.system(size: 11.5)).foregroundStyle(.green)
+        }
+    }
+
+    private var addForm: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            TextField(session.localized("mytools.name"), text: $name)
+                .textFieldStyle(.roundedBorder)
+            TextField(session.localized("mytools.address"), text: $address)
+                .textFieldStyle(.roundedBorder)
+                .autocorrectionDisabled()
+                #if os(iOS)
+                .textInputAutocapitalization(.never)
+                .keyboardType(.URL)
+                .textContentType(.URL)
+                #endif
+            SecureField(session.localized("mytools.token.optional"), text: $token)
+                .textFieldStyle(.roundedBorder)
+                .onSubmit { if canConnect { Task { await add() } } }
+            Button {
+                Task { await add() }
+            } label: {
+                HStack(spacing: 8) {
+                    if busy { ProgressView().controlSize(.small) }
+                    Text(session.localized(busy ? "mytools.checking" : "mail.connect"))
+                }
+                .font(.system(size: 14, weight: .medium))
+                .frame(maxWidth: .infinity).padding(.vertical, 10)
+            }
+            .glassProminentButton()
+            .disabled(!canConnect)
+            if let added {
+                Label(added, systemImage: "checkmark.circle.fill").font(.system(size: 12.5)).foregroundStyle(.green)
+            }
+            if let error {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(error).font(.system(size: 12.5, weight: .medium)).foregroundStyle(.red)
+                    if let detail {
+                        Text(detail).font(.system(size: 11, design: .monospaced)).foregroundStyle(theme.inkMute)
+                            .textSelection(.enabled)
+                    }
+                }
+            }
+        }
+    }
+
+    private func load() async {
+        guard let api, let token = session.tokenForActiveUser else { return }
+        if let r: ToolServersResponse = try? await api.get("/api/tool-servers", token: token) {
+            servers = r.servers
+            allowed = r.allowed
+        }
+    }
+
+    private func show(_ err: Error) {
+        if case APIError.server(let code, let message) = err {
+            error = session.localized(code == 422 ? "mytools.unreachable" : "mail.failed")
+            detail = message
+        } else {
+            error = session.localized("mail.failed")
+            detail = err.localizedDescription
+        }
+    }
+
+    private func add() async {
+        guard let api, let auth = session.tokenForActiveUser else { return }
+        busy = true; error = nil; detail = nil; added = nil
+        defer { busy = false }
+        var url = address.trimmingCharacters(in: .whitespaces)
+        if !url.contains("://") { url = "https://" + url }
+        let secret = token.trimmingCharacters(in: .whitespaces)
+        let body = NewToolServer(name: name.trimmingCharacters(in: .whitespaces), url: url, token: secret.isEmpty ? nil : secret)
+        do {
+            let row: ToolServerRow = try await api.post("/api/tool-servers", body: body, token: auth, timeout: 40)
+            servers = (servers ?? []) + [row]
+            added = session.localized("mytools.added", row.tools.count)
+            name = ""; address = ""; token = ""
+            open.insert(row.id)
+        } catch {
+            token = ""
+            show(error)
+        }
+    }
+
+    private func set(_ server: ToolServerRow, enabled: Bool) async {
+        guard let api, let auth = session.tokenForActiveUser else { return }
+        busy = true; error = nil; detail = nil
+        defer { busy = false }
+        do {
+            let row: ToolServerRow = try await api.patch("/api/tool-servers/\(server.id)", body: ToolServerSwitch(enabled: enabled), token: auth)
+            replace(row)
+        } catch { show(error) }
+    }
+
+    private func refresh(_ server: ToolServerRow) async {
+        guard let api, let auth = session.tokenForActiveUser else { return }
+        busy = true; error = nil; detail = nil
+        defer { busy = false }
+        do {
+            let row: ToolServerRow = try await api.post("/api/tool-servers/\(server.id)/refresh",
+                                                        body: [String: String](), token: auth, timeout: 40)
+            replace(row)
+        } catch { show(error) }
+    }
+
+    private func renew(_ server: ToolServerRow) async {
+        guard let api, let auth = session.tokenForActiveUser else { return }
+        busy = true; error = nil; detail = nil
+        defer { busy = false }
+        do {
+            let row: ToolServerRow = try await api.patch("/api/tool-servers/\(server.id)",
+                                                         body: ToolServerToken(token: newToken.trimmingCharacters(in: .whitespaces)), token: auth)
+            replace(row)
+            renewing = nil; newToken = ""
+        } catch { show(error) }
+    }
+
+    private func remove(_ server: ToolServerRow) async {
+        guard let api, let auth = session.tokenForActiveUser else { return }
+        do {
+            try await api.delete("/api/tool-servers/\(server.id)", token: auth)
+            servers?.removeAll { $0.id == server.id }
+        } catch { show(error) }
+        removing = nil
+    }
+
+    private func replace(_ row: ToolServerRow) {
+        guard let i = servers?.firstIndex(where: { $0.id == row.id }) else { return }
+        servers?[i] = row
     }
 }
 

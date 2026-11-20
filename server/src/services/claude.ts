@@ -21,6 +21,7 @@ import { factsForPrompt, isRememberFactTool, rememberFactTool, runRememberFactTo
 import { importHintSection } from "./chatImport";
 import { MAURICE_DOCS_TOOL_NAME, askMauriceDocs, mauriceDocsTool } from "./mauriceDocsTool";
 import { domainToolsFor, isDomainTool, proposalPromptSection, runDomainTool } from "./domainProposals";
+import { isMemberTool, memberToolsFor, memberToolsNotice, runMemberTool } from "./memberTools";
 import { readingApproved } from "./mailApproval";
 import { DOMAIN_RECOGNISED_TOOL, briefAlreadyRead, recogniseDomain, recognitionNote, type Recognition } from "./domainRecognition";
 import { listMailAccounts } from "./mailAccounts";
@@ -709,6 +710,13 @@ async function executeTool(
       // wait; that check is made again inside.
       if (isDomainTool(name)) {
         return await runDomainTool(name, input || {}, ctx.memberId ?? undefined);
+      }
+      // A tool of a server the member added themselves (services/
+      // memberTools.ts): it goes to that server, never to the gateway, and
+      // the member, the switch and the name are checked again there.
+      if (isMemberTool(name)) {
+        const r = await runMemberTool(name, input || {}, ctx.memberId);
+        return { text: compactToolText(r.text), isError: r.isError };
       }
       if (mcp) {
         // Same budget on the other side: three layers is three searches, and
@@ -1781,6 +1789,16 @@ function trackedBooks(
   // And the two that go with them: reading a brief, and writing down a fact.
   if (carriesDomainIndex) mcpTools = [...mcpTools, domainBriefTool(), rememberFactTool()];
 
+  // The member's own tools (services/memberTools.ts), from the servers they
+  // added and left switched on: in the conversations they hold alone with
+  // Maurice, never in a room — what a tool is handed leaves the household for
+  // a third party the others present did not choose. After everything else,
+  // so that adding a server moves nobody else's cached prefix.
+  if (memberId && countParticipants(conversationId) === 1) {
+    const taken = new Set(mcpTools.map((t) => t.name));
+    mcpTools = [...mcpTools, ...memberToolsFor(memberId).filter((t) => !taken.has(t.name))];
+  }
+
   if (textOnly) mcpTools = [];
 
   // Now that the roster is settled, tell the model what it really holds.
@@ -1788,6 +1806,7 @@ function trackedBooks(
   systemPrompt += corpusNotice(mcpTools.map((t) => t.name));
   systemPrompt += notesNotice(mcpTools.map((t) => t.name), userLang);
   systemPrompt += mailNotice(mcpTools.map((t) => t.name), memberId, userDisplayName);
+  systemPrompt += memberToolsNotice(memberId, mcpTools.map((t) => t.name));
 
   // Fit the conversation to the model's window. `ctx` is what the roster says
   // (k tokens, admin-editable); Ollama is additionally capped by what we ask

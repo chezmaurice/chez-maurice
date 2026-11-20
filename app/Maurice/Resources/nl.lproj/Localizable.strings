@@ -1205,3 +1205,28 @@
 "connect.disclosure.warning" = "Als je niet verwachtte bij deze Maurice aan te sluiten, of een onbekende je vroeg Maurice te installeren en hier verbinding te maken, maak dan geen verbinding.";
 "connect.disclosure.cancel" = "Annuleren";
 "connect.disclosure.accept" = "Begrepen — Verbinden";
+
+/* The member's own tools (MCP servers) */
+"mytools.group" = "Hulpmiddelen";
+"mytools.title" = "Uw eigen hulpmiddelen";
+"mytools.caption" = "Verbind uw eigen diensten zodat Maurice ze in uw gesprekken gebruikt.";
+"mytools.intro" = "Voeg een server met hulpmiddelen (MCP) toe via zijn adres: Maurice kan dan gebruiken wat die aanbiedt — een takenbeheerder, een kennisbank, een eigen dienst — in de gesprekken die u alleen met hem voert. Deze hulpmiddelen zijn alleen van u; niemand anders in het huishouden ziet ze.";
+"mytools.yours" = "Uw servers";
+"mytools.add" = "Een server toevoegen";
+"mytools.privacy" = "Het token wordt versleuteld bewaard op de server van uw Maurice en wordt nooit meer getoond. Wat Maurice aan een van deze hulpmiddelen doorgeeft, verlaat uw huishouden naar die dienst: voeg alleen servers toe die u vertrouwt. Ze worden nooit gebruikt in een gedeeld gesprek.";
+"mytools.unavailable" = "Eigen hulpmiddelen toevoegen is niet beschikbaar voor uw account in dit huishouden.";
+"mytools.remove.confirm" = "Maurice gebruikt de hulpmiddelen van %@ niet meer en vergeet het token.";
+"mytools.name" = "Naam (bijvoorbeeld: Taken)";
+"mytools.address" = "Serveradres (https://…)";
+"mytools.token" = "Token";
+"mytools.token.optional" = "Token (als de server erom vraagt)";
+"mytools.new_token" = "Nieuw token";
+"mytools.show" = "Hulpmiddelen tonen";
+"mytools.hide" = "Hulpmiddelen verbergen";
+"mytools.checking" = "De server wordt naar zijn hulpmiddelen gevraagd…";
+"mytools.added" = "Verbonden: %d hulpmiddelen.";
+"mytools.unreachable" = "Maurice kon geen verbinding maken met deze server.";
+"mytools.state.ok" = "%d hulpmiddelen";
+"mytools.state.error" = "Antwoordt niet";
+"mytools.state.off" = "Uitgeschakeld";
+"mytools.dropped" = "Nog %d hulpmiddelen zijn weggelaten (te veel, of te groot).";

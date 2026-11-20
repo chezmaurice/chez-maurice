@@ -1204,3 +1204,28 @@
 "connect.disclosure.warning" = "Wenn du nicht damit gerechnet hast, diesem Maurice beizutreten, oder ein Unbekannter dich gebeten hat, Maurice zu installieren und dich hier zu verbinden, verbinde dich nicht.";
 "connect.disclosure.cancel" = "Abbrechen";
 "connect.disclosure.accept" = "Verstanden – Verbinden";
+
+/* The member's own tools (MCP servers) */
+"mytools.group" = "Werkzeuge";
+"mytools.title" = "Ihre eigenen Werkzeuge";
+"mytools.caption" = "Verbinden Sie eigene Dienste, damit Maurice sie in Ihren Gesprächen nutzt.";
+"mytools.intro" = "Fügen Sie einen Werkzeug-Server (MCP) über seine Adresse hinzu: Maurice kann dann nutzen, was er anbietet — eine Aufgabenverwaltung, eine Wissensdatenbank, einen eigenen Dienst — in den Gesprächen, die Sie allein mit ihm führen. Diese Werkzeuge gehören nur Ihnen; niemand sonst im Haushalt sieht sie.";
+"mytools.yours" = "Ihre Server";
+"mytools.add" = "Server hinzufügen";
+"mytools.privacy" = "Das Token wird verschlüsselt auf dem Server Ihres Maurice aufbewahrt und nie wieder angezeigt. Was Maurice an eines dieser Werkzeuge übergibt, verlässt Ihren Haushalt und geht an diesen Dienst: Fügen Sie nur Server hinzu, denen Sie vertrauen. In einem geteilten Gespräch werden sie nie verwendet.";
+"mytools.unavailable" = "Das Hinzufügen eigener Werkzeuge ist für Ihr Konto in diesem Haushalt nicht verfügbar.";
+"mytools.remove.confirm" = "Maurice verwendet die Werkzeuge von %@ nicht mehr und vergisst das Token.";
+"mytools.name" = "Name (zum Beispiel: Aufgaben)";
+"mytools.address" = "Serveradresse (https://…)";
+"mytools.token" = "Token";
+"mytools.token.optional" = "Token (falls der Server eines verlangt)";
+"mytools.new_token" = "Neues Token";
+"mytools.show" = "Werkzeuge anzeigen";
+"mytools.hide" = "Werkzeuge ausblenden";
+"mytools.checking" = "Der Server wird nach seinen Werkzeugen gefragt…";
+"mytools.added" = "Verbunden: %d Werkzeuge.";
+"mytools.unreachable" = "Maurice konnte keine Verbindung zu diesem Server herstellen.";
+"mytools.state.ok" = "%d Werkzeuge";
+"mytools.state.error" = "Antwortet nicht";
+"mytools.state.off" = "Ausgeschaltet";
+"mytools.dropped" = "%d weitere Werkzeuge wurden ausgelassen (zu viele oder zu groß).";

@@ -30,95 +30,145 @@ function authHeaders(memberId: string): Record<string, string> {
   };
 }
 
+/** Where a session talks to, and how. The household's gateway by default;
+ *  a member's own server (services/memberTools.ts) brings its own. */
+export interface McpEndpoint {
+  url: string;
+  headers: Record<string, string>;
+  /** The fetch to use: the remote case goes through the SSRF guard. */
+  fetch?: (url: string, init: RequestInit) => Promise<Response>;
+  /** Give up on a request after this long. None for the loopback gateway. */
+  timeoutMs?: number;
+  /** Read at most this much of an answer. */
+  maxBytes?: number;
+}
+
+function gatewayEndpoint(memberId: string): McpEndpoint {
+  return { url: gatewayUrl(), headers: authHeaders(memberId) };
+}
+
+function rpcMessage(payload: string): any {
+  try {
+    return JSON.parse(payload);
+  } catch {
+    return null; // a keepalive, or a frame cut short
+  }
+}
+
 // Parse a Streamable-HTTP response body: either a JSON object, or SSE frames
 // where the payload is on `data:` lines. Returns the first JSON-RPC message
-// that has a `result` or `error`.
-async function parseRpc(resp: Response): Promise<any> {
-  const text = await resp.text();
+// that has a `result` or `error` — and stops reading there: a server that
+// keeps its event stream open after answering would otherwise hold the turn.
+async function parseRpc(resp: Response, maxBytes = Infinity): Promise<any> {
   const ct = resp.headers.get("content-type") || "";
-  if (ct.includes("application/json")) {
-    return JSON.parse(text);
-  }
-  // SSE: collect data: lines, parse each as JSON, return the one with id/result.
+  const sse = !ct.includes("application/json");
+  const reader = resp.body?.getReader();
+  if (!reader) return null;
+  const decoder = new TextDecoder();
+  let text = "";
+  let bytes = 0;
+  let scanned = 0;
   let last: any = null;
-  for (const line of text.split("\n")) {
-    const t = line.trim();
-    if (!t.startsWith("data:")) continue;
-    const payload = t.slice(5).trim();
-    if (!payload || payload === "[DONE]") continue;
-    try {
-      const msg = JSON.parse(payload);
-      if (msg.result !== undefined || msg.error !== undefined) return msg;
-      last = msg;
-    } catch {
-      // ignore non-JSON keepalives
+  const scan = (final: boolean): any => {
+    for (;;) {
+      const nl = text.indexOf("\n", scanned);
+      if (nl < 0 && !final) return null;
+      const line = (nl < 0 ? text.slice(scanned) : text.slice(scanned, nl)).trim();
+      scanned = nl < 0 ? text.length : nl + 1;
+      if (line.startsWith("data:")) {
+        const payload = line.slice(5).trim();
+        if (payload && payload !== "[DONE]") {
+          const msg = rpcMessage(payload);
+          if (msg && (msg.result !== undefined || msg.error !== undefined)) return msg;
+          if (msg) last = msg;
+        }
+      }
+      if (nl < 0) return null;
     }
+  };
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (value) {
+        bytes += value.byteLength;
+        if (bytes > maxBytes) throw new Error("the answer is too large");
+        text += decoder.decode(value, { stream: true });
+      }
+      if (sse) {
+        const hit = scan(!!done);
+        if (hit) return hit;
+      }
+      if (done) break;
+    }
+  } finally {
+    reader.cancel().catch(() => {});
   }
+  if (!sse) return JSON.parse(text);
   return last;
 }
 
 /**
  * A short-lived MCP session: initialize once, then list/call tools.
- * Construct via McpSession.open(memberId).
+ * Construct via McpSession.open(memberId), or McpSession.openAt(endpoint).
  */
 export class McpSession {
   private constructor(
-    private memberId: string,
-    private sessionId: string | null
+    private endpoint: McpEndpoint,
+    private sessionId: string | null,
+    private protocol: string | null,
   ) {}
 
-  static async open(memberId: string): Promise<McpSession> {
-    const headers = authHeaders(memberId);
-    const resp = await fetch(gatewayUrl(), {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        jsonrpc: "2.0",
-        id: 1,
-        method: "initialize",
-        params: {
-          protocolVersion: PROTOCOL_VERSION,
-          capabilities: {},
-          clientInfo: { name: "maurice-server", version: "0.1.0" },
-        },
-      }),
+  static open(memberId: string): Promise<McpSession> {
+    return McpSession.openAt(gatewayEndpoint(memberId));
+  }
+
+  static async openAt(endpoint: McpEndpoint): Promise<McpSession> {
+    const fresh = new McpSession(endpoint, null, null);
+    const resp = await fresh.send({
+      jsonrpc: "2.0",
+      id: 1,
+      method: "initialize",
+      params: {
+        protocolVersion: PROTOCOL_VERSION,
+        capabilities: {},
+        clientInfo: { name: "maurice-server", version: "0.1.0" },
+      },
     });
     if (!resp.ok) {
-      throw new Error(`MCP initialize failed: ${resp.status} ${await resp.text().catch(() => "")}`);
+      throw new Error(`MCP initialize failed: ${resp.status} ${(await resp.text().catch(() => "")).slice(0, 300)}`);
     }
     const sessionId = resp.headers.get("mcp-session-id");
-    await parseRpc(resp); // drain initialize result
+    const init = await parseRpc(resp, endpoint.maxBytes);
+    if (init?.error) throw new Error(`MCP initialize error: ${init.error.message || JSON.stringify(init.error)}`);
+    const version = typeof init?.result?.protocolVersion === "string" ? init.result.protocolVersion : null;
 
-    const session = new McpSession(memberId, sessionId);
+    const session = new McpSession(endpoint, sessionId, version);
     // Required handshake: tell the server we're initialized.
     await session.notify("notifications/initialized");
     return session;
   }
 
-  private headers(): Record<string, string> {
-    const h = authHeaders(this.memberId);
-    if (this.sessionId) h["mcp-session-id"] = this.sessionId;
-    return h;
+  private send(body: unknown): Promise<Response> {
+    const headers = { ...this.endpoint.headers };
+    if (this.sessionId) headers["mcp-session-id"] = this.sessionId;
+    if (this.protocol) headers["MCP-Protocol-Version"] = this.protocol;
+    const init: RequestInit = { method: "POST", headers, body: JSON.stringify(body) };
+    if (this.endpoint.timeoutMs) init.signal = AbortSignal.timeout(this.endpoint.timeoutMs);
+    return (this.endpoint.fetch ?? fetch)(this.endpoint.url, init);
   }
 
   private async notify(method: string): Promise<void> {
-    await fetch(gatewayUrl(), {
-      method: "POST",
-      headers: this.headers(),
-      body: JSON.stringify({ jsonrpc: "2.0", method, params: {} }),
-    }).catch(() => {});
+    await this.send({ jsonrpc: "2.0", method, params: {} })
+      .then((r) => r.body?.cancel())
+      .catch(() => {});
   }
 
   private async rpc(method: string, params: any, id: number): Promise<any> {
-    const resp = await fetch(gatewayUrl(), {
-      method: "POST",
-      headers: this.headers(),
-      body: JSON.stringify({ jsonrpc: "2.0", id, method, params }),
-    });
+    const resp = await this.send({ jsonrpc: "2.0", id, method, params });
     if (!resp.ok) {
-      throw new Error(`MCP ${method} failed: ${resp.status} ${await resp.text().catch(() => "")}`);
+      throw new Error(`MCP ${method} failed: ${resp.status} ${(await resp.text().catch(() => "")).slice(0, 300)}`);
     }
-    const msg = await parseRpc(resp);
+    const msg = await parseRpc(resp, this.endpoint.maxBytes);
     if (msg?.error) {
       throw new Error(`MCP ${method} error: ${msg.error.message || JSON.stringify(msg.error)}`);
     }

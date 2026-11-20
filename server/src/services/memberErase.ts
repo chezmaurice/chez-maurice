@@ -104,6 +104,7 @@ const OWNED: [table: string, column: string][] = [
   ["mail_reading_consent", "member_id"],
   ["contact_cards", "member_id"],
   ["contact_accounts", "member_id"],
+  ["member_tool_servers", "member_id"],
   ["domain_proposals", "member_id"],
   ["domain_mail", "member_id"],
   ["domain_articles", "member_id"],

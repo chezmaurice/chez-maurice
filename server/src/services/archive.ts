@@ -185,7 +185,7 @@ export function withoutPasswords(snapshot: string): void {
   const db = new Database(snapshot);
   try {
     db.run("PRAGMA secure_delete = ON");
-    for (const table of ["mail_accounts", "contact_accounts"]) {
+    for (const table of ["mail_accounts", "contact_accounts", "member_tool_servers"]) {
       const exists = db.query(`SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?`).get(table);
       if (!exists) continue;
       db.run(`UPDATE ${table} SET secret = '', state = 'error', last_error = ?`, [RECONNECT_NOTE]);

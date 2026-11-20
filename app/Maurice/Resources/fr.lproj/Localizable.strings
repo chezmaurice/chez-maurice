@@ -1204,3 +1204,28 @@
 "connect.disclosure.warning" = "Si vous ne vous attendiez pas à rejoindre ce Maurice, ou si un inconnu vous a demandé d’installer Maurice et de vous connecter ici, ne vous connectez pas.";
 "connect.disclosure.cancel" = "Annuler";
 "connect.disclosure.accept" = "J’ai compris — Me connecter";
+
+/* The member's own tools (MCP servers) */
+"mytools.group" = "Outils";
+"mytools.title" = "Vos propres outils";
+"mytools.caption" = "Connectez vos propres services pour que Maurice s'en serve dans vos conversations.";
+"mytools.intro" = "Ajoutez un serveur d'outils (MCP) par son adresse : Maurice peut alors se servir de ce qu'il propose — un gestionnaire de tâches, une base de connaissances, un service à vous — dans les conversations que vous tenez seul avec lui. Ces outils ne sont qu'à vous ; personne d'autre dans le foyer ne les voit.";
+"mytools.yours" = "Vos serveurs";
+"mytools.add" = "Ajouter un serveur";
+"mytools.privacy" = "Le jeton est gardé chiffré sur le serveur de votre Maurice et n'est plus jamais affiché. Ce que Maurice transmet à l'un de ces outils quitte votre foyer pour ce service : n'ajoutez que des serveurs en qui vous avez confiance. Ils ne servent jamais dans une conversation partagée.";
+"mytools.unavailable" = "L'ajout de vos propres outils n'est pas disponible pour votre compte dans ce foyer.";
+"mytools.remove.confirm" = "Maurice ne se servira plus des outils de %@ et oublie son jeton.";
+"mytools.name" = "Nom (par exemple : Tâches)";
+"mytools.address" = "Adresse du serveur (https://…)";
+"mytools.token" = "Jeton";
+"mytools.token.optional" = "Jeton (si le serveur en demande un)";
+"mytools.new_token" = "Nouveau jeton";
+"mytools.show" = "Voir les outils";
+"mytools.hide" = "Masquer les outils";
+"mytools.checking" = "Demande de ses outils au serveur…";
+"mytools.added" = "Connecté : %d outils.";
+"mytools.unreachable" = "Maurice n'a pas pu se connecter à ce serveur.";
+"mytools.state.ok" = "%d outils";
+"mytools.state.error" = "Ne répond pas";
+"mytools.state.off" = "Désactivé";
+"mytools.dropped" = "%d autres outils ont été laissés de côté (trop nombreux, ou trop volumineux).";

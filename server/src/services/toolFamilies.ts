@@ -1,6 +1,7 @@
 import db from "../db";
 import { McpSession } from "./mcpClient";
 import { getUser } from "./users";
+import { memberToolFamilies } from "./memberTools";
 
 // Tool families group the ~127 MCP tools by their server prefix (the `prefix__`
 // in `calendar__get_events`). A turn exposes only the selected families, so a
@@ -206,7 +207,8 @@ const META: Record<string, { title: string; icon: string; blurb: string }> = {
  *  model is actually holding this turn, so the system prompt can say it instead
  *  of promising a fixed list the member may never have been granted. */
 export function familyTitles(toolNames: string[]): string[] {
-  const ids = new Set(toolNames.map(familyOf));
+  // A member's own tools are named in a section of their own (memberTools.ts).
+  const ids = new Set(toolNames.filter((n) => !n.startsWith("x_")).map(familyOf));
   return [...ids].map((id) => META[id]?.title ?? id).sort();
 }
 
@@ -271,7 +273,9 @@ export function familiesForMember(all: ToolFamily[], memberId: string): ToolFami
 /** The household's tool families with live counts (cached briefly), placed
  *  for this member (familiesForMember). */
 export async function listFamilies(memberId: string): Promise<ToolFamily[]> {
-  const forMember = (all: ToolFamily[]) => familiesForMember(all, memberId);
+  // The member's own servers (services/memberTools.ts) come last, as theirs:
+  // each is a family that is on while its server is, in every private turn.
+  const forMember = (all: ToolFamily[]) => [...familiesForMember(all, memberId), ...memberToolFamilies(memberId)];
   if (cache && Date.now() - cache.at < TTL) return forMember(cache.families);
   const counts: Record<string, number> = { web: 2 };
   try {

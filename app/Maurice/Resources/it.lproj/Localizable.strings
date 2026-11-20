@@ -1204,3 +1204,28 @@
 "connect.disclosure.warning" = "Se non ti aspettavi di entrare in questo Maurice, o uno sconosciuto ti ha chiesto di installare Maurice e connetterti qui, non connetterti.";
 "connect.disclosure.cancel" = "Annulla";
 "connect.disclosure.accept" = "Ho capito — Connetti";
+
+/* The member's own tools (MCP servers) */
+"mytools.group" = "Strumenti";
+"mytools.title" = "I vostri strumenti";
+"mytools.caption" = "Collegate i vostri servizi perché Maurice li usi nelle vostre conversazioni.";
+"mytools.intro" = "Aggiungete un server di strumenti (MCP) con il suo indirizzo: Maurice potrà usare ciò che offre — un gestore di attività, una base di conoscenze, un vostro servizio — nelle conversazioni che tenete da soli con lui. Questi strumenti sono soltanto vostri; nessun altro nella famiglia li vede.";
+"mytools.yours" = "I vostri server";
+"mytools.add" = "Aggiungere un server";
+"mytools.privacy" = "Il token è conservato cifrato sul server del vostro Maurice e non viene più mostrato. Ciò che Maurice trasmette a uno di questi strumenti lascia la vostra famiglia per quel servizio: aggiungete solo server di cui vi fidate. Non vengono mai usati in una conversazione condivisa.";
+"mytools.unavailable" = "L'aggiunta di strumenti propri non è disponibile per il vostro account in questa famiglia.";
+"mytools.remove.confirm" = "Maurice non userà più gli strumenti di %@ e dimentica il suo token.";
+"mytools.name" = "Nome (per esempio: Attività)";
+"mytools.address" = "Indirizzo del server (https://…)";
+"mytools.token" = "Token";
+"mytools.token.optional" = "Token (se il server lo richiede)";
+"mytools.new_token" = "Nuovo token";
+"mytools.show" = "Mostra gli strumenti";
+"mytools.hide" = "Nascondi gli strumenti";
+"mytools.checking" = "Richiesta degli strumenti al server…";
+"mytools.added" = "Collegato: %d strumenti.";
+"mytools.unreachable" = "Maurice non è riuscito a collegarsi a questo server.";
+"mytools.state.ok" = "%d strumenti";
+"mytools.state.error" = "Non risponde";
+"mytools.state.off" = "Disattivato";
+"mytools.dropped" = "Altri %d strumenti sono stati esclusi (troppi, o troppo grandi).";

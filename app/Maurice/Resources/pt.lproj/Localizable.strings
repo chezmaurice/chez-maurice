@@ -1205,3 +1205,28 @@
 "connect.disclosure.warning" = "Se não esperava juntar-se a este Maurice, ou se um desconhecido lhe pediu para instalar o Maurice e ligar-se aqui, não se ligue.";
 "connect.disclosure.cancel" = "Cancelar";
 "connect.disclosure.accept" = "Compreendo — Ligar";
+
+/* The member's own tools (MCP servers) */
+"mytools.group" = "Ferramentas";
+"mytools.title" = "As suas ferramentas";
+"mytools.caption" = "Ligue os seus próprios serviços para que o Maurice os use nas suas conversas.";
+"mytools.intro" = "Adicione um servidor de ferramentas (MCP) pelo seu endereço: o Maurice poderá usar o que ele oferece — um gestor de tarefas, uma base de conhecimento, um serviço seu — nas conversas que mantém a sós com ele. Estas ferramentas são apenas suas; mais ninguém no agregado as vê.";
+"mytools.yours" = "Os seus servidores";
+"mytools.add" = "Adicionar um servidor";
+"mytools.privacy" = "O token é guardado cifrado no servidor do seu Maurice e nunca mais é mostrado. O que o Maurice transmite a uma destas ferramentas sai do seu agregado para esse serviço: adicione apenas servidores em que confia. Nunca são usadas numa conversa partilhada.";
+"mytools.unavailable" = "Adicionar ferramentas próprias não está disponível para a sua conta neste agregado.";
+"mytools.remove.confirm" = "O Maurice deixará de usar as ferramentas de %@ e esquece o seu token.";
+"mytools.name" = "Nome (por exemplo: Tarefas)";
+"mytools.address" = "Endereço do servidor (https://…)";
+"mytools.token" = "Token";
+"mytools.token.optional" = "Token (se o servidor pedir um)";
+"mytools.new_token" = "Novo token";
+"mytools.show" = "Ver as ferramentas";
+"mytools.hide" = "Ocultar as ferramentas";
+"mytools.checking" = "A pedir as ferramentas ao servidor…";
+"mytools.added" = "Ligado: %d ferramentas.";
+"mytools.unreachable" = "O Maurice não conseguiu ligar-se a este servidor.";
+"mytools.state.ok" = "%d ferramentas";
+"mytools.state.error" = "Não responde";
+"mytools.state.off" = "Desativado";
+"mytools.dropped" = "Mais %d ferramentas ficaram de fora (demasiadas, ou demasiado grandes).";

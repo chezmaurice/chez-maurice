@@ -1204,3 +1204,28 @@
 "connect.disclosure.warning" = "If you weren’t expecting to join this Maurice, or someone you don’t know asked you to install Maurice and connect here, don’t connect.";
 "connect.disclosure.cancel" = "Cancel";
 "connect.disclosure.accept" = "I understand — Connect";
+
+/* The member's own tools (MCP servers) */
+"mytools.group" = "Tools";
+"mytools.title" = "Your own tools";
+"mytools.caption" = "Connect services of your own for Maurice to use in your conversations.";
+"mytools.intro" = "Add a tool server (MCP) by its address: Maurice can then use what it offers — a task manager, a knowledge base, a service of your own — in the conversations you hold alone with it. Only you have these tools; nobody else in the household sees them.";
+"mytools.yours" = "Your servers";
+"mytools.add" = "Add a server";
+"mytools.privacy" = "The token is kept encrypted on your Maurice's server and is never shown again. What Maurice passes to one of these tools leaves your household for that service: add only servers you trust. They are never used in a shared conversation.";
+"mytools.unavailable" = "Adding your own tools is not available for your account in this household.";
+"mytools.remove.confirm" = "Maurice will no longer use the tools of %@ and forgets its token.";
+"mytools.name" = "Name (for example: Tasks)";
+"mytools.address" = "Server address (https://…)";
+"mytools.token" = "Token";
+"mytools.token.optional" = "Token (if the server asks for one)";
+"mytools.new_token" = "New token";
+"mytools.show" = "Show tools";
+"mytools.hide" = "Hide tools";
+"mytools.checking" = "Asking the server for its tools…";
+"mytools.added" = "Connected: %d tools.";
+"mytools.unreachable" = "Maurice could not connect to this server.";
+"mytools.state.ok" = "%d tools";
+"mytools.state.error" = "Not answering";
+"mytools.state.off" = "Switched off";
+"mytools.dropped" = "%d more tools were left out (too many, or too large).";
