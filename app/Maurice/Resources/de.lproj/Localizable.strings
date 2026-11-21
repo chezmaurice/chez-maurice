@@ -106,6 +106,7 @@
 "persona.preview.selected" = "%d ausgewählt";
 "persona.preview.no_tagline" = "Noch kein Slogan.";
 "chat.back_to_conversations" = "Zurück zu den Unterhaltungen";
+"chat.scroll_to_end" = "Zum Ende";
 "chat.tools_help" = "Werkzeuge für diese Unterhaltung";
 "chat.add_someone_help" = "Jemanden zu diesem Raum hinzufügen";
 "chat.edit_maurice" = "Bereich bearbeiten";

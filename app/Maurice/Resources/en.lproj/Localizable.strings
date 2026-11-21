@@ -106,6 +106,7 @@
 "persona.preview.selected" = "%d selected";
 "persona.preview.no_tagline" = "No tagline yet.";
 "chat.back_to_conversations" = "Back to conversations";
+"chat.scroll_to_end" = "Go to the end";
 "chat.tools_help" = "Tools for this conversation";
 "chat.add_someone_help" = "Add someone to this room";
 "chat.edit_maurice" = "Edit domain";

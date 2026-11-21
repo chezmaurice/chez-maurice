@@ -106,6 +106,7 @@
 "persona.preview.selected" = "%d geselecteerd";
 "persona.preview.no_tagline" = "Nog geen slogan.";
 "chat.back_to_conversations" = "Terug naar gesprekken";
+"chat.scroll_to_end" = "Naar het einde";
 "chat.tools_help" = "Hulpmiddelen voor dit gesprek";
 "chat.add_someone_help" = "Iemand toevoegen aan deze ruimte";
 "chat.edit_maurice" = "Domein bewerken";

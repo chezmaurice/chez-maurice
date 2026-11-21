@@ -106,6 +106,7 @@
 "persona.preview.selected" = "%d sélectionné(s)";
 "persona.preview.no_tagline" = "Pas encore d'accroche.";
 "chat.back_to_conversations" = "Retour aux conversations";
+"chat.scroll_to_end" = "Aller à la fin";
 "chat.tools_help" = "Outils pour cette conversation";
 "chat.add_someone_help" = "Ajouter quelqu'un à ce salon";
 "chat.edit_maurice" = "Modifier le domaine";

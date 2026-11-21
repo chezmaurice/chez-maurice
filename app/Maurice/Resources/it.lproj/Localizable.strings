@@ -106,6 +106,7 @@
 "persona.preview.selected" = "%d selezionati";
 "persona.preview.no_tagline" = "Ancora nessun motto.";
 "chat.back_to_conversations" = "Torna alle conversazioni";
+"chat.scroll_to_end" = "Vai alla fine";
 "chat.tools_help" = "Strumenti per questa conversazione";
 "chat.add_someone_help" = "Aggiungi qualcuno a questa stanza";
 "chat.edit_maurice" = "Modifica dominio";

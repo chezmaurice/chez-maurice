@@ -31,6 +31,30 @@ struct ChatView: View {
     @State private var atBottom = true
     /// Force one scroll-to-bottom after a (re)load, regardless of scroll state.
     @State private var pendingScrollToBottom = true
+    /// The conversation whose last question of the member's is pinned to the
+    /// top of the viewport: sending one puts it there and the reply writes
+    /// itself underneath, then under the fold, instead of pushing its own
+    /// first lines off the top. Nil: no pin, the thread ends where its text does.
+    @State private var pinConversation: String?
+    /// The pin is being held: the thread does not follow the reply. Released
+    /// by the member's own hand, on reaching the end of the text once it has
+    /// gone under the fold, or by the "↓" button.
+    @State private var holdPin = false
+    /// The member's hand is on the thread — dragging it, or it is still
+    /// coasting from their flick. What releases the pin: the end of the text
+    /// coming into view is no evidence by itself, it also does when the
+    /// streamed row gives way to the final message.
+    @State private var handScrolling = false
+    /// The member has scrolled since the question was pinned: the pin is not
+    /// put back under them.
+    @State private var scrolledSincePin = false
+    /// A question was just sent from this composer: pin it as it lands, even
+    /// when it is the one that mounts the scroll view (a new conversation).
+    @State private var armPin = false
+    /// Height of the pinned turn — question's pinned line to the end of the
+    /// text. Its own object so that only the spacer under the turn redraws as
+    /// the reply grows, not the thread.
+    @State private var turn = TurnExtent()
     @FocusState private var isInputFocused: Bool
     #if os(iOS)
     @Environment(\.horizontalSizeClass) private var hSize
@@ -114,7 +138,13 @@ struct ChatView: View {
             chat.onCreated = { [composer] id in await composer.carryTo(id) }
         }
         .task(id: chat.activeConversationId) {
-            isNearBottom = true // a freshly opened thread follows to the latest
+            // A freshly opened thread follows to the latest; the one a first
+            // question has just created keeps that question pinned.
+            if pinConversation != chat.activeConversationId {
+                pinConversation = nil
+                holdPin = false
+            }
+            if !holdPin { isNearBottom = true }
             let m = maurices.maurice(for: chat.activeConversation?.maurice_id)
             await composer.setConversation(
                 chat.activeConversationId,
@@ -252,6 +282,7 @@ struct ChatView: View {
             if !chat.messages.isEmpty {
                 GeometryReader { outer in
                   ScrollViewReader { proxy in
+                   ZStack(alignment: .bottom) {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 22) {
                             ForEach(Array(chat.messages.enumerated()), id: \.element.id) { index, message in
@@ -260,6 +291,11 @@ struct ChatView: View {
                                 if message.id != finishing?.id {
                                     MessageRow(message: message, isLast: index == chat.messages.count - 1)
                                         .id(message.id)
+                                        .overlay(alignment: .bottom) {
+                                            if message.id == pinnedMessageId {
+                                                PinMarker(cap: outer.size.height / 3)
+                                            }
+                                        }
                                 }
                             }
 
@@ -268,13 +304,27 @@ struct ChatView: View {
 
                             // Permanent bottom anchor: the scroll target AND the
                             // probe for "is the user near the bottom?".
-                            Color.clear.frame(height: 1).id("bottom")
-                                .background(GeometryReader { g in
-                                    Color.clear.preference(
-                                        key: ChatBottomAnchorKey.self,
-                                        value: g.frame(in: .named("chatScroll")).minY
-                                    )
-                                })
+                            // It marks the end of the TEXT: the room kept
+                            // under a pinned turn comes after it, in the same
+                            // cell so the stack's spacing does not add to it.
+                            VStack(spacing: 0) {
+                                Color.clear.frame(height: 1).id("bottom")
+                                    .background(GeometryReader { g in
+                                        Color.clear
+                                            .preference(key: ChatBottomAnchorKey.self,
+                                                        value: g.frame(in: .named("chatScroll")).minY)
+                                            .preference(key: TurnExtentKey.self,
+                                                        value: TurnEdges(end: g.frame(in: .named("chatContent")).maxY))
+                                    })
+                                if pinnedMessageId != nil {
+                                    TurnTailSpacer(turn: turn, viewport: outer.size.height - Self.bottomPadding)
+                                }
+                            }
+                        }
+                        .coordinateSpace(name: "chatContent")
+                        .onPreferenceChange(TurnExtentKey.self) { edges in
+                            let height = edges.pin.flatMap { pin in edges.end.map { max(0, $0 - pin) } } ?? 0
+                            if abs(turn.height - height) > 0.5 { turn.height = height }
                         }
                         // Pad FIRST, then claim the width: the other way round
                         // the stack takes the whole viewport and the padding
@@ -304,19 +354,48 @@ struct ChatView: View {
                     .onAppear {
                         // Land at the bottom when the thread first appears (the
                         // view may mount with messages already loaded).
-                        DispatchQueue.main.async { proxy.scrollTo("bottom", anchor: UnitPoint(x: 0, y: 1)) }
+                        // Mounting is the first population: nothing is
+                        // left pending for the next message to trip on.
+                        pendingScrollToBottom = false
+                        // A first question mounts the view: it is pinned.
+                        if lastIsOwnQuestion, armPin || chat.messages.count == 1 {
+                            pinQuestion(proxy)
+                        } else {
+                            DispatchQueue.main.async { proxy.scrollTo("bottom", anchor: UnitPoint(x: 0, y: 1)) }
+                        }
                     }
                     .onPreferenceChange(ChatBottomAnchorKey.self) { minY in
                         atBottom = (minY - outer.size.height) < 24
-                        // Back at the end: follow again. Never the reverse —
-                        // content growing under the viewport is not a scroll.
-                        if atBottom { isNearBottom = true }
+                        if holdPin {
+                            // A pinned question: the end of a short reply is
+                            // in view from the start, and that is no reason
+                            // to follow. Only once the text has gone under
+                            // the fold and the member has scrolled to its
+                            // end — their hand, not the layout — does the
+                            // follow take over.
+                            if atBottom && handScrolling { releasePinIfUnderFold(viewport: outer.size.height) }
+                        } else if atBottom {
+                            // Back at the end: follow again. Never the reverse —
+                            // content growing under the viewport is not a scroll.
+                            isNearBottom = true
+                        }
                     }
                     .userScroll { up in
                         if up && !atBottom { isNearBottom = false }
+                    } onHand: { active in
+                        handScrolling = active
+                        if active {
+                            scrolledSincePin = true
+                        } else if holdPin && atBottom {
+                            // The scroll came to rest on the end of the text.
+                            releasePinIfUnderFold(viewport: outer.size.height)
+                        }
                     }
                     .onChange(of: chat.activeConversationId) {
                         // Opening/switching a thread: snap to the latest, follow.
+                        pinConversation = nil
+                        holdPin = false
+                        armPin = false
                         isNearBottom = true
                         pendingScrollToBottom = true
                     }
@@ -326,21 +405,48 @@ struct ChatView: View {
                         // reader who was following, leave one who was not.
                         if !chat.isStreaming && finishing == nil && isNearBottom { scrollToBottom(proxy) }
                     }
-                    .onChange(of: chat.messages.count) {
-                        if pendingScrollToBottom {
+                    .onChange(of: chat.messages.count) { old, new in
+                        if armPin, lastIsOwnQuestion {
+                            // Their own message, just sent: it goes to the top
+                            // of the screen and stays; the reply fills the
+                            // space under it.
+                            pinQuestion(proxy)
+                        } else if pendingScrollToBottom {
                             // First population after a (re)load — always snap.
                             pendingScrollToBottom = false
                             scrollToBottom(proxy)
-                        } else if chat.messages.last?.role == "user" && chat.messages.last?.author_id == session.activeUserId {
-                            // Their own message: snap, and follow the reply.
-                            isNearBottom = true
-                            scrollToBottom(proxy)
+                        } else if lastIsOwnQuestion && new > old {
+                            // The same, sent from another of their devices.
+                            pinQuestion(proxy)
                         } else if isNearBottom {
                             // Someone else's, or Maurice's: only if they
                             // haven't scrolled away.
                             scrollToBottom(proxy)
                         }
                     }
+
+                    // There is text under the fold: one tap goes to its end
+                    // and follows from there.
+                    if !atBottom {
+                        Button {
+                            holdPin = false
+                            isNearBottom = true
+                            scrollToBottom(proxy)
+                        } label: {
+                            Image(systemName: "arrow.down")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(theme.inkSoft)
+                                .frame(width: 36, height: 36)
+                                .contentShape(Circle())
+                        }
+                        .buttonStyle(.plain)
+                        .glassControl(theme, in: Circle())
+                        .accessibilityLabel(session.localized("chat.scroll_to_end"))
+                        .padding(.bottom, 8)
+                        .transition(.opacity.combined(with: .scale(scale: 0.8)))
+                    }
+                   }
+                   .animation(.easeOut(duration: 0.15), value: atBottom)
                   }
                 }
             } else {
@@ -481,6 +587,7 @@ struct ChatView: View {
         pendingPastes = []
         trayOpen = false
         dismissKeyboard()
+        armPin = true
         Task { await chat.send(text, images: images) }
     }
 
@@ -504,7 +611,65 @@ struct ChatView: View {
         pendingPastes = []
         trayOpen = false
         dismissKeyboard()
+        armPin = true
         Task { await chat.postBubble(text, images: images) }
+    }
+
+    /// The content's padding under the end of the text.
+    private static var bottomPadding: CGFloat {
+        #if os(iOS)
+        10
+        #else
+        26
+        #endif
+    }
+
+    /// The thread ends on a message of this member's.
+    private var lastIsOwnQuestion: Bool {
+        chat.messages.last?.role == "user" && chat.messages.last?.author_id == session.activeUserId
+    }
+
+    /// The message pinned to the top: the member's last one in the pinned
+    /// conversation. Found by position, not kept by id — the local copy's id
+    /// gives way to the server's when it arrives.
+    private var pinnedMessageId: String? {
+        guard let pinned = pinConversation, pinned == chat.activeConversationId else { return nil }
+        return chat.messages.last { $0.role == "user" && $0.author_id == session.activeUserId }?.id
+    }
+
+    /// Put the question just sent at the top of the viewport and hold it
+    /// there: the reply is not followed until the member goes to its end.
+    private func pinQuestion(_ proxy: ScrollViewProxy) {
+        armPin = false
+        pendingScrollToBottom = false
+        pinConversation = chat.activeConversationId
+        holdPin = true
+        scrolledSincePin = false
+        isNearBottom = false
+        // Once the marker and the room under the turn are laid out — and
+        // again when the phone's keyboard has finished leaving, which
+        // resizes the viewport under the first scroll.
+        for (delay, animated) in [(60, true), (450, false)] {
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(delay))
+                guard holdPin, animated || !scrolledSincePin else { return }
+                let anchor = UnitPoint(x: 0, y: 0)
+                if animated {
+                    withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo("pin", anchor: anchor) }
+                } else {
+                    proxy.scrollTo("pin", anchor: anchor)
+                }
+            }
+        }
+    }
+
+    /// The member has scrolled to the end of a pinned turn's text: if that
+    /// text reaches under the fold, follow it from here on. A reply that
+    /// still fits under its question has nothing to follow.
+    private func releasePinIfUnderFold(viewport: CGFloat) {
+        guard turn.height > viewport - Self.bottomPadding else { return }
+        holdPin = false
+        isNearBottom = true
     }
 
     private func scrollToBottom(_ proxy: ScrollViewProxy, animated: Bool = true) {
@@ -522,33 +687,43 @@ struct ChatView: View {
 }
 
 /// Reports a scroll the member made — `up` when they pulled the content
-/// down to read earlier lines. Scroll phases where the system has them
-/// (iOS 18, macOS 15: finger, wheel and trackpad alike); a drag alongside
-/// the scroll view's own before that, which the wheel does not send — an
-/// older Mac keeps the follow until a message of its own.
+/// down to read earlier lines — and, through `onHand`, when their hand takes
+/// the thread and when the scroll it started has come to rest. Scroll phases
+/// where the system has them (iOS 18, macOS 15: finger, wheel and trackpad
+/// alike); a drag alongside the scroll view's own before that, which the
+/// wheel does not send — an older Mac keeps the follow until a message of
+/// its own, and a pinned question until the "↓" button.
 private extension View {
-    func userScroll(_ onScroll: @escaping (_ up: Bool) -> Void) -> some View {
-        modifier(UserScrollModifier(onScroll: onScroll))
+    func userScroll(_ onScroll: @escaping (_ up: Bool) -> Void,
+                    onHand: @escaping (_ active: Bool) -> Void = { _ in }) -> some View {
+        modifier(UserScrollModifier(onScroll: onScroll, onHand: onHand))
     }
 }
 
 private struct UserScrollModifier: ViewModifier {
     let onScroll: (_ up: Bool) -> Void
+    let onHand: (_ active: Bool) -> Void
     @State private var lastOffset: CGFloat = 0
 
     func body(content: Content) -> some View {
         if #available(iOS 18.0, macOS 15.0, *) {
-            content.onScrollPhaseChange { _, phase, context in
-                guard phase == .interacting || phase == .decelerating else { return }
+            content.onScrollPhaseChange { old, phase, context in
+                let wasHand = old == .interacting || old == .decelerating
+                let isHand = phase == .interacting || phase == .decelerating
+                if isHand != wasHand { onHand(isHand) }
+                guard isHand else { return }
                 let y = context.geometry.contentOffset.y
                 defer { lastOffset = y }
                 if y < lastOffset - 1 { onScroll(true) }
             }
         } else {
             content.simultaneousGesture(
-                DragGesture(minimumDistance: 8).onChanged { value in
-                    if value.translation.height > 8 { onScroll(true) }
-                }
+                DragGesture(minimumDistance: 8)
+                    .onChanged { value in
+                        onHand(true)
+                        if value.translation.height > 8 { onScroll(true) }
+                    }
+                    .onEnded { _ in onHand(false) }
             )
         }
     }
@@ -595,6 +770,66 @@ private struct HorizontalOffsetPin: UIViewRepresentable {
     }
 }
 #endif
+
+/// Height of the pinned turn, from the question's pinned line to the end of
+/// the text. Read by `TurnTailSpacer` alone.
+@Observable
+private final class TurnExtent {
+    var height: CGFloat = 0
+}
+
+/// The two ends of the pinned turn, in the content's own coordinates (they do
+/// not move when the thread scrolls).
+private struct TurnEdges: Equatable {
+    var pin: CGFloat?
+    var end: CGFloat?
+}
+
+private struct TurnExtentKey: PreferenceKey {
+    static let defaultValue = TurnEdges()
+    static func reduce(value: inout TurnEdges, nextValue: () -> TurnEdges) {
+        let next = nextValue()
+        value.pin = next.pin ?? value.pin
+        value.end = next.end ?? value.end
+    }
+}
+
+/// The scroll target laid over the pinned question: the line that goes to the
+/// top of the viewport. A short question is shown whole, with a little air
+/// above; of a long one only the last `cap` points stay, so that the reply
+/// has the screen.
+private struct PinMarker: View {
+    let cap: CGFloat
+    private let air: CGFloat = 8
+
+    var body: some View {
+        // Laid over the row from its bottom edge (the overlay's alignment),
+        // and no GeometryReader around the target: a scroll to an id placed
+        // by one lands on the reader's origin, the top of the question.
+        Color.clear
+            .frame(maxHeight: cap)
+            .background(GeometryReader { g in
+                Color.clear.preference(key: TurnExtentKey.self,
+                                       value: TurnEdges(pin: g.frame(in: .named("chatContent")).minY))
+            })
+            .id("pin")
+            .padding(.top, -air)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+    }
+}
+
+/// The room kept under a pinned turn so that its question can sit at the top
+/// of the viewport while the reply is still short. It gives way point for
+/// point as the reply grows, and is gone once the text reaches the fold.
+private struct TurnTailSpacer: View {
+    let turn: TurnExtent
+    let viewport: CGFloat
+
+    var body: some View {
+        Color.clear.frame(height: max(0, viewport - turn.height))
+    }
+}
 
 /// Reports the bottom anchor's position within the scroll viewport, so we can
 /// tell whether the user is following the stream or has scrolled up to re-read.

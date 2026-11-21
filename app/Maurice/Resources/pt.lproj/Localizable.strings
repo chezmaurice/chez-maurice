@@ -106,6 +106,7 @@
 "persona.preview.selected" = "%d selecionados";
 "persona.preview.no_tagline" = "Ainda sem lema.";
 "chat.back_to_conversations" = "Voltar às conversas";
+"chat.scroll_to_end" = "Ir para o fim";
 "chat.tools_help" = "Ferramentas para esta conversa";
 "chat.add_someone_help" = "Adicionar alguém a esta sala";
 "chat.edit_maurice" = "Editar domínio";
