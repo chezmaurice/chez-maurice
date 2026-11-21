@@ -1240,3 +1240,8 @@
 "mytools.signin.waiting" = "Terminez la connexion dans votre navigateur, puis revenez ici.";
 "mytools.signin.again" = "Se reconnecter";
 "mytools.signin.timeout" = "La connexion n'a pas été terminée. Réessayez.";
+"carnet_offer.title" = "Carnet va avec Maurice";
+"carnet_offer.body" = "Tout ce que vous lisez et regardez, au même endroit, et sous les yeux de Maurice quand vous lui en parlez.";
+"carnet_offer.install" = "Installer Carnet";
+"carnet_offer.never" = "Ne plus me le proposer";
+"carnet_offer.later" = "Plus tard";

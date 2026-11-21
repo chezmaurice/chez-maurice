@@ -38,6 +38,8 @@ struct ContentView: View {
     @State private var disclosureAck = false
     /// A sign-up link arrived while a household is paired (pendingAccessCode).
     @State private var showSignupLink = false
+    /// Carnet, offered after a first reply while it is not on the device.
+    @State private var carnetOffer = CarnetOffer()
 
     /// Show the connect disclosure once per server host for non-owner sessions.
     private var needsDisclosure: Bool {
@@ -183,7 +185,7 @@ struct ContentView: View {
         }
         .onChange(of: scenePhase) {
             chat.appActive = (scenePhase == .active)
-            if scenePhase == .active { showChatForSharedPage() }
+            if scenePhase == .active { showChatForSharedPage(); carnetOffer.recheck() }
             if scenePhase == .active, session.hasActiveSession {
                 Task { await budget.refresh(session) }
                 // A provider added while the app was away is asked about.
@@ -210,15 +212,27 @@ struct ContentView: View {
         }
         .onChange(of: chat.isStreaming) { was, now in
             if was && !now { Task { await budget.refresh(session) } }
+            // Carnet is offered once Maurice has answered — not at install —
+            // and steps aside when the next message leaves.
+            if was && !now {
+                carnetOffer.turnEnded(replied: chat.error == nil && chat.messages.last?.role == "assistant")
+            } else if now {
+                carnetOffer.later()
+            }
         }
         .overlay(alignment: .top) {
             if session.hasActiveSession, !isLoading, let percent = budget.alert {
                 BudgetToast(percent: percent)
                     .padding(.top, 8).padding(.horizontal, 16)
                     .transition(.move(edge: .top).combined(with: .opacity))
+            } else if session.hasActiveSession, !isLoading, carnetOffer.visible {
+                CarnetOfferToast(offer: carnetOffer)
+                    .padding(.top, 8).padding(.horizontal, 16)
+                    .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
         .animation(.spring(duration: 0.4, bounce: 0.2), value: budget.alert)
+        .animation(.spring(duration: 0.4, bounce: 0.2), value: carnetOffer.visible)
         // The ring and the toast both lead here: Settings, opened on Budget.
         .sheet(isPresented: budgetSettingsBinding) {
             SettingsView(initialPane: budget.opensSubscription ? .subscription : .budget)

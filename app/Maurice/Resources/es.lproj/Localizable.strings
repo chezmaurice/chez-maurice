@@ -1240,3 +1240,8 @@
 "mytools.signin.waiting" = "Termine de iniciar sesión en el navegador y vuelva aquí.";
 "mytools.signin.again" = "Volver a iniciar sesión";
 "mytools.signin.timeout" = "El inicio de sesión no se completó. Inténtelo de nuevo.";
+"carnet_offer.title" = "Carnet va con Maurice";
+"carnet_offer.body" = "Todo lo que lees y ves, en un solo lugar, y a la vista de Maurice cuando le hablas de ello.";
+"carnet_offer.install" = "Instalar Carnet";
+"carnet_offer.never" = "No volver a proponérmelo";
+"carnet_offer.later" = "Más tarde";

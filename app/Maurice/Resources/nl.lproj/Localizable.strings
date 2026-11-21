@@ -1241,3 +1241,8 @@
 "mytools.signin.waiting" = "Rond het aanmelden af in uw browser en kom dan hier terug.";
 "mytools.signin.again" = "Opnieuw aanmelden";
 "mytools.signin.timeout" = "Het aanmelden is niet voltooid. Probeer het opnieuw.";
+"carnet_offer.title" = "Carnet hoort bij Maurice";
+"carnet_offer.body" = "Alles wat je leest en kijkt, op één plek, en onder de ogen van Maurice wanneer je er met hem over praat.";
+"carnet_offer.install" = "Carnet installeren";
+"carnet_offer.never" = "Niet meer voorstellen";
+"carnet_offer.later" = "Later";

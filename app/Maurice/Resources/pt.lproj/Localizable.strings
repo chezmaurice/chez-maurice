@@ -1241,3 +1241,8 @@
 "mytools.signin.waiting" = "Termine o início de sessão no navegador e volte aqui.";
 "mytools.signin.again" = "Iniciar sessão de novo";
 "mytools.signin.timeout" = "O início de sessão não foi concluído. Tente novamente.";
+"carnet_offer.title" = "O Carnet acompanha o Maurice";
+"carnet_offer.body" = "Tudo o que lê e vê, num só lugar, e à vista do Maurice quando lhe fala disso.";
+"carnet_offer.install" = "Instalar o Carnet";
+"carnet_offer.never" = "Não voltar a propor";
+"carnet_offer.later" = "Mais tarde";

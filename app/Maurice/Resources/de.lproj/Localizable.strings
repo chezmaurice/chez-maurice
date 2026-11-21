@@ -1240,3 +1240,8 @@
 "mytools.signin.waiting" = "Schließen Sie die Anmeldung im Browser ab und kehren Sie dann hierher zurück.";
 "mytools.signin.again" = "Erneut anmelden";
 "mytools.signin.timeout" = "Die Anmeldung wurde nicht abgeschlossen. Versuchen Sie es erneut.";
+"carnet_offer.title" = "Carnet gehört zu Maurice";
+"carnet_offer.body" = "Alles, was du liest und schaust, an einem Ort, und vor Maurices Augen, wenn du mit ihm darüber sprichst.";
+"carnet_offer.install" = "Carnet installieren";
+"carnet_offer.never" = "Nicht mehr vorschlagen";
+"carnet_offer.later" = "Später";

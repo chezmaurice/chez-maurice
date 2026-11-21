@@ -4,6 +4,10 @@
 <dict>
 	<key>MauriceTowerURL</key>
 	<string>$(MAURICE_TOWER_URL)</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>carnet</string>
+	</array>
 	<key>UIBackgroundModes</key>
 	<array/>
 	<key>CFBundleURLTypes</key>

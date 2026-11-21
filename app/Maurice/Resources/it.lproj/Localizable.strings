@@ -1240,3 +1240,8 @@
 "mytools.signin.waiting" = "Completate l'accesso nel browser, poi tornate qui.";
 "mytools.signin.again" = "Accedere di nuovo";
 "mytools.signin.timeout" = "L'accesso non è stato completato. Riprovate.";
+"carnet_offer.title" = "Carnet va con Maurice";
+"carnet_offer.body" = "Tutto ciò che leggi e guardi, in un solo posto, e sotto gli occhi di Maurice quando gliene parli.";
+"carnet_offer.install" = "Installa Carnet";
+"carnet_offer.never" = "Non propormelo più";
+"carnet_offer.later" = "Più tardi";

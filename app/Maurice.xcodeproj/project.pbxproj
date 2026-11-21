@@ -108,6 +108,7 @@
 		B80161B44335BB6CEC01F7DA /* YoungSerif-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 723F14E6AB7B2EAB08CC94EF /* YoungSerif-Regular.ttf */; };
 		BA3A758A5BFEC6E054910E44 /* AIConsentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66B15A7DAA63249B9A1B8CEF /* AIConsentStore.swift */; };
 		BA51E568256E682B32B4FD40 /* ThinkingPulse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60C505B6E7E7122F0D8C38C4 /* ThinkingPulse.swift */; };
+		BF2A117C97A0E95ED418CC5C /* CarnetOffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ACC1137506B015776EF6F8D /* CarnetOffer.swift */; };
 		BF7B4063A0CE6200A44B7159 /* PushSeal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3277381BCF86792BD4A81D61 /* PushSeal.swift */; };
 		C0E68B5EB590027F561AEB2F /* BrowserSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76C004AF1E20AFC0C9C7B695 /* BrowserSession.swift */; };
 		C3F16250A82E93FC469EAA89 /* BudgetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 475D8D96ACDB87A322874BFA /* BudgetViews.swift */; };
@@ -140,6 +141,7 @@
 		EAC75DADBFF075757B21BC46 /* SubscriptionViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A902302DDAF91A3A5B2DB9A /* SubscriptionViews.swift */; };
 		EB4C28812634CBBFFA2D4B02 /* MauriceShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = FFEC5DA17CABDEC1BF693557 /* MauriceShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		EC5E8D139CC03275DE8A1A9F /* ShareExtensionPreprocessor.js in Resources */ = {isa = PBXBuildFile; fileRef = 1471437CC5C770C8DECCD439 /* ShareExtensionPreprocessor.js */; };
+		EC7A3545D2324B90F08E304E /* CarnetOffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ACC1137506B015776EF6F8D /* CarnetOffer.swift */; };
 		ED50C0B176EE6BC4F5861734 /* SharedArticles.swift in Sources */ = {isa = PBXBuildFile; fileRef = E76EA458EBA05810D312BA7F /* SharedArticles.swift */; };
 		EE60CB5C6953EB6207373CBA /* MauriceStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C96937F0554878BAF247D3F /* MauriceStore.swift */; };
 		EEF2722A0817C78F1649422B /* Glass.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5ABD3D073D2DB74064F5A13 /* Glass.swift */; };
@@ -239,6 +241,7 @@
 		37041BD17EA900D3E728A616 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		37FEBF4DD802FA8BE1117B58 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		3988D0E0E8356FD44EE8B2A7 /* ext.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = ext.js; sourceTree = "<group>"; };
+		3ACC1137506B015776EF6F8D /* CarnetOffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarnetOffer.swift; sourceTree = "<group>"; };
 		3B5F6F2E3C5F7D8FFDE02630 /* ImportConversationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportConversationsView.swift; sourceTree = "<group>"; };
 		3D819685EF797FBCDD411BFC /* pt */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pt; path = pt.lproj/Localizable.strings; sourceTree = "<group>"; };
 		405F9AA69C83E58A86FDD625 /* SessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStore.swift; sourceTree = "<group>"; };
@@ -467,6 +470,7 @@
 				9EAE5B7CF41BA9515CFEE3EE /* AIConsentView.swift */,
 				EE3170FDE5751A81E295CF2E /* BoaterHat.swift */,
 				475D8D96ACDB87A322874BFA /* BudgetViews.swift */,
+				3ACC1137506B015776EF6F8D /* CarnetOffer.swift */,
 				128CD9E8B27DD3AD93E49524 /* CarnetSuggestions.swift */,
 				0093E2B2C16E646EA2A8E856 /* ChatSnippets.swift */,
 				4E01BB325D88F4E74B3571BC /* ChatView.swift */,
@@ -853,6 +857,7 @@
 				5F5B88BEB929BBCDE886119A /* BrowserSession.swift in Sources */,
 				0E7FF7906B6E446D403E0BF4 /* BudgetStore.swift in Sources */,
 				272361308311D10B864B3FD4 /* BudgetViews.swift in Sources */,
+				EC7A3545D2324B90F08E304E /* CarnetOffer.swift in Sources */,
 				B732DCB9E5F61EAEC2D7F191 /* CarnetSuggestions.swift in Sources */,
 				CCEF2532174820F615C4C61F /* ChatService.swift in Sources */,
 				D0B48FA211BB0DB5BB28B7EA /* ChatSnippets.swift in Sources */,
@@ -930,6 +935,7 @@
 				DF9BE4A1BA6E59025D217291 /* BrowserSession.swift in Sources */,
 				F4CE792418674D3840BAEDC6 /* BudgetStore.swift in Sources */,
 				C3F16250A82E93FC469EAA89 /* BudgetViews.swift in Sources */,
+				BF2A117C97A0E95ED418CC5C /* CarnetOffer.swift in Sources */,
 				3E96FF24D227953BEB5EA28F /* CarnetSuggestions.swift in Sources */,
 				D050F6CF74E2684FAF9E78A2 /* ChatService.swift in Sources */,
 				79D972E8244DCF5442DB6922 /* ChatSnippets.swift in Sources */,

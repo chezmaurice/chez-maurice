@@ -1240,3 +1240,8 @@
 "mytools.signin.waiting" = "Finish signing in in your browser, then come back here.";
 "mytools.signin.again" = "Sign in again";
 "mytools.signin.timeout" = "The sign-in was not completed. Try again.";
+"carnet_offer.title" = "Carnet goes with Maurice";
+"carnet_offer.body" = "Everything you read and watch, in one place, and in front of Maurice when you talk to him about it.";
+"carnet_offer.install" = "Install Carnet";
+"carnet_offer.never" = "Don’t offer it again";
+"carnet_offer.later" = "Later";
